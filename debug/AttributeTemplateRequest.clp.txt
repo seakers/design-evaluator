@@ -1,0 +1,16 @@
+(deftemplate DATABASE::Launch-vehicle
+    (slot cost)
+    (slot diameter)
+    (slot height)
+    (slot id)
+    (multislot payload-GEO)
+    (multislot payload-HEO)
+    (multislot payload-LEO-equat)
+    (multislot payload-LEO-polar)
+    (multislot payload-MEO)
+    (multislot payload-SSO)
+    (slot factHistory)
+    (multislot payload-ISS)
+
+
+)

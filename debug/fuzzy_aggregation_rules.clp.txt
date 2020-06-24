@@ -1,0 +1,1 @@
+/app/problems/smap/clp/fuzzy_aggregation_rules.clp

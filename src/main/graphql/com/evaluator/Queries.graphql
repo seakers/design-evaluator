@@ -1,0 +1,340 @@
+# INSTANTIATIONS
+
+
+query OrbitInformation($problem_id: Int!) {
+    items: Orbit(where: {Join__Orbit_Attributes: {problem_id: {_eq: $problem_id}}, name: {_in: ["LEO-600-polar-NA", "SSO-600-SSO-AM", "SSO-600-SSO-DD", "SSO-800-SSO-AM", "SSO-800-SSO-DD"]}}) {
+        id
+        name
+        attributes: Join__Orbit_Attributes(where: {problem_id: {_eq: $problem_id}}) {
+            id
+            value
+            attribute: Orbit_Attribute {
+                name
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+query LaunchVehicleInformation($group_id: Int, $problem_id: Int!) {
+    items: Launch_Vehicle(where: {Group: {id: {_eq: $group_id}}}) {
+        id
+        name
+        attributes: Join__Launch_Vehicle_Attributes(where: {problem_id: {_eq: $problem_id}}) {
+            value
+            attribute: Launch_Vehicle_Attribute {
+                name
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ATTRIBUTES
+
+query MeasurementAttribute($group_id: Int!) {
+    items: Measurement_Attribute(where: {Group: {id: {_eq: $group_id}}}) {
+        id
+        name
+        slot_type
+        type
+        values: Join__Measurement_Attribute_Values {
+            Accepted_Value {
+                value
+            }
+        }
+    }
+}
+
+query InstrumentAttribute($group_id: Int) {
+    items: Instrument_Attribute(where: {Group: {id: {_eq: $group_id}}}) {
+        id
+        name
+        slot_type
+        type
+        values: Join__Instrument_Attribute_Values {
+            Accepted_Value {
+                value
+            }
+        }
+    }
+}
+
+
+
+
+query Instrument($problem_id: Int) {
+    items: Instrument(where: {Join__Problem_Instruments: {problem_id: {_eq: $problem_id}}}) {
+        id
+        name
+        attributes: Join__Instrument_Characteristics {
+            Instrument_Attribute {
+                id
+                name
+            }
+            value
+        }
+    }
+}
+
+
+
+
+
+
+query OrbitAttribute($group_id: Int) {
+    items: Orbit_Attribute(where: {Group: {id: {_eq: $group_id}}}) {
+        id
+        name
+        slot_type
+        type
+    }
+}
+
+query LaunchVehicleAttribute($group_id: Int) {
+    items: Launch_Vehicle_Attribute(where: {Group: {id: {_eq: $group_id}}}) {
+        id
+        name
+        slot_type
+        type
+    }
+}
+
+query MissionAttribute($problem_id: Int) {
+    items: Mission_Attribute(where: {Problem: {id: {_eq: $problem_id}}}) {
+        id
+        name
+        slot_type
+        type
+    }
+}
+
+
+query AttributeInheritance($problem_id: Int) {
+    items: Inheritence_Attribute(where: {Problem: {id: {_eq: $problem_id}}}) {
+        template1
+        copySlotType1
+        copySlotName1
+        matchingSlotType1
+        matchingSlotName1
+        template2
+        matchingSlotName2
+        copySlotName2
+        module
+        id
+    }
+}
+
+
+
+
+
+query FuzzyAttribute($problem_id: Int) {
+    items: Fuzzy_Attribute(where: {Problem: {id: {_eq: $problem_id}}}) {
+        id
+        name
+        parameter
+        unit
+        values: Fuzzy_Values {
+            id
+            value
+            minimum
+            mean
+            maximum
+        }
+    }
+}
+
+
+
+query AggregationRule($problem_id: Int) {
+    items: Stakeholder_Needs_Panel(where: {problem_id: {_eq: $problem_id}}) {
+        name
+        index_id
+        weight
+        description
+        objectives: Stakeholder_Needs_Objectives {
+            name
+            weight
+            description
+            subobjectives: Stakeholder_Needs_Subobjectives {
+                name
+                description
+                weight
+            }
+        }
+    }
+}
+
+
+
+query RequirementRuleCase($problem_id: Int) {
+    items: Requirement_Rule_Case(where: {problem_id: {_eq: $problem_id}}) {
+        id
+        measurement_attribute_id
+        measurement_id
+        problem_id
+        rule
+        subobjective_id
+        value
+    }
+}
+
+
+
+query RequirementRuleAttribute($problem_id: Int) {
+    items: Requirement_Rule_Attribute(where: {problem_id: {_eq: $problem_id}}) {
+        id
+        justification
+        scores
+        thresholds
+        type
+        measurement: Measurement {
+            name
+        }
+        measurement_attribute: Measurement_Attribute {
+            name
+        }
+        problem: Problem {
+            id
+            name
+        }
+        objective: Stakeholder_Needs_Subobjective {
+            id
+            name
+        }
+    }
+}
+
+
+query CapabilityRule($group_id: Int!, $problem_id: Int!) {
+    items: Join__Instrument_Capability(where: {problem_id: {_eq: $problem_id}, group_id: {_eq: $group_id}, Instrument: {name: {_in: ["BIOMASS", "VIIRS", "SMAP_MWR", "SMAP_RAD", "CMIS"]}}}) {
+        instrument: Instrument {
+            name
+        }
+        measurement: Measurement {
+            name
+        }
+        measurement_attribute: Measurement_Attribute {
+            name
+        }
+        measurement_attribute_value: value
+    }
+}
+
+
+
+
+query EnabledInstruments($problem_id: Int!){
+    items: Join__Problem_Instrument(where: {problem_id: {_eq: $problem_id}}) {
+        instrument: Instrument {
+            name
+        }
+    }
+}
+
+
+
+
+
+query PanelId($problem_id: Int!, $name: String!){
+    items: Stakeholder_Needs_Panel(where: {problem_id: {_eq: $problem_id}, name: {_eq: $name}}) {
+        id
+        name
+    }
+}
+
+query ObjectiveId($problem_id: Int!, $name: String!){
+    items: Stakeholder_Needs_Objective(where: {problem_id: {_eq: $problem_id}, name: {_eq: $name}}) {
+        id
+        name
+    }
+}
+
+query SubobjectiveId($problem_id: Int!, $name: String!){
+    items: Stakeholder_Needs_Subobjective(where: {problem_id: {_eq: $problem_id}, name: {_eq: $name}}) {
+        id
+        name
+    }
+}
+
+
+
+
+
+
+mutation InsertArchitecture($problem_id: Int!, $input: String!, $science: float8, $cost: float8){
+    items: insert_Architecture_one(object: {problem_id: $problem_id, input: $input, science: $science, cost: $cost}) {
+        id
+    }
+}
+
+
+
+
+mutation InsertArchitectureScoreExplanation($architecture_id: Int!, $panel_id: Int!, $satisfaction: float8){
+    items: insert_ArchitectureScoreExplanation_one(object: {architecture_id: $architecture_id, panel_id: $panel_id, satisfaction: $satisfaction}) {
+        id
+    }
+}
+
+mutation InsertPanelScoreExplanation($architecture_id: Int!, $objective_id: Int!, $satisfaction: float8){
+    items: insert_PanelScoreExplanation_one(object: {architecture_id: $architecture_id, objective_id: $objective_id, satisfaction: $satisfaction}) {
+        id
+    }
+}
+
+mutation InsertObjectiveScoreExplanation($architecture_id: Int!, $subobjective_id: Int!, $satisfaction: float8){
+    items: insert_ObjectiveScoreExplanation_one(object: {architecture_id: $architecture_id, subobjective_id: $subobjective_id, satisfaction: $satisfaction}) {
+        id
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

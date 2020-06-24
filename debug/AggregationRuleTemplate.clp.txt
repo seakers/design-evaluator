@@ -1,0 +1,31 @@
+(deffacts AGGREGATION::init-aggregation-facts
+
+
+ (AGGREGATION::VALUE (sh-scores (repeat$ -1.0 5)) (sh-fuzzy-scores (repeat$ -1.0 5)) (weights  (create$  0.2  0.2  0.2  0.2  0.2 )) (factHistory F0))
+
+ (AGGREGATION::STAKEHOLDER (id WEA) (index 1) (obj-fuzzy-scores (repeat$ -1.0 3)) (obj-scores (repeat$ -1.0 3)) (weights (create$  0.6  0.2  0.2 )) (factHistory F0))
+ (AGGREGATION::STAKEHOLDER (id CLI) (index 2) (obj-fuzzy-scores (repeat$ -1.0 2)) (obj-scores (repeat$ -1.0 2)) (weights (create$  0.8  0.2 )) (factHistory F0))
+ (AGGREGATION::STAKEHOLDER (id ECO) (index 3) (obj-fuzzy-scores (repeat$ -1.0 2)) (obj-scores (repeat$ -1.0 2)) (weights (create$  0.75  0.25 )) (factHistory F0))
+ (AGGREGATION::STAKEHOLDER (id WAT) (index 4) (obj-fuzzy-scores (repeat$ -1.0 4)) (obj-scores (repeat$ -1.0 4)) (weights (create$  0.67  0.11  0.11  0.11 )) (factHistory F0))
+ (AGGREGATION::STAKEHOLDER (id HEA) (index 5) (obj-fuzzy-scores (repeat$ -1.0 5)) (obj-scores (repeat$ -1.0 5)) (weights (create$  0.2  0.2  0.2  0.2  0.2 )) (factHistory F0))
+
+
+ (AGGREGATION::OBJECTIVE (id WEA1) (parent WEA) (index 1) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id WEA2) (parent WEA) (index 2) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id WEA3) (parent WEA) (index 3) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id CLI1) (parent CLI) (index 1) (subobj-fuzzy-scores (repeat$ -1.0 2)) (subobj-scores (repeat$ -1.0 2)) (weights (create$  0.75  0.25 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id CLI2) (parent CLI) (index 2) (subobj-fuzzy-scores (repeat$ -1.0 2)) (subobj-scores (repeat$ -1.0 2)) (weights (create$  0.5  0.5 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id ECO1) (parent ECO) (index 1) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id ECO2) (parent ECO) (index 2) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id WAT1) (parent WAT) (index 1) (subobj-fuzzy-scores (repeat$ -1.0 2)) (subobj-scores (repeat$ -1.0 2)) (weights (create$  0.5  0.5 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id WAT2) (parent WAT) (index 2) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id WAT3) (parent WAT) (index 3) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id WAT4) (parent WAT) (index 4) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id HEA1) (parent HEA) (index 1) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id HEA2) (parent HEA) (index 2) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id HEA3) (parent HEA) (index 3) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id HEA4) (parent HEA) (index 4) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+ (AGGREGATION::OBJECTIVE (id HEA5) (parent HEA) (index 5) (subobj-fuzzy-scores (repeat$ -1.0 1)) (subobj-scores (repeat$ -1.0 1)) (weights (create$  1 )) (factHistory F0))
+
+
+ )

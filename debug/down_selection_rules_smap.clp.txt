@@ -1,0 +1,1 @@
+/app/problems/smap/clp/down_selection_rules_smap.clp

@@ -1,0 +1,529 @@
+     
+     
+
+  
+        ;;; BEGIN RULE: WEA1-1 ;;;
+
+        (defrule REQUIREMENTS::WEA1-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  4200 12000 30000) ) (create$  1 0.67 0.33 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future NWP grid size (<12km achieved, <4km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future NWP grid size (<12km achieved, <4km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  24 72 168) ) (create$  1 0.67 0.33 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.04 0.11) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.5 0.01 0.001) ) (create$  1 0.67 0.33 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band ideal)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  3.0 1.5 0.0) ) (create$  1 0.67 0.33 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id WEA1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent WEA1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WEA1-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: WEA2-1 ;;;
+
+        (defrule REQUIREMENTS::WEA2-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  40000 80000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet needs for river streamflow forecasts (40-80km achieved, 40km desired, 80km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet needs for river streamflow forecasts (40-80km achieved, 40km desired, 80km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  24 72 168) ) (create$  1 0.67 0.33 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.04 0.11) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.5 0.01 0.001) ) (create$  1 0.67 0.33 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band ideal)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  3.0 1.5 0.0) ) (create$  1 0.67 0.33 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id WEA2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent WEA2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WEA2-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: WEA3-1 ;;;
+
+        (defrule REQUIREMENTS::WEA3-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (All-weather ?val1&~nil) (Horizontal-Spatial-Resolution# ?val2&~nil) (Temporal-resolution# ?val3&~nil) (Accuracy# ?val4&~nil) (soil-penetration# ?val5&~nil) (Swath# ?val6&~nil) (sensitivity# ?val7&~nil) (image-distortion# ?val8&~nil) (orbit-inclination ?val9&~nil) (orbit-RAAN ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  yes) ) (create$  1 0.5))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  50000 80000) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient HSR to meet needs for river flas flood forecasts (50km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet needs for river flas flood forecasts (50km required)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  24 72 168) ) (create$  1 0.67 0.33 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.04 0.11) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  0.5 0.01 0.001) ) (create$  1 0.67 0.33 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient penetration (L-band required, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band ideal)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  3.0 1.5 0.0) ) (create$  1 0.67 0.33 0))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  0.8) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  SSO) ) (create$  1 0.5))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id WEA3-1) (attributes  All-weather  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN ) (index 1) (parent WEA3) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WEA3-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: CLI1-1 ;;;
+
+        (defrule REQUIREMENTS::CLI1-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  50000 100000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future climate models grid size (achieved 50-100km, currently 2x2deg = 100km, future 0.5x0.5deg=50km)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future climate models grid size (achieved 50-100km, currently 2x2deg = 100km, future 0.5x0.5deg=50km)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.04 0.11) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.5 0.01 0.001) ) (create$  1 0.67 0.33 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band ideal)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  3.0 1.5 0.0) ) (create$  1 0.67 0.33 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id CLI1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent CLI1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::CLI1-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: CLI2-2 ;;;
+
+        (defrule REQUIREMENTS::CLI2-2-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "3.4.1 Ocean surface wind speed")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (Swath# ?val4&~nil) (image-distortion# ?val5&~nil) (orbit-inclination ?val6&~nil) (All-weather ?val7&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  60000 100000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  1.0 2.0) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (0.6 psu achieved, 0.2 psu required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (0.6 psu achieved, 0.2 psu required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient swath (650-1000km achieved, >1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650-1000km achieved, >1000km required)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  0.8) ) (create$  1 0.5))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  polar) ) (create$  1 0.5))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "SSO orbit does not provide adequate tidal sampling (polar orbit required)" )) (bind ?reason (str-cat ?reason  "SSO orbit does not provide adequate tidal sampling (polar orbit required)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  yes) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id CLI2-2) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  Swath#  image-distortion#  orbit-inclination  All-weather ) (index 2) (parent CLI2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::CLI2-2-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: HEA5-1 ;;;
+
+        (defrule REQUIREMENTS::HEA5-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  50000 80000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet needs for river flas flood forecasts (50km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet needs for river flas flood forecasts (50km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  24 72 168) ) (create$  1 0.67 0.33 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.04 0.11) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.01 0.001) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band not needed)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  1.5 0.0) ) (create$  1 0.5 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id HEA5-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA5) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA5-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: CLI1-2 ;;;
+
+        (defrule REQUIREMENTS::CLI1-2-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.1 Freeze/thaw state")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  50000 100000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient accuracy (80% goal, 70% target)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (80% goal, 70% target)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.8 0.7) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.5 0.01 0.001) ) (create$  1 0.67 0.33 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band ideal)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  3.0 1.5 0.0) ) (create$  1 0.67 0.33 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id CLI1-2) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 2) (parent CLI1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::CLI1-2-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: CLI2-1 ;;;
+
+        (defrule REQUIREMENTS::CLI2-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "3.3.1 Ocean salinity")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (Swath# ?val4&~nil) (image-distortion# ?val5&~nil) (orbit-inclination ?val6&~nil) (orbit-RAAN ?val7&~nil) (All-weather ?val8&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  150000 300000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.2 0.6) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (0.6 psu achieved, 0.2 psu required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (0.6 psu achieved, 0.2 psu required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient swath (650-1000km achieved, >1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650-1000km achieved, >1000km required)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  0.8) ) (create$  1 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  SSO) ) (create$  1 0.5))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  yes) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id CLI2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  Swath#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent CLI2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::CLI2-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: HEA4-1 ;;;
+
+        (defrule REQUIREMENTS::HEA4-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  10000 50000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR for drought monitoring (achieved 10-50km, <10km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR for drought monitoring (achieved 10-50km, <10km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.11 0.15) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (10% goal, 15% threshold)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (10% goal, 15% threshold)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.01 0.001) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band not needed)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  1.5 0.0) ) (create$  1 0.5 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id HEA4-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA4) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA4-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: HEA3-1 ;;;
+
+        (defrule REQUIREMENTS::HEA3-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  50000 80000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet needs for river flas flood forecasts (50km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet needs for river flas flood forecasts (50km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  24 72 168) ) (create$  1 0.67 0.33 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.04 0.11) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.01 0.001) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band not needed)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  1.5 0.0) ) (create$  1 0.5 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id HEA3-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA3) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA3-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: HEA2-1 ;;;
+
+        (defrule REQUIREMENTS::HEA2-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  10000 50000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR for drought monitoring (achieved 10-50km, <10km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR for drought monitoring (achieved 10-50km, <10km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.11 0.15) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (10% goal, 15% threshold)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (10% goal, 15% threshold)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.01 0.001) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band not needed)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  1.5 0.0) ) (create$  1 0.5 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id HEA2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA2-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: ECO2-1 ;;;
+
+        (defrule REQUIREMENTS::ECO2-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.3 Carbon net ecosystem exchange NEE")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  50000 100000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future climate models grid size (achieved 50-100km, currently 2x2deg = 100km, future 0.5x0.5deg=50km)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future climate models grid size (achieved 50-100km, currently 2x2deg = 100km, future 0.5x0.5deg=50km)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.04 0.11) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.5 0.01 0.001) ) (create$  1 0.67 0.33 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band ideal)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  3.0 1.5 0.0) ) (create$  1 0.67 0.33 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id ECO2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent ECO2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::ECO2-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: HEA1-1 ;;;
+
+        (defrule REQUIREMENTS::HEA1-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  10000 50000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR for drought monitoring (achieved 10-50km, <10km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR for drought monitoring (achieved 10-50km, <10km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.11 0.15) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (10% goal, 15% threshold)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (10% goal, 15% threshold)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.01 0.001) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band not needed)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  1.5 0.0) ) (create$  1 0.5 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band required, P-band not needed)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id HEA1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA1-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: ECO1-1 ;;;
+
+        (defrule REQUIREMENTS::ECO1-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.1 Freeze/thaw state")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  4200 12000 30000) ) (create$  1 0.67 0.33 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future NWP grid size (<12km achieved, <4km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future NWP grid size (<12km achieved, <4km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  48 72 168) ) (create$  1 0.67 0.33 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (3 days required 2 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (3 days required 2 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.8 0.7) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.5 0.01 0.001) ) (create$  1 0.67 0.33 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band ideal)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  3.0 1.5 0.0) ) (create$  1 0.67 0.33 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id ECO1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent ECO1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::ECO1-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: WAT1-1 ;;;
+
+        (defrule REQUIREMENTS::WAT1-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.2 soil moisture")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  50000 100000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future climate models grid size (achieved 50-100km, currently 2x2deg = 100km, future 0.5x0.5deg=50km)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future climate models grid size (achieved 50-100km, currently 2x2deg = 100km, future 0.5x0.5deg=50km)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (2-3 days required 1 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (2-3 days required 1 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.04 0.11) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.5 0.01 0.001) ) (create$  1 0.67 0.33 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band ideal)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  3.0 1.5 0.0) ) (create$  1 0.67 0.33 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id WAT1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent WAT1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT1-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: WAT1-2 ;;;
+
+        (defrule REQUIREMENTS::WAT1-2-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "2.3.1 Freeze/thaw state")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (soil-penetration# ?val4&~nil) (Swath# ?val5&~nil) (sensitivity# ?val6&~nil) (image-distortion# ?val7&~nil) (orbit-inclination ?val8&~nil) (orbit-RAAN ?val9&~nil) (All-weather ?val10&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  12000 40000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future NWP grid size (<12km achieved, <4km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future NWP grid size (<12km achieved, <4km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (3 days required 2 days ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (3 days required 2 days ideal)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  0.8 0.7) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (4-10% achieved, 4% required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (4-10% achieved, 4% required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  0.5 0.01 0.001) ) (create$  1 0.67 0.33 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient penetration (L-band required, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient penetration (L-band required, P-band ideal)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Insufficient swath (650km degraded, 1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650km degraded, 1000km required)")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  3.0 1.5 0.0) ) (create$  1 0.67 0.33 0))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)" )) (bind ?reason (str-cat ?reason  "Insufficient sensitivity to soil moisture in vegetation (L-band achieved, P-band ideal)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  0.8) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x8 (nth$ (find-bin-num ?val8  (create$  SSO) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x9 (nth$ (find-bin-num ?val9  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x9 1.0) then (bind ?new-reasons (replace$  ?new-reasons 9 9 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
+                    (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id WAT1-2) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 2) (parent WAT1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT1-2-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: WAT2-1 ;;;
+
+        (defrule REQUIREMENTS::WAT2-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "1.7.3 Rain rate, tropical storms, and hurricanes")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy# ?val3&~nil) (Swath# ?val4&~nil) (image-distortion# ?val5&~nil) (orbit-inclination ?val6&~nil) (All-weather ?val7&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  60000 100000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  5.0 10.0) ) (create$  1 0.5 0))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (0.6 psu achieved, 0.2 psu required)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (0.6 psu achieved, 0.2 psu required)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient swath (650-1000km achieved, >1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650-1000km achieved, >1000km required)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  0.8) ) (create$  1 0))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  SSO) ) (create$  1 0.5))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "Suboptimal illumination conditions (not SSO)" )) (bind ?reason (str-cat ?reason  "Suboptimal illumination conditions (not SSO)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  yes) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id WAT2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  Swath#  image-distortion#  orbit-inclination  All-weather ) (index 1) (parent WAT2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT2-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: WAT3-1 ;;;
+
+        (defrule REQUIREMENTS::WAT3-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "4.2.4 snow cover")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy ?val3&~nil) (Swath# ?val4&~nil) (image-distortion# ?val5&~nil) (orbit-inclination ?val6&~nil) (All-weather ?val7&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  60000 100000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  High Medium Low) ) (create$  1 0.67 0.33))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (High accuracy req'd, obtained through multispectral combination of sensors)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (High accuracy req'd, obtained through multispectral combination of sensors)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient swath (650-1000km achieved, >1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650-1000km achieved, >1000km required)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  0.8) ) (create$  1 0.5))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  polar) ) (create$  1 0.5))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "SSO orbit does not provide adequate coverage of polar regions (polar orbit required)" )) (bind ?reason (str-cat ?reason  "SSO orbit does not provide adequate coverage of polar regions (polar orbit required)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  yes) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id WAT3-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy  Swath#  image-distortion#  orbit-inclination  All-weather ) (index 1) (parent WAT3) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT3-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+        ;;; BEGIN RULE: WAT4-1 ;;;
+
+        (defrule REQUIREMENTS::WAT4-1-attrib ?m <- (REQUIREMENTS::Measurement (taken-by ?whom)  (power-duty-cycle# ?pc) (data-rate-duty-cycle# ?dc)
+        (Parameter "4.3.2 Sea ice cover")
+        (Horizontal-Spatial-Resolution# ?val1&~nil) (Temporal-resolution# ?val2&~nil) (Accuracy ?val3&~nil) (Swath# ?val4&~nil) (image-distortion# ?val5&~nil) (orbit-inclination ?val6&~nil) (All-weather ?val7&~nil) )
+
+        =>
+
+        (bind ?reason "") (bind ?new-reasons (create$  N-A N-A N-A N-A N-A N-A N-A))
+
+                            (bind ?x1 (nth$ (find-bin-num ?val1  (create$  60000 100000) ) (create$  1 0.5 0))) (if (< ?x1 1.0) then (bind ?new-reasons (replace$  ?new-reasons 1 1 "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)" )) (bind ?reason (str-cat ?reason  "Insufficient HSR to meet future climate models grid size (achieved 150-300km, 150km required)")))
+                    (bind ?x2 (nth$ (find-bin-num ?val2  (create$  72 168) ) (create$  1 0.5 0))) (if (< ?x2 1.0) then (bind ?new-reasons (replace$  ?new-reasons 2 2 "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)" )) (bind ?reason (str-cat ?reason  "Insufficient temporal resolution (3-7 days achieved, 2-3 days req'd)")))
+                    (bind ?x3 (nth$ (find-bin-num ?val3  (create$  High Medium Low) ) (create$  1 0.67 0.33))) (if (< ?x3 1.0) then (bind ?new-reasons (replace$  ?new-reasons 3 3 "Insufficient accuracy (High accuracy req'd, obtained through multispectral combination of sensors)" )) (bind ?reason (str-cat ?reason  "Insufficient accuracy (High accuracy req'd, obtained through multispectral combination of sensors)")))
+                    (bind ?x4 (nth$ (find-bin-num ?val4  (create$  1000 600) ) (create$  1 0.5 0))) (if (< ?x4 1.0) then (bind ?new-reasons (replace$  ?new-reasons 4 4 "Insufficient swath (650-1000km achieved, >1000km required)" )) (bind ?reason (str-cat ?reason  "Insufficient swath (650-1000km achieved, >1000km required)")))
+                    (bind ?x5 (nth$ (find-bin-num ?val5  (create$  0.8) ) (create$  1 0.5))) (if (< ?x5 1.0) then (bind ?new-reasons (replace$  ?new-reasons 5 5 "Too large image distortion" )) (bind ?reason (str-cat ?reason  "Too large image distortion")))
+                    (bind ?x6 (nth$ (find-bin-num ?val6  (create$  polar) ) (create$  1 0.5))) (if (< ?x6 1.0) then (bind ?new-reasons (replace$  ?new-reasons 6 6 "SSO orbit does not provide adequate coverage of polar regions (polar orbit required)" )) (bind ?reason (str-cat ?reason  "SSO orbit does not provide adequate coverage of polar regions (polar orbit required)")))
+                    (bind ?x7 (nth$ (find-bin-num ?val7  (create$  yes) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
+                
+        (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7 ))
+
+        (assert (AGGREGATION::SUBOBJECTIVE (id WAT4-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy  Swath#  image-distortion#  orbit-inclination  All-weather ) (index 1) (parent WAT4) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT4-1-attrib) " A" (call ?m getFactId) "}")))))
+
+  
+
+
+
+  (deffacts REQUIREMENTS::init-subobjectives
+
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id WEA1-1) (index 1) (parent WEA1) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id WEA2-1) (index 1) (parent WEA2) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id WEA3-1) (index 1) (parent WEA3) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id CLI1-1) (index 1) (parent CLI1) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id CLI2-2) (index 2) (parent CLI2) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id HEA5-1) (index 1) (parent HEA5) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id CLI1-2) (index 2) (parent CLI1) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id CLI2-1) (index 1) (parent CLI2) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id HEA4-1) (index 1) (parent HEA4) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id HEA3-1) (index 1) (parent HEA3) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id HEA2-1) (index 1) (parent HEA2) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id ECO2-1) (index 1) (parent ECO2) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id HEA1-1) (index 1) (parent HEA1) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id ECO1-1) (index 1) (parent ECO1) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id WAT1-1) (index 1) (parent WAT1) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id WAT1-2) (index 2) (parent WAT1) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id WAT2-1) (index 1) (parent WAT2) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id WAT3-1) (index 1) (parent WAT3) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A)) (factHistory F0))
+      (AGGREGATION::SUBOBJECTIVE (satisfaction 0.0) (id WAT4-1) (index 1) (parent WAT4) (reasons (create$  N-A N-A N-A N-A N-A N-A N-A))(requirement-id -1) (factHistory F0))
+  
+  )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

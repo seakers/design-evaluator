@@ -1,0 +1,7 @@
+(deftemplate DATABASE::list-of-instruments (multislot list) (slot factHistory))
+(deffacts DATABASE::list-of-instruments (DATABASE::list-of-instruments (list
+
+(create$
+             SMAP_RAD                      SMAP_MWR                      CMIS                      VIIRS                      BIOMASS             ))
+
+(factHistory 0)))

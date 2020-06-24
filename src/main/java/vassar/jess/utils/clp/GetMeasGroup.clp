@@ -1,0 +1,8 @@
+(deffunction get-meas-group (?str)
+    (bind ?pos (str-index . ?str))
+    (bind ?gr1 (sub-string 1 (- ?pos 1) ?str))
+    (bind ?new-str (sub-string (+ ?pos 1) (str-length ?str) ?str))
+    (bind ?pos2 (str-index . ?new-str))
+    (bind ?gr2 (sub-string 1 (- ?pos2 1) ?new-str))
+    (bind ?gr3 (sub-string (+ ?pos2 1) (str-length ?new-str) ?new-str))
+    (return (create$ ?gr1 ?gr2 ?gr3)))
