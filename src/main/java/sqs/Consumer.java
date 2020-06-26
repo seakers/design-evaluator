@@ -67,14 +67,7 @@ public class Consumer implements Runnable{
     public void run() {
         int counter = 0;
 
-//        String arch = "0000000010000000000000000";
-//        String arch2= "0000000010000000100000000";
-
-//        this.sendEvalMessage(arch, 0);
-//        this.sendEvalMessage(arch2, 0);
-//        this.sendBuildMessage(1, 1, 0);
-//        this.sendEvalMessage(arch, 0);
-//        this.sendExitMessage(0);
+        // this.sendTestMessages();
 
         while(this.running){
             System.out.println("-----> Loop iteration: " + counter);
@@ -117,14 +110,22 @@ public class Consumer implements Runnable{
     public void mgsTypeEvaluate(HashMap<String, String> msg_contents){
 
         String input  = msg_contents.get("input");
+
+        if(this.client.doesArchitectureExist(input)){
+            System.out.println("---> Architecture already exists!!!");
+            System.out.println("---> INPUT: " + input);
+            this.consumerSleep(3);
+            return;
+        }
+
         Result result = this.client.evaluateArchitecture(input);
 
-        System.out.println("\n-------------------- EVALUATE REQUEST --------------------");
+        System.out.println("\n-------------------- EVALUATE REQUEST OUTPUT --------------------");
         System.out.println("-----> INPUT: " + input);
         System.out.println("------> COST: " + result.getCost());
         System.out.println("---> SCIENCE: " + result.getScience());
-        System.out.println("----------------------------------------------------------\n");
-        // this.consumerSleep(5);
+        System.out.println("----------------------------------------------------------------\n");
+        this.consumerSleep(3);
     }
 
     public void msgTypeBuild(HashMap<String, String> msg_contents){
@@ -188,6 +189,17 @@ public class Consumer implements Runnable{
     }
 
 
+    // ---> DEBUG MESSAGES
+    public void sendTestMessages(){
+        String arch = "0000000010000000000000000";
+        String arch2= "0000000010000000100000000";
+
+        this.sendEvalMessage(arch, 0);
+        this.sendEvalMessage(arch2, 0);
+        this.sendBuildMessage(1, 1, 0);
+        this.sendEvalMessage(arch, 0);
+        this.sendExitMessage(0);
+    }
 
     public void sendEvalMessage(String input, int delay){
 

@@ -105,6 +105,10 @@ public class DatabaseClient {
         this.queryAPI.group_id = id;
     }
 
+    public boolean doesArchitectureExist(String input){
+        return this.queryAPI.doesArchitectureExist(input);
+    }
+
 
     public void writeDebugInfo() {
         this.debugAPI.writeJson();

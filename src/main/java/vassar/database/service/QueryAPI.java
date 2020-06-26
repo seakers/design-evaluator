@@ -291,7 +291,22 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items().id();
     }
 
+    public boolean doesArchitectureExist(String input){
+        ArchitectureCountQuery countQuery = ArchitectureCountQuery.builder()
+                .problem_id(this.problem_id)
+                .input(input)
+                .build();
+        ApolloCall<ArchitectureCountQuery.Data>           apolloCall  = this.apollo.query(countQuery);
+        Observable<Response<ArchitectureCountQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
 
+        int count = observable.blockingFirst().getData().items().aggregate().count();
+        if(count > 0){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
 
 
 }

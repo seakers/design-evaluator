@@ -133,7 +133,9 @@ public class VassarClient {
         }
     }
 
-
+    public boolean doesArchitectureExist(String input){
+        return this.engine.dbClient.doesArchitectureExist(input);
+    }
 
 
 //  _____      _           _ _     _   _____

@@ -29,30 +29,30 @@
 
     )
     (DATABASE::Orbit
-        (id SSO-600-SSO-DD)
+        (id SSO-800-SSO-AM)
         
                                 (type   SSO)
             
         
-                                (altitude   600)
+                                (altitude   800)
             
         
-                                (inclination   97.78)
+                                (inclination   98.6)
             
         
-                                (RAAN#   DD)
+                                (RAAN#   AM)
             
         
-                                (fraction-of-sunlight#   93%)
+                                (fraction-of-sunlight#   67%)
             
         
-                                (period#   97)
+                                (period#   101)
             
         
-                                (worst-sun-angle#   121.22)
+                                (worst-sun-angle#   122.04)
             
         
-                                (max-eclipse-time#   1199)
+                                (max-eclipse-time#   2033)
             
                 (factHistory F1)
 
@@ -87,6 +87,35 @@
 
     )
     (DATABASE::Orbit
+        (id SSO-600-SSO-DD)
+        
+                                (type   SSO)
+            
+        
+                                (altitude   600)
+            
+        
+                                (inclination   97.78)
+            
+        
+                                (RAAN#   DD)
+            
+        
+                                (fraction-of-sunlight#   93%)
+            
+        
+                                (period#   97)
+            
+        
+                                (worst-sun-angle#   121.22)
+            
+        
+                                (max-eclipse-time#   1199)
+            
+                (factHistory F3)
+
+    )
+    (DATABASE::Orbit
         (id SSO-800-SSO-DD)
         
                                 (type   SSO)
@@ -111,35 +140,6 @@
             
         
                                 (max-eclipse-time#   959)
-            
-                (factHistory F3)
-
-    )
-    (DATABASE::Orbit
-        (id SSO-800-SSO-AM)
-        
-                                (type   SSO)
-            
-        
-                                (altitude   800)
-            
-        
-                                (inclination   98.6)
-            
-        
-                                (RAAN#   AM)
-            
-        
-                                (fraction-of-sunlight#   67%)
-            
-        
-                                (period#   101)
-            
-        
-                                (worst-sun-angle#   122.04)
-            
-        
-                                (max-eclipse-time#   2033)
             
                 (factHistory F4)
 

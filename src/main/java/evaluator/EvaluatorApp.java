@@ -28,21 +28,20 @@ import java.util.HashMap;
 public class EvaluatorApp {
 
     public static void main(String[] args) {
-        // System.setProperty("orekit.coveragedatabase", "/Users/gabeapaza/repositories/seakers/design_evaluator/app/src/main/java/vassar/evaluator/coverage/orekit/CoverageDatabase");
-        System.setProperty("orekit.coveragedatabase", System.getenv("COVERAGE_DATABASE")); // DOCKER
 
+//  _____ _   _ _____ _______
+// |_   _| \ | |_   _|__   __|
+//   | | |  \| | | |    | |
+//   | | | . ` | | |    | |
+//  _| |_| |\  |_| |_   | |
+// |_____|_| \_|_____|  |_|
+//
 
+        String coverage_database = "/app/src/main/java/vassar/evaluator/coverage/orekit/CoverageDatabase";
+        String orekit_init       = "/app/src/main/java/vassar/evaluator/coverage/orekit";
 
-//       __  .__   __.  __  .___________.
-//      |  | |  \ |  | |  | |           |
-//      |  | |   \|  | |  | `---|  |----`
-//      |  | |  . `  | |  |     |  |
-//      |  | |  |\   | |  |     |  |
-//      |__| |__| \__| |__|     |__|
-
-
-        // OrekitConfig.init(1, "/Users/gabeapaza/repositories/seakers/design_evaluator/app/src/main/java/vassar/evaluator/coverage/orekit");
-        OrekitConfig.init(1, System.getenv("OREKIT_INIT")); // DOCKER
+        System.setProperty("orekit.coveragedatabase", coverage_database);
+        OrekitConfig.init(1, orekit_init);
 
         GlobalScope.measurementsToSubobjectives = new HashMap<>();
         GlobalScope.subobjectivesToMeasurements = new HashMap<>();
@@ -53,13 +52,14 @@ public class EvaluatorApp {
 
         String outputFilePath     = rootPath + "/app/debug/dbOutput.json";
         String outputPath         = rootPath + "/app/debug";
-        String apollo_url         = "http://graphql:8080/v1/graphql";
-        String localstackEndpoint = "http://localstack:4576";
-        String queue_url          = "http://localstack:4576/queue/test_queue";
+        String apollo_url         = System.getenv("APOLLO_URL");
+        String localstackEndpoint = System.getenv("AWS_STACK_ENDPOINT");
+        String queue_url          = System.getenv("EVAL_QUEUE_URL");
         boolean debug             = true;
 
-        int group_id   = 1;
-        int problem_id = 5;
+        int group_id   = Integer.parseInt(System.getenv("GROUP_ID"));
+        int problem_id = Integer.parseInt(System.getenv("PROBLEM_ID"));
+
 
         ArrayList<Userfunction> userFuncs = new ArrayList<>() {{
             add( new SameOrBetter() );
@@ -72,7 +72,7 @@ public class EvaluatorApp {
         String jessGlobalTempPath = rootPath + "/app/src/main/java/vassar/database/template/defs";
         String jessGlobalFuncPath = rootPath + "/app/src/main/java/vassar/jess/utils/clp";
         String jessAppPath        = rootPath + "/app/problems/smap/clp";
-        String requestMode        = "CRISP-ATTRIBUTES";
+        String requestMode        = System.getenv("REQUEST_MODE");
         Requests requests = new Requests.Builder()
                                         .setGlobalTemplatePath(jessGlobalTempPath)
                                         .setGlobalFunctionPath(jessGlobalFuncPath)
@@ -83,14 +83,26 @@ public class EvaluatorApp {
 
 
 
+        System.out.println("\n------------------ VASSAR INIT ------------------");
+        System.out.println("----------> APOLLO URL: " + apollo_url);
+        System.out.println("----> AWS ENDPOINT URL: " + localstackEndpoint);
+        System.out.println("-----> INPUT QUEUE URL: " + queue_url);
+        System.out.println("---------------> GROUP: " + group_id);
+        System.out.println("-------------> PROBLEM: " + problem_id);
+        System.out.println("--------> REQUEST MODE: " + requestMode);
+        System.out.println("-------------------------------------------------------\n");
 
 
-//      .______    __    __   __   __       _______
-//      |   _  \  |  |  |  | |  | |  |     |       \
-//      |  |_)  | |  |  |  | |  | |  |     |  .--.  |
-//      |   _  <  |  |  |  | |  | |  |     |  |  |  |
-//      |  |_)  | |  `--'  | |  | |  `----.|  '--'  |
-//      |______/   \______/  |__| |_______||_______/
+
+
+
+//  _           _ _     _
+// | |         (_) |   | |
+// | |__  _   _ _| | __| |
+// | '_ \| | | | | |/ _` |
+// | |_) | |_| | | | (_| |
+// |_.__/ \__,_|_|_|\__,_|
+//
 
 
         QueryAPI queryAPI = new QueryAPI.Builder(apollo_url)
@@ -147,10 +159,6 @@ public class EvaluatorApp {
         // RUN CONSUMER
         Thread cThread = new Thread(evaluator);
         cThread.start();
-
-
-
-
 
     }
 }

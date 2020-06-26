@@ -25,7 +25,29 @@ public class CapabilityRuleTemplateRequest extends TemplateRequest {
         super(builder);
     }
 
+    // PROCESS REQUEST
+    public TemplateResponse processRequest(QueryAPI api) {
+        try {
+            // QUERY
+            List<CapabilityRuleQuery.Item> items              = api.capabilityRuleQuery();
+            CapabilityRules rules                             = new CapabilityRules(items); // Record all the instruments
+            ArrayList<CapabilityRules.Instrument> instruments = rules.buildRules();
 
+            this.problemBuilder.setInstrumentMeasurementData(instruments);
+
+            this.context.put("items", instruments);
+            this.template.evaluate(this.writer, this.context);
+
+            return new TemplateResponse.Builder()
+                    .setTemplateString(this.writer.toString())
+                    .build();
+        }
+        catch (Exception e) {
+            System.out.println("Error processing orbit template request: " +e.getClass() + " : " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 
 
@@ -117,32 +139,6 @@ public class CapabilityRuleTemplateRequest extends TemplateRequest {
             }
         }
 
-    }
-
-
-
-    // PROCESS REQUEST
-    public TemplateResponse processRequest(QueryAPI api) {
-        try {
-            // QUERY
-            List<CapabilityRuleQuery.Item> items              = api.capabilityRuleQuery();
-            CapabilityRules rules                             = new CapabilityRules(items); // Record all the instruments
-            ArrayList<CapabilityRules.Instrument> instruments = rules.buildRules();
-
-            this.problemBuilder.setInstrumentMeasurementData(instruments);
-
-            this.context.put("items", instruments);
-            this.template.evaluate(this.writer, this.context);
-
-            return new TemplateResponse.Builder()
-                    .setTemplateString(this.writer.toString())
-                    .build();
-        }
-        catch (Exception e) {
-            System.out.println("Error processing orbit template request: " +e.getClass() + " : " + e.getMessage());
-            e.printStackTrace();
-        }
-        return null;
     }
 
 }
