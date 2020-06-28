@@ -49,50 +49,21 @@ public class VassarClient {
 
     }
 
-    public Result evaluateArchitecture(String bitString){
-
-        AbstractArchitecture arch = new Architecture(bitString, 1, this.engine.getProblem());
-
-        System.out.println(arch.isFeasibleAssignment());
-
-        AbstractArchitectureEvaluator t = new ArchitectureEvaluator(this.engine, arch, "Slow");
-
-        ExecutorService executorService = Executors.newFixedThreadPool(1);
-
-        Future<Result> future = executorService.submit(t);
-
-        Result result = null;
-        try {
-            result = future.get();
-        }
-        catch (ExecutionException e) {
-            System.out.println("Exception when evaluating an architecture");
-            e.printStackTrace();
-            System.exit(-1);
-        }
-        catch (InterruptedException e) {
-            System.out.println("Execution got interrupted while evaluating an architecture");
-            e.printStackTrace();
-            System.exit(-1);
-        }
-
-        this.indexArchitecture(result, bitString);
-
-        return result;
-    }
 
 
-    public void indexArchitecture(Result result, String bitString){
+
+
+
+    public void indexArchitecture(Result result, String bitString, boolean ga){
 
         double cost    = result.getCost();
         double science = result.getScience();
 
-        int archID = this.engine.dbClient.indexArchitecture(bitString, science, cost);
+        int archID = this.engine.dbClient.indexArchitecture(bitString, science, cost, ga);
 
         this.indexArchitectureScoreExplanations(result, archID);
     }
 
-    // Index architecture subobjective satisfaction
     private void indexArchitectureScoreExplanations(Result result, int archID){
 
         System.out.println("--- indexing architecture score explanations");
@@ -138,14 +109,59 @@ public class VassarClient {
     }
 
 
+
+
+
+//
+//  ______          _             _                           _     _ _            _
+// |  ____|        | |           | |           /\            | |   (_) |          | |
+// | |____   ____ _| |_   _  __ _| |_ ___     /  \   _ __ ___| |__  _| |_ ___  ___| |_ _   _ _ __ ___
+// |  __\ \ / / _` | | | | |/ _` | __/ _ \   / /\ \ | '__/ __| '_ \| | __/ _ \/ __| __| | | | '__/ _ \
+// | |___\ V / (_| | | |_| | (_| | ||  __/  / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
+// |______\_/ \__,_|_|\__,_|\__,_|\__\___| /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
+//
+
+    public Result evaluateArchitecture(String bitString, boolean ga){
+
+        AbstractArchitecture arch = new Architecture(bitString, 1, this.engine.getProblem());
+
+        System.out.println(arch.isFeasibleAssignment());
+
+        AbstractArchitectureEvaluator t = new ArchitectureEvaluator(this.engine, arch, "Slow");
+
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
+
+        Future<Result> future = executorService.submit(t);
+
+        Result result = null;
+        try {
+            result = future.get();
+        }
+        catch (ExecutionException e) {
+            System.out.println("Exception when evaluating an architecture");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        catch (InterruptedException e) {
+            System.out.println("Execution got interrupted while evaluating an architecture");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        this.indexArchitecture(result, bitString, ga);
+
+        return result;
+    }
+
+
+
+
 //  _____      _           _ _     _   _____
 // |  __ \    | |         (_) |   | | |  __ \
 // | |__) |___| |__  _   _ _| | __| | | |__) |___  ___  ___  _   _ _ __ ___ ___
 // |  _  // _ \ '_ \| | | | | |/ _` | |  _  // _ \/ __|/ _ \| | | | '__/ __/ _ \
 // | | \ \  __/ |_) | |_| | | | (_| | | | \ \  __/\__ \ (_) | |_| | | | (_|  __/
 // |_|  \_\___|_.__/ \__,_|_|_|\__,_| |_|  \_\___||___/\___/ \__,_|_|  \___\___|
-
-
 
 
     public void rebuildResource(int group_id, int problem_id){

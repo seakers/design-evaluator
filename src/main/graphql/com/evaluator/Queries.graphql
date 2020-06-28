@@ -285,8 +285,8 @@ query SubobjectiveId($problem_id: Int!, $name: String!){
 
 
 
-mutation InsertArchitecture($problem_id: Int!, $input: String!, $science: float8, $cost: float8){
-    items: insert_Architecture_one(object: {problem_id: $problem_id, input: $input, science: $science, cost: $cost}) {
+mutation InsertArchitecture($problem_id: Int!, $input: String!, $science: float8, $cost: float8, $ga: Boolean!){
+    items: insert_Architecture_one(object: {problem_id: $problem_id, input: $input, science: $science, cost: $cost, ga: $ga}) {
         id
     }
 }

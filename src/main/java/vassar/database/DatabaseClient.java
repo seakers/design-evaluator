@@ -69,8 +69,8 @@ public class DatabaseClient {
 
 
 
-    public int indexArchitecture(String input, double science, double cost){
-        return this.queryAPI.insertArchitecture(input, science, cost);
+    public int indexArchitecture(String input, double science, double cost, boolean ga){
+        return this.queryAPI.insertArchitecture(input, science, cost, ga);
     }
 
 

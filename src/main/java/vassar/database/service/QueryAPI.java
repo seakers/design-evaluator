@@ -242,12 +242,13 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items().get(0).id();
     }
 
-    public int insertArchitecture(String input, double science, double cost){
+    public int insertArchitecture(String input, double science, double cost, boolean ga){
         InsertArchitectureMutation archMutation = InsertArchitectureMutation.builder()
                 .problem_id(this.problem_id)
                 .input(input)
                 .science(science)
                 .cost(cost)
+                .ga(ga)
                 .build();
         ApolloCall<InsertArchitectureMutation.Data>           apolloCall  = this.apollo.mutate(archMutation);
         Observable<Response<InsertArchitectureMutation.Data>> observable  = Rx2Apollo.from(apolloCall);

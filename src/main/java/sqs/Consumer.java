@@ -109,23 +109,29 @@ public class Consumer implements Runnable{
     // ---> MESSAGE TYPES
     public void mgsTypeEvaluate(HashMap<String, String> msg_contents){
 
-        String input  = msg_contents.get("input");
+        String  input   = msg_contents.get("input");
+        boolean ga_arch = false;
+
+        if(msg_contents.containsKey("ga")){
+            ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
+        }
+
 
         if(this.client.doesArchitectureExist(input)){
             System.out.println("---> Architecture already exists!!!");
             System.out.println("---> INPUT: " + input);
-            this.consumerSleep(3);
+            this.consumerSleep(1);
             return;
         }
 
-        Result result = this.client.evaluateArchitecture(input);
+        Result result = this.client.evaluateArchitecture(input, ga_arch);
 
         System.out.println("\n-------------------- EVALUATE REQUEST OUTPUT --------------------");
         System.out.println("-----> INPUT: " + input);
         System.out.println("------> COST: " + result.getCost());
         System.out.println("---> SCIENCE: " + result.getScience());
         System.out.println("----------------------------------------------------------------\n");
-        this.consumerSleep(3);
+        // this.consumerSleep(3);
     }
 
     public void msgTypeBuild(HashMap<String, String> msg_contents){
