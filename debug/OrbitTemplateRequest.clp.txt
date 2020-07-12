@@ -64,17 +64,4 @@
                         (factHistory F4)
 
     )
-    (DATABASE::Orbit
-        (id LEO-700-polar-NA)
-                        (type   LEO)
-                                (altitude   700)
-                                (inclination   90)
-                                (RAAN#   NA)
-                                (fraction-of-sunlight#   73%)
-                                (period#   97)
-                                (worst-sun-angle#   113.44)
-                                (max-eclipse-time#   2110)
-                        (factHistory F5)
-
-    )
 )
