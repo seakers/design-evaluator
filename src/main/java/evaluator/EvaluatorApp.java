@@ -61,6 +61,7 @@ public class EvaluatorApp {
         String localstackEndpoint = System.getenv("AWS_STACK_ENDPOINT");
         String queue_url          = System.getenv("EVAL_QUEUE_URL");
         String private_queue_name = System.getenv("PRIVATE_QUEUE_NAME");
+        String apollo_ws_url      = System.getenv("APOLLO_URL_WS");
         boolean debug             = true;
 
         int group_id   = Integer.parseInt(System.getenv("GROUP_ID"));
@@ -130,7 +131,7 @@ public class EvaluatorApp {
 
 
 
-        QueryAPI queryAPI = new QueryAPI.Builder(apollo_url)
+        QueryAPI queryAPI = new QueryAPI.Builder(apollo_url, apollo_ws_url)
                                         .groupID(group_id)
                                         .problemID(problem_id)
                                         .privateQueue(private_queue_url)

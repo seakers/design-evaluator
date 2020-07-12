@@ -54,12 +54,12 @@ public class QueryAPI {
         private int          group_id;
         private int          problem_id;
 
-        public Builder(String apollo_url){
+        public Builder(String apollo_url, String apollo_ws_url){
             this.apollo_url = apollo_url;
             this.http       = new OkHttpClient.Builder().build();
             this.apollo     = ApolloClient.builder()
                     .serverUrl(this.apollo_url)
-                    .subscriptionTransportFactory(new WebSocketSubscriptionTransport.Factory("ws://graphql:8080/v1/graphql", this.http))
+                    .subscriptionTransportFactory(new WebSocketSubscriptionTransport.Factory(apollo_ws_url, this.http)) // ws://graphql:8080/v1/graphql
                     .okHttpClient(this.http)
                     .build();
         }
