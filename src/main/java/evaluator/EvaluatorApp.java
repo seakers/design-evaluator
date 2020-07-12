@@ -5,6 +5,9 @@ package evaluator;
 
 import jess.Userfunction;
 import seakers.orekit.util.OrekitConfig;
+import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import vassar.GlobalScope;
 import vassar.VassarClient;
 import vassar.database.DatabaseClient;
@@ -24,6 +27,8 @@ import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsPro
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 public class EvaluatorApp {
 
@@ -55,6 +60,7 @@ public class EvaluatorApp {
         String apollo_url         = System.getenv("APOLLO_URL");
         String localstackEndpoint = System.getenv("AWS_STACK_ENDPOINT");
         String queue_url          = System.getenv("EVAL_QUEUE_URL");
+        String private_queue_name = System.getenv("PRIVATE_QUEUE_NAME");
         boolean debug             = true;
 
         int group_id   = Integer.parseInt(System.getenv("GROUP_ID"));
@@ -68,7 +74,7 @@ public class EvaluatorApp {
         }};
 
 
-        // -----> JESS REQUESTS <-----
+        // -----> JESS REQUESTS
         String jessGlobalTempPath = rootPath + "/app/src/main/java/vassar/database/template/defs";
         String jessGlobalFuncPath = rootPath + "/app/src/main/java/vassar/jess/utils/clp";
         String jessAppPath        = rootPath + "/app/problems/smap/clp";
@@ -82,11 +88,16 @@ public class EvaluatorApp {
                                         .build();
 
 
+        // -----> When scaling, private queue names will be random
+        if(private_queue_name.equals("RANDOM")){
+            private_queue_name = "vassar_private_" + EvaluatorApp.getSaltString(8);
+        }
 
         System.out.println("\n------------------ VASSAR INIT ------------------");
         System.out.println("----------> APOLLO URL: " + apollo_url);
         System.out.println("----> AWS ENDPOINT URL: " + localstackEndpoint);
         System.out.println("-----> INPUT QUEUE URL: " + queue_url);
+        System.out.println("--> PRIVATE QUEUE NAME: " + private_queue_name);
         System.out.println("---------------> GROUP: " + group_id);
         System.out.println("-------------> PROBLEM: " + problem_id);
         System.out.println("--------> REQUEST MODE: " + requestMode);
@@ -105,9 +116,25 @@ public class EvaluatorApp {
 //
 
 
+        // --> SQS
+        final SqsClient sqsClient = SqsClient.builder()
+                                       .region(Region.US_EAST_2)
+                                       .endpointOverride(URI.create(localstackEndpoint))
+                                       .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                                       .build();
+
+        // PRIVATE QUEUE
+        String private_queue_url = EvaluatorApp.createPrivateQueue(sqsClient, private_queue_name, problem_id);
+
+
+
+
+
         QueryAPI queryAPI = new QueryAPI.Builder(apollo_url)
                                         .groupID(group_id)
                                         .problemID(problem_id)
+                                        .privateQueue(private_queue_url)
+                                        .sqsClient(sqsClient)
                                         .build();
 
         DebugAPI debugAPI = new DebugAPI.Builder(outputFilePath)
@@ -119,9 +146,8 @@ public class EvaluatorApp {
                                         .debug(debug)
                                         .queryClient(queryAPI)
                                         .debugClient(debugAPI)
+                                        .subscribe()
                                         .build();
-
-
 
         Resource engine = new Resource.Builder(dbClient)
                                         .addUserFunctionBatch(userFuncs)      // - Improve(), SameOrBetter(), Worsen()
@@ -129,36 +155,50 @@ public class EvaluatorApp {
                                         .setRequestMode(requestMode)
                                         .build();
 
-
-
         VassarClient vClient = new VassarClient.Builder()
                                         .setEngine(engine)
                                         .build();
 
 
 
-
-
-
-
-        SqsClient sqsClient = SqsClient.builder()
-                                        .region(Region.US_EAST_2)
-                                        .endpointOverride(URI.create(localstackEndpoint))
-                                        .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
-                                        .build();
-
-
-
-
         Consumer evaluator = new Consumer.Builder(sqsClient)
                                          .setVassarClient(vClient)
                                          .setQueueUrl(queue_url)
+                                         .setPrivateQueueUrl(private_queue_url)
                                          .debug(debug)
                                          .build();
+
+
 
         // RUN CONSUMER
         Thread cThread = new Thread(evaluator);
         cThread.start();
+    }
 
+    public static String createPrivateQueue(SqsClient sqsClient, String private_queue_name, int problem_id){
+        Map<String, String> queueParams = new HashMap<>();
+        queueParams.put("problem_id", String.valueOf(problem_id));
+        queueParams.put("type", "vassar_eval_private");
+        CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
+                .queueName(private_queue_name)
+                .tags(queueParams)
+                .build();
+        sqsClient.createQueue(createQueueRequest);
+
+        GetQueueUrlResponse getQueueUrlResponse = sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(private_queue_name).build());
+        String private_url = getQueueUrlResponse.queueUrl();
+        return private_url;
+    }
+
+    public static String getSaltString(int length) {
+        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        StringBuilder salt = new StringBuilder();
+        Random rnd = new Random();
+        while (salt.length() < length) { // length of the random string.
+            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
+            salt.append(SALTCHARS.charAt(index));
+        }
+        String saltStr = salt.toString();
+        return saltStr;
     }
 }

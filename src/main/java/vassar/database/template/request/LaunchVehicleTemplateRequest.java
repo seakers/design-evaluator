@@ -1,6 +1,6 @@
 package vassar.database.template.request;
 
-import com.evaluator.LaunchVehicleInformationQuery;
+import com.evaluator.ProblemLaunchVehicleQuery;
 import vassar.database.service.QueryAPI;
 import vassar.database.template.TemplateRequest;
 import vassar.database.template.TemplateResponse;
@@ -44,7 +44,7 @@ public class LaunchVehicleTemplateRequest extends TemplateRequest {
     public TemplateResponse processRequest(QueryAPI api) {
         try {
             // QUERY
-            List<LaunchVehicleInformationQuery.Item> items = api.launchVehicleQuery();
+            List<ProblemLaunchVehicleQuery.Item> items = api.problemLaunchVehicleQuery();
 
             // BUILD CONTEXT
             this.context.put("template_header", this.template_header);

@@ -5,6 +5,7 @@ import vassar.VassarClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import vassar.result.Result;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ public class Consumer implements Runnable{
     private VassarClient client;
     private SqsClient    sqsClient;
     private String       queueUrl;
+    private String       privateQueueUrl;
 
     public static class Builder {
 
@@ -24,6 +26,7 @@ public class Consumer implements Runnable{
         private VassarClient   client;
         private SqsClient      sqsClient;
         private String         queueUrl;
+        private String         privateQueueUrl;
 
         public Builder(SqsClient sqsClient){
             this.sqsClient = sqsClient;
@@ -39,18 +42,24 @@ public class Consumer implements Runnable{
             return this;
         }
 
+        public Builder setPrivateQueueUrl(String privateQueueUrl) {
+            this.privateQueueUrl = privateQueueUrl;
+            return this;
+        }
+
         public Builder debug(boolean debug) {
             this.debug = debug;
             return this;
         }
 
         public Consumer build(){
-            Consumer build  = new Consumer();
-            build.sqsClient = this.sqsClient;
-            build.debug     = this.debug;
-            build.client    = this.client;
-            build.queueUrl  = this.queueUrl;
-            build.running   = true;
+            Consumer build        = new Consumer();
+            build.sqsClient       = this.sqsClient;
+            build.debug           = this.debug;
+            build.client          = this.client;
+            build.queueUrl        = this.queueUrl;
+            build.privateQueueUrl = this.privateQueueUrl;
+            build.running         = true;
             return build;
         }
 
@@ -68,12 +77,20 @@ public class Consumer implements Runnable{
         int counter = 0;
 
         // this.sendTestMessages();
+        this.deletePrivMessages();
 
         while(this.running){
             System.out.println("-----> Loop iteration: " + counter);
             this.consumerSleep(1);
+            List<Message> messages;
+            boolean privateMsg = true;
 
-            List<Message> messages = this.getMessages(1, 5);
+            // CHECK PRIVATE QUEUE FIRST - IF PRIVATE QUEUE EMPTY, CHECK EVAL QUEUE
+            messages = this.getMessages(this.privateQueueUrl, 1, 1);
+            if(messages.isEmpty()){
+                messages   = this.getMessages(this.queueUrl, 1, 5);
+                privateMsg = false;
+            }
 
             for (Message msg: messages){
                 HashMap<String, String> msg_contents = this.processMessage(msg);
@@ -97,7 +114,14 @@ public class Consumer implements Runnable{
                     // this.consumerSleep(10);
                 }
             }
-            this.deleteMessages(messages);
+
+            if(privateMsg){
+                this.deleteMessages(messages, this.privateQueueUrl);
+            }
+            else{
+                this.deleteMessages(messages, this.queueUrl);
+            }
+
             counter++;
         }
 
@@ -109,22 +133,28 @@ public class Consumer implements Runnable{
     // ---> MESSAGE TYPES
     public void mgsTypeEvaluate(HashMap<String, String> msg_contents){
 
-        String  input   = msg_contents.get("input");
-        boolean ga_arch = false;
+        String  input       = msg_contents.get("input");
+        boolean ga_arch     = false;
+        boolean re_evaluate = false;
 
         if(msg_contents.containsKey("ga")){
             ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
         }
 
-
-        if(this.client.doesArchitectureExist(input)){
-            System.out.println("---> Architecture already exists!!!");
-            System.out.println("---> INPUT: " + input);
-            this.consumerSleep(1);
-            return;
+        if(msg_contents.containsKey("redo")){
+            re_evaluate = Boolean.parseBoolean(msg_contents.get("redo"));
         }
 
-        Result result = this.client.evaluateArchitecture(input, ga_arch);
+        if(!re_evaluate) {
+            if (this.client.doesArchitectureExist(input)) {
+                System.out.println("---> Architecture already exists!!!");
+                System.out.println("---> INPUT: " + input);
+                this.consumerSleep(1);
+                return;
+            }
+        }
+
+        Result result = this.client.evaluateArchitecture(input, ga_arch, re_evaluate);
 
         System.out.println("\n-------------------- EVALUATE REQUEST OUTPUT --------------------");
         System.out.println("-----> INPUT: " + input);
@@ -150,9 +180,9 @@ public class Consumer implements Runnable{
 
     // ---> MESSAGE FLOW
     // 1.
-    public List<Message> getMessages(int maxMessages, int waitTimeSeconds){
+    public List<Message> getMessages(String url, int maxMessages, int waitTimeSeconds){
         ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
-                .queueUrl(this.queueUrl)
+                .queueUrl(url)
                 .waitTimeSeconds(waitTimeSeconds)
                 .maxNumberOfMessages(maxMessages)
                 .attributeNames(QueueAttributeName.ALL)
@@ -177,10 +207,10 @@ public class Consumer implements Runnable{
     }
 
     // 3.
-    public void deleteMessages(List<Message> messages){
+    public void deleteMessages(List<Message> messages, String url){
         for (Message message : messages) {
             DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
-                    .queueUrl(queueUrl)
+                    .queueUrl(url)
                     .receiptHandle(message.receiptHandle())
                     .build();
             this.sqsClient.deleteMessage(deleteMessageRequest);
@@ -261,7 +291,6 @@ public class Consumer implements Runnable{
         this.sendMessage(messageAttributes, delay);
     }
 
-
     private void sendMessage(Map<String, MessageAttributeValue> messageAttributes, int delay){
         this.sqsClient.sendMessage(SendMessageRequest.builder()
                 .queueUrl(queueUrl)
@@ -272,4 +301,10 @@ public class Consumer implements Runnable{
     }
 
 
+    // --> DELETE PRIVATE MESSAGES
+    public void deletePrivMessages(){
+        System.out.println("---> DELETING PRIVATE MESSAGES");
+        List<Message> messages = this.getMessages(this.privateQueueUrl, 10, 1);
+        this.deleteMessages(messages, this.privateQueueUrl);
+    }
 }

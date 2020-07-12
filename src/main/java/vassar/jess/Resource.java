@@ -197,8 +197,13 @@ public class Resource {
 
     public Resource rebuild(int group_id, int problem_id, ArrayList<TemplateRequest> newRequests){
 
-        this.dbClient.setGroupID(group_id);
-        this.dbClient.setProblemID(problem_id);
+        if(group_id != -1){
+            this.dbClient.setGroupID(group_id);
+        }
+
+        if(problem_id != -1){
+            this.dbClient.setProblemID(problem_id);
+        }
 
         GlobalScope.init();
 

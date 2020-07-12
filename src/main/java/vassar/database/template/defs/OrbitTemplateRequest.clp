@@ -3,15 +3,13 @@
 {% for item in items %}
     ({{orbit_header}}
 
-        (id {{item.name()}})
-        {% for attribute in item.attributes() %}
-
-            {% if attribute.value().matches("\[(.+)(,(.+))+\]") %}
-                    ({{ attribute.attribute().name() }} {{ createJessList(attribute.value()) }})
-            {% else %}
-                    ({{ attribute.attribute().name() }}   {{ attribute.value() }})
-            {% endif %}
-
+        (id {{item.Orbit().name()}})
+        {% for attribute in item.Orbit().attributes() %}
+        {% if attribute.value().matches("\[(.+)(,(.+))+\]") %}
+        ({{ attribute.Orbit_Attribute().name() }} {{ createJessList(attribute.value()) }})
+        {% else %}
+        ({{ attribute.Orbit_Attribute().name() }}   {{ attribute.value() }})
+        {% endif %}
         {% endfor %}
         (factHistory F{{loop.index}})
 

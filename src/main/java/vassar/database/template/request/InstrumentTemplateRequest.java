@@ -1,8 +1,6 @@
 package vassar.database.template.request;
 
-import com.evaluator.InstrumentQuery;
-import com.evaluator.LaunchVehicleInformationQuery;
-import com.evaluator.MeasurementAttributeQuery;
+import com.evaluator.*;
 import vassar.GlobalScope;
 import vassar.database.service.QueryAPI;
 import vassar.database.template.TemplateRequest;
@@ -43,7 +41,7 @@ public class InstrumentTemplateRequest extends TemplateRequest {
     protected InstrumentTemplateRequest(Builder builder) {
 
         super(builder);
-        this.template_header       = builder.template_header;
+        this.template_header   = builder.template_header;
         this.instrument_header = builder.instrument_header;
     }
 
@@ -54,15 +52,14 @@ public class InstrumentTemplateRequest extends TemplateRequest {
     public TemplateResponse processRequest(QueryAPI api) {
 
         try {
+
             // QUERY
-            List<InstrumentQuery.Item> items = api.instrumentQuery();
+            // List<InstrumentQuery.Item> items = api.instrumentQuery();
+            List<EnabledInstrumentsQuery.Item> enabled_instruments = api.enabledInstrumentQuery();
+            List<ProblemInstrumentsQuery.Item> items               = api.problemInstrumentQuery();
 
             // BUILD PROBLEM
-            String[] instrumentList = new String[items.size()];
-            for(int x=0; x < items.size(); x++){
-                instrumentList[x] = items.get(x).name();
-            }
-            this.problemBuilder.setInstrumentList(instrumentList);
+            this.problemBuilder.setInstrumentList(enabled_instruments);
 
             // BUILD CONTEXT
             this.context.put("template_header", this.template_header);

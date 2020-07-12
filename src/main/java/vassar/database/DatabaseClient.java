@@ -3,11 +3,14 @@ package vassar.database;
 // I/O
 
 // JSON
+import com.apollographql.apollo.ApolloSubscriptionCall;
 import vassar.database.service.DebugAPI;
 import vassar.database.service.QueryAPI;
 import vassar.database.template.TemplateRequest;
 import vassar.database.template.TemplateResponse;
 import vassar.problem.Problem;
+
+import java.util.ArrayList;
 
 
 public class DatabaseClient {
@@ -15,12 +18,14 @@ public class DatabaseClient {
     private boolean  debug;
     private QueryAPI queryAPI;
     private DebugAPI debugAPI;
+    private ArrayList<ApolloSubscriptionCall> subscriptions;
 
     public static class Builder {
 
         private boolean  debug;
         private QueryAPI queryAPI;
         private DebugAPI debugAPI;
+        private ArrayList<ApolloSubscriptionCall> subscriptions;
 
         public Builder(){
             this.debug = false;
@@ -41,13 +46,23 @@ public class DatabaseClient {
             return this;
         }
 
+        public Builder subscribe(){
+            subscriptions = new ArrayList<>();
+            subscriptions.add(
+                    this.queryAPI.subscribeToInstruments()
+            );
+            subscriptions.add(
+                    this.queryAPI.subscribeToOrbits()
+            );
+            return this;
+        }
+
         public DatabaseClient build() {
-            DatabaseClient api    = new DatabaseClient();
-
-            api.debug    = this.debug;
-            api.queryAPI = this.queryAPI;
-            api.debugAPI = this.debugAPI;
-
+            DatabaseClient api = new DatabaseClient();
+            api.debug          = this.debug;
+            api.queryAPI       = this.queryAPI;
+            api.debugAPI       = this.debugAPI;
+            api.subscriptions  = this.subscriptions;
             return api;
         }
     }
@@ -67,10 +82,13 @@ public class DatabaseClient {
     }
 
 
-
-
-    public int indexArchitecture(String input, double science, double cost, boolean ga){
-        return this.queryAPI.insertArchitecture(input, science, cost, ga);
+    public int indexArchitecture(String input, double science, double cost, boolean ga, boolean redo){
+        if(redo){
+            return this.queryAPI.updateArchitecture(input, science, cost, ga);
+        }
+        else{
+            return this.queryAPI.insertArchitecture(input, science, cost, ga);
+        }
     }
 
 

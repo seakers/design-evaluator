@@ -1,6 +1,7 @@
 package vassar.database.template.request;
 
 import com.evaluator.EnabledInstrumentsQuery;
+import com.evaluator.ProblemInstrumentsQuery;
 import vassar.GlobalScope;
 import vassar.database.service.QueryAPI;
 import vassar.database.template.TemplateRequest;
@@ -32,14 +33,22 @@ public class AdHocRuleTemplateRequest extends TemplateRequest {
     public TemplateResponse processRequest(QueryAPI api) {
         try {
 
-            List<EnabledInstrumentsQuery.Item> items = api.enabledInstrumentQuery();
+            List<ProblemInstrumentsQuery.Item> items = api.problemInstrumentQuery();
 
             ArrayList<String> substitute = new ArrayList<>();
-            substitute.add("SMAP_RAD");
-            substitute.add("SMAP_MWR");
-            substitute.add("CMIS");
-            substitute.add("VIIRS");
-            substitute.add("BIOMASS");
+
+            for (ProblemInstrumentsQuery.Item item: items){
+                substitute.add(item.Instrument().name());
+            }
+
+//            substitute.add("SMAP_RAD");
+//            substitute.add("SMAP_MWR");
+//            substitute.add("CMIS");
+//            substitute.add("VIIRS");
+//            substitute.add("BIOMASS");
+//
+//            substitute.add("SMAP_ANT");
+//            substitute.add("CLOUD_MASK");
 
             // BUILD CONTEXT
             this.context.put("items", substitute);

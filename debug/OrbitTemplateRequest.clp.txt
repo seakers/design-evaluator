@@ -1,147 +1,80 @@
 (deffacts orbit-information-facts
     (DATABASE::Orbit
         (id LEO-600-polar-NA)
-        
-                                (type   LEO)
-            
-        
+                        (type   LEO)
                                 (altitude   600)
-            
-        
                                 (inclination   90)
-            
-        
                                 (RAAN#   NA)
-            
-        
                                 (fraction-of-sunlight#   73%)
-            
-        
                                 (period#   97)
-            
-        
                                 (worst-sun-angle#   113.44)
-            
-        
                                 (max-eclipse-time#   2110)
-            
-                (factHistory F0)
-
-    )
-    (DATABASE::Orbit
-        (id SSO-800-SSO-AM)
-        
-                                (type   SSO)
-            
-        
-                                (altitude   800)
-            
-        
-                                (inclination   98.6)
-            
-        
-                                (RAAN#   AM)
-            
-        
-                                (fraction-of-sunlight#   67%)
-            
-        
-                                (period#   101)
-            
-        
-                                (worst-sun-angle#   122.04)
-            
-        
-                                (max-eclipse-time#   2033)
-            
-                (factHistory F1)
-
-    )
-    (DATABASE::Orbit
-        (id SSO-600-SSO-AM)
-        
-                                (type   SSO)
-            
-        
-                                (altitude   600)
-            
-        
-                                (inclination   97.78)
-            
-        
-                                (RAAN#   AM)
-            
-        
-                                (fraction-of-sunlight#   65%)
-            
-        
-                                (period#   97)
-            
-        
-                                (worst-sun-angle#   121.22)
-            
-        
-                                (max-eclipse-time#   2062)
-            
-                (factHistory F2)
+                        (factHistory F0)
 
     )
     (DATABASE::Orbit
         (id SSO-600-SSO-DD)
-        
-                                (type   SSO)
-            
-        
+                        (type   SSO)
                                 (altitude   600)
-            
-        
                                 (inclination   97.78)
-            
-        
                                 (RAAN#   DD)
-            
-        
                                 (fraction-of-sunlight#   93%)
-            
-        
                                 (period#   97)
-            
-        
                                 (worst-sun-angle#   121.22)
-            
-        
                                 (max-eclipse-time#   1199)
-            
-                (factHistory F3)
+                        (factHistory F1)
+
+    )
+    (DATABASE::Orbit
+        (id SSO-600-SSO-AM)
+                        (type   SSO)
+                                (altitude   600)
+                                (inclination   97.78)
+                                (RAAN#   AM)
+                                (fraction-of-sunlight#   65%)
+                                (period#   97)
+                                (worst-sun-angle#   121.22)
+                                (max-eclipse-time#   2062)
+                        (factHistory F2)
 
     )
     (DATABASE::Orbit
         (id SSO-800-SSO-DD)
-        
-                                (type   SSO)
-            
-        
+                        (type   SSO)
                                 (altitude   800)
-            
-        
                                 (inclination   98.6)
-            
-        
                                 (RAAN#   DD)
-            
-        
                                 (fraction-of-sunlight#   95%)
-            
-        
                                 (period#   101)
-            
-        
                                 (worst-sun-angle#   122.04)
-            
-        
                                 (max-eclipse-time#   959)
-            
-                (factHistory F4)
+                        (factHistory F3)
+
+    )
+    (DATABASE::Orbit
+        (id SSO-800-SSO-AM)
+                        (type   SSO)
+                                (altitude   800)
+                                (inclination   98.6)
+                                (RAAN#   AM)
+                                (fraction-of-sunlight#   67%)
+                                (period#   101)
+                                (worst-sun-angle#   122.04)
+                                (max-eclipse-time#   2033)
+                        (factHistory F4)
+
+    )
+    (DATABASE::Orbit
+        (id LEO-700-polar-NA)
+                        (type   LEO)
+                                (altitude   700)
+                                (inclination   90)
+                                (RAAN#   NA)
+                                (fraction-of-sunlight#   73%)
+                                (period#   97)
+                                (worst-sun-angle#   113.44)
+                                (max-eclipse-time#   2110)
+                        (factHistory F5)
 
     )
 )

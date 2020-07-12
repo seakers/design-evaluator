@@ -3,8 +3,8 @@
 {% for item in items %}
     ({{launch_vehicle_header}}
 
-        (id {{item.name()}})
-        {% for attribute in item.attributes() %}
+        (id {{item.Launch_Vehicle().name()}})
+        {% for attribute in item.Launch_Vehicle().attributes() %}
 
             {% if attribute.value().matches("\[(.+)(,(.+))+\]") %}
                     ({{ attribute.attribute().name() }} {{ createJessList(attribute.value()) }})

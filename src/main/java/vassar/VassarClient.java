@@ -52,15 +52,14 @@ public class VassarClient {
 
 
 
-
-
-    public void indexArchitecture(Result result, String bitString, boolean ga){
+    public void indexArchitecture(Result result, String bitString, boolean ga, boolean redo){
 
         double cost    = result.getCost();
         double science = result.getScience();
 
-        int archID = this.engine.dbClient.indexArchitecture(bitString, science, cost, ga);
+        int archID = this.engine.dbClient.indexArchitecture(bitString, science, cost, ga, redo);
 
+        // TODO: write update queries for archiecture re-evaluations
         this.indexArchitectureScoreExplanations(result, archID);
     }
 
@@ -121,7 +120,7 @@ public class VassarClient {
 // |______\_/ \__,_|_|\__,_|\__,_|\__\___| /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 //
 
-    public Result evaluateArchitecture(String bitString, boolean ga){
+    public Result evaluateArchitecture(String bitString, boolean ga, boolean redo){
 
         AbstractArchitecture arch = new Architecture(bitString, 1, this.engine.getProblem());
 
@@ -148,7 +147,7 @@ public class VassarClient {
             System.exit(-1);
         }
 
-        this.indexArchitecture(result, bitString, ga);
+        this.indexArchitecture(result, bitString, ga, redo);
 
         return result;
     }

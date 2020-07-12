@@ -1,6 +1,7 @@
 package vassar.database.template.request;
 
 import com.evaluator.CapabilityRuleQuery;
+import com.evaluator.EnabledInstrumentsQuery;
 import com.evaluator.RequirementRuleAttributeQuery;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -28,8 +29,18 @@ public class CapabilityRuleTemplateRequest extends TemplateRequest {
     // PROCESS REQUEST
     public TemplateResponse processRequest(QueryAPI api) {
         try {
+
+            // Instrument ids -------------
+            List<EnabledInstrumentsQuery.Item> enabled_instruments = api.enabledInstrumentQuery();
+            ArrayList<Integer> instIds = new ArrayList<>();
+            for(EnabledInstrumentsQuery.Item item: enabled_instruments){
+                instIds.add(item.instrument().id());
+            }
+            // ------------------------
+
+
             // QUERY
-            List<CapabilityRuleQuery.Item> items              = api.capabilityRuleQuery();
+            List<CapabilityRuleQuery.Item> items              = api.capabilityRuleQuery(instIds);
             CapabilityRules rules                             = new CapabilityRules(items); // Record all the instruments
             ArrayList<CapabilityRules.Instrument> instruments = rules.buildRules();
 

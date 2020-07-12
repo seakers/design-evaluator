@@ -1,6 +1,7 @@
 package vassar.database.template.request;
 
-import com.evaluator.OrbitInformationQuery;
+import com.evaluator.ProblemOrbitJoinQuery;
+import com.evaluator.ProblemOrbitsQuery;
 import vassar.database.service.QueryAPI;
 import vassar.database.template.TemplateRequest;
 import vassar.database.template.TemplateResponse;
@@ -49,12 +50,22 @@ public class OrbitTemplateRequest extends TemplateRequest {
     public TemplateResponse processRequest(QueryAPI api) {
         try {
             // QUERY
-            List<OrbitInformationQuery.Item> items = api.orbitQuery();
+            // List<OrbitInformationQuery.Item> items = api.orbitQuery();
+
+            List<ProblemOrbitsQuery.Item>    items         = api.problemOrbitQuery();
+            List<ProblemOrbitJoinQuery.Item> problem_items = api.problemOrbitJoin();
+
+//            for (ProblemOrbitsQuery.Item item : items){
+//                item.Orbit().name();
+//                item.Orbit().attributes();
+//                for (ProblemOrbitsQuery.Attribute attribute: item.Orbit().attributes()){
+//                    attribute.Orbit_Attribute().name();
+//                    attribute.value();
+//                }
+//            }
 
 
-
-
-            this.problemBuilder.setOrbitList(items);
+            this.problemBuilder.setOrbitList(problem_items);
 
             // BUILD CONTEXT
             this.context.put("template_header", this.template_header);

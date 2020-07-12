@@ -25,6 +25,7 @@ import vassar.evaluator.spacecraft.Orbit;
 
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -152,6 +153,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             // Check if all of the orbits in the original formulation are used
             int[] revTimePrecomputedIndex = new int[params.getOrbitList().length];
             String[] revTimePrecomputedOrbitList = {"LEO-600-polar-NA","SSO-600-SSO-AM","SSO-600-SSO-DD","SSO-800-SSO-DD","SSO-800-SSO-PM"};
+            // String[] revTimePrecomputedOrbitList = params.getOrbitList();
 
             for(int i = 0; i < params.getOrbitList().length; i++){
                 String orb = params.getOrbitList()[i];

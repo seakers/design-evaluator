@@ -1,7 +1,6 @@
 package vassar.problem;
 
-import com.evaluator.AggregationRuleQuery;
-import com.evaluator.OrbitInformationQuery;
+import com.evaluator.*;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.extension.AbstractExtension;
 import vassar.database.template.TemplateRequest;
@@ -98,22 +97,38 @@ public class Problem {
             measurementsToInstruments = new HashMap<>();
         }
 
-        public T setInstrumentList(String[] instrumentList){
-            // this.instrumentList = instrumentList;
-            this.instrumentList = new String[]{"BIOMASS", "SMAP_RAD", "SMAP_MWR", "CMIS", "VIIRS"};
+        public T setInstrumentList(List<EnabledInstrumentsQuery.Item> items){
+            this.instrumentList = new String[items.size()];
+            int counter = 0;
+
+            System.out.println("\n\n--------------- PROBLEM INSTRUMENTS ---------------");
+            for (EnabledInstrumentsQuery.Item item: items){
+                System.out.println(item.instrument().name());
+                this.instrumentList[counter] = item.instrument().name();
+                counter ++;
+            }
+            System.out.println("---------------------------------------------------\n");
+
+            // this.instrumentList = new String[]{"BIOMASS", "SMAP_RAD", "SMAP_MWR", "CMIS", "VIIRS"};
             return (T) this;
         }
 
-        public T setOrbitList(List<OrbitInformationQuery.Item> items){
-            // BUILD PROBLEM
-//            String[] orbitList = new String[items.size()];
-//            for(int x=0; x < items.size(); x++){
-//                orbitList[x] = items.get(x).name();
-//            }
+        public T setOrbitList(List<ProblemOrbitJoinQuery.Item> items){
+            this.orbitList = new String[items.size()];
+            int counter = 0;
 
-            this.orbitList = new String[]{"LEO-600-polar-NA", "SSO-600-SSO-AM", "SSO-600-SSO-DD", "SSO-800-SSO-AM", "SSO-800-SSO-DD"};
+            System.out.println("\n\n--------------- PROBLEM ORBITS ---------------");
+            for (ProblemOrbitJoinQuery.Item item: items){
+                System.out.println(item.Orbit().name());
+                this.orbitList[counter] = item.Orbit().name();
+                counter ++;
+            }
+            System.out.println("----------------------------------------------\n");
+
+            // this.orbitList = new String[]{"LEO-600-polar-NA", "SSO-600-SSO-AM", "SSO-600-SSO-DD", "SSO-800-SSO-AM", "SSO-800-SSO-DD"};
             return (T) this;
         }
+
 
         public T setInstrumentMeasurementData(ArrayList<CapabilityRuleTemplateRequest.CapabilityRules.Instrument> instruments){
             for(CapabilityRuleTemplateRequest.CapabilityRules.Instrument instrument : instruments) {
