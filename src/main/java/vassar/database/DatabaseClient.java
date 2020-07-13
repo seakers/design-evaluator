@@ -54,6 +54,9 @@ public class DatabaseClient {
             subscriptions.add(
                     this.queryAPI.subscribeToOrbits()
             );
+            subscriptions.add(
+                    this.queryAPI.subscribeToStakeholders()
+            );
             return this;
         }
 

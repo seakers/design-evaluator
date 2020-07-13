@@ -75,15 +75,6 @@ query EnabledInstruments($problem_id: Int!){
 
 
 
-subscription InstrumentSubscription($problem_id: Int!){
-    items: Join__Problem_Instrument(where: {problem_id: {_eq: $problem_id}}) {
-        Instrument {
-            id
-            name
-        }
-        problem_id
-    }
-}
 
 
 
@@ -132,17 +123,6 @@ query ProblemOrbitJoin($problem_id: Int!) {
             id
             name
         }
-    }
-}
-
-
-subscription OrbitSubscription($problem_id: Int!){
-    items: Join__Problem_Orbit(where: {problem_id: {_eq: $problem_id}}) {
-        Orbit {
-            id
-            name
-        }
-        problem_id
     }
 }
 
@@ -426,10 +406,54 @@ mutation InsertObjectiveScoreExplanation($architecture_id: Int!, $subobjective_i
 
 
 
+#   _____       _                   _       _   _
+#  / ____|     | |                 (_)     | | (_)
+# | (___  _   _| |__  ___  ___ _ __ _ _ __ | |_ _  ___  _ __  ___
+#  \___ \| | | | '_ \/ __|/ __| '__| | '_ \| __| |/ _ \| '_ \/ __|
+#  ____) | |_| | |_) \__ \ (__| |  | | |_) | |_| | (_) | | | \__ \
+# |_____/ \__,_|_.__/|___/\___|_|  |_| .__/ \__|_|\___/|_| |_|___/
+#                                    | |
+#                                    |_|
 
 
+subscription InstrumentSubscription($problem_id: Int!){
+    items: Join__Problem_Instrument(where: {problem_id: {_eq: $problem_id}}) {
+        Instrument {
+            id
+            name
+        }
+        problem_id
+    }
+}
 
+subscription OrbitSubscription($problem_id: Int!){
+    items: Join__Problem_Orbit(where: {problem_id: {_eq: $problem_id}}) {
+        Orbit {
+            id
+            name
+        }
+        problem_id
+    }
+}
 
+subscription AggregationRuleSubscription($problem_id: Int) {
+    items: Stakeholder_Needs_Panel(where: {problem_id: {_eq: $problem_id}}) {
+        name
+        index_id
+        weight
+        description
+        objectives: Stakeholder_Needs_Objectives {
+            name
+            weight
+            description
+            subobjectives: Stakeholder_Needs_Subobjectives {
+                name
+                description
+                weight
+            }
+        }
+    }
+}
 
 
 

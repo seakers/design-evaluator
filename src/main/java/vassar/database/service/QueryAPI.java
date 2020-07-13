@@ -545,5 +545,68 @@ public class QueryAPI {
         return subCall;
     }
 
+    public ApolloSubscriptionCall subscribeToStakeholders(){
+        System.out.println("\n\n-----> subscribeToStakeholders");
+
+        AggregationRuleSubscription sub = AggregationRuleSubscription.builder()
+                .problem_id(this.problem_id)
+                .build();
+
+        ApolloSubscriptionCall<AggregationRuleSubscription.Data> subCall = this.apollo.subscribe(sub);
+
+        subCall.execute( new ApolloSubscriptionCall.Callback<>() {
+            @Override
+            public void onResponse(@NotNull Response<AggregationRuleSubscription.Data> response) {
+                System.out.println("-----> STEAKHOLDER CHANGE: REBUILD");
+                final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+                messageAttributes.put("msgType",
+                        MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("build")
+                                .build()
+                );
+                messageAttributes.put("group_id",
+                        MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("-1")
+                                .build()
+                );
+                messageAttributes.put("problem_id",
+                        MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("-1")
+                                .build()
+                );
+                client.sendMessage(SendMessageRequest.builder()
+                        .queueUrl(private_queue_url)
+                        .messageBody("")
+                        .messageAttributes(messageAttributes)
+                        .delaySeconds(1)
+                        .build());
+            }
+
+            @Override
+            public void onFailure(@NotNull ApolloException e) {
+                System.out.println("\n\n\n\n-----> FAILURE");
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("\n\n\n\n-----> COMPLETED");
+            }
+
+            @Override
+            public void onTerminated() {
+                System.out.println("\n\n\n\n-----> TERMINATED");
+            }
+
+            @Override
+            public void onConnected() {
+                System.out.println("\n\n\n\n-----> CONNECTED");
+            }
+        });
+        return subCall;
+    }
+
 
 }

@@ -8,7 +8,7 @@ package vassar;
 // -  -  -     \ \ / /`'_\ : ( (`\] ( (`\] `'_\ : [ `/'`\]| |        | | [  |/ /__\\[ `.-. | | |
 // -  -  -      \ ' / // | |, `'.'.  `'.'. // | |, | |    \ `.___.'\ | |  | || \__., | | | | | |,
 // -  -  -       \_/  \'-;__/[\__) )[\__) )\'-;__/[___]    `.____ .'[___][___]'.__.'[___||__]\__/
-// -  -  -   - Gabe: take it easy m8
+// -  -  -  - Gabe: take it easy m8
 
 import jess.Rete;
 import vassar.architecture.AbstractArchitecture;
