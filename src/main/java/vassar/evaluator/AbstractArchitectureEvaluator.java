@@ -150,11 +150,32 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
             int javaAssertedFactID = 1;
 
+
+
+
+
+
+
+
             // Check if all of the orbits in the original formulation are used
+
+
+
+
+            // revTimePrecomputedIndex: integer list with as many indicies as problem orbits
+            // revTimePrecomputedIndex: index mapping from the problem orbit list to the precomputed orbit list
             int[] revTimePrecomputedIndex = new int[params.getOrbitList().length];
+
+
+
             String[] revTimePrecomputedOrbitList = {"LEO-600-polar-NA","SSO-600-SSO-AM","SSO-600-SSO-DD","SSO-800-SSO-DD","SSO-800-SSO-PM"};
             // String[] revTimePrecomputedOrbitList = params.getOrbitList();
 
+
+
+            // loop thru revTimePrecomputedIndex,   place -1 if using orbit not in revTimePrecomputedOrbitList or place index
+            // if there is a -1 in revTimePrecomputedIndex, then that problem orbit is not found in the pre-computed orbit list
+            // if there is an int != -1 in revTimePrecomputedIndex, then that is that problem orbit's mapping to the index of the orbit in the pre-computed orbit list
             for(int i = 0; i < params.getOrbitList().length; i++){
                 String orb = params.getOrbitList()[i];
                 int matchedIndex = -1;
@@ -168,13 +189,27 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 // Assign -1 if unmatched. Otherwise, assign the corresponding index
                 revTimePrecomputedIndex[i] = matchedIndex;
             }
+
+
+
+
+
+
+
 //            System.out.println("--- Revolution Time " + revTimePrecomputedIndex);
 //            System.out.println("--- Measurements to Instruments Keyset " + params.measurementsToInstruments.keySet());
 
+
+            // revTimePrecomputedIndex: index mapping from the problem orbit list to the precomputed orbit list
             for (String param: params.measurementsToInstruments.keySet()) {
 
                 Value v = r.eval("(update-fovs " + param + " (create$ " + MatlabFunctions.stringArraytoStringWithSpaces(params.getOrbitList()) + "))");
-                // System.out.println("X - " + RU.getTypeName(v.type()) + " " + v);
+                // basically for each measurement, find that measurement's corresponding fov for each of the problem orbits
+                // v: contains the list of measurement fovs - one for each problem orbit
+                // v: contains false if no fovs were found for any of the orbits
+                // v: potentially could be a list of fovs shorter than the list of orbits
+
+
 
                 if (RU.getTypeName(v.type()).equalsIgnoreCase("LIST")) {
 
@@ -187,10 +222,15 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                         int tmp = thefovs.get(i).intValue(r.getGlobalContext());
                         fovs[i] = String.valueOf(tmp);
                     }
+
+                    // list of strings containing the fov values for this measurement
                     //System.out.println("The fovs: " + thefovs);
                     //System.out.println("fovs: " + fovs);
 
+
+
                     boolean recalculateRevisitTime = false;
+                    // if any of the measurement's fovs corresponding orbits are not pre-calculated, then calc them
                     for(int i = 0; i < fovs.length; i++){
                         if(revTimePrecomputedIndex[i] == -1){
                             // If there exists a single orbit that is different from pre-calculated ones, re-calculate
@@ -245,6 +285,8 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                         therevtimesUS = therevtimesGlobal;
 
                     }else{
+                        System.out.println("---> no new evaluations");
+
                         // Re-assign fovs based on the original orbit formulation, if the number of orbits is less than 5
                         if (thefovs.size() < 5) {
                             String[] new_fovs = new String[5];
@@ -262,10 +304,21 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                             + "(avg-revisit-time-global# " + therevtimesGlobal + ") "
                             + "(avg-revisit-time-US# " + therevtimesUS + ")"
                             + "(factHistory J" + javaAssertedFactID + ")))";
+
+                    System.out.println("---> final rev time for measurement" + call);
                     javaAssertedFactID++;
                     r.eval(call);
                 }
             }
+
+
+
+
+
+
+
+
+
 
             r.setFocus("ASSIMILATION2");
             r.run();
@@ -283,6 +336,9 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             r.run();
 
 
+
+
+            // VIIRS: no requirement rules are being fired
             if ((params.getRequestMode().equalsIgnoreCase("FUZZY-CASES")) || (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES"))) {
                 r.setFocus("FUZZY-REQUIREMENTS");
             }
@@ -291,6 +347,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             }
             r.run();
 
+            // VIIRS: all subobjective satisfaction values are 0
             if ((params.getRequestMode().equalsIgnoreCase("FUZZY-CASES")) || (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES"))) {
                 r.setFocus("FUZZY-AGGREGATION");
             }

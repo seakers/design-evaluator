@@ -2,6 +2,6 @@
 (deffacts DATABASE::list-of-instruments (DATABASE::list-of-instruments (list
 
 (create$
-             CLOUD_MASK                      SMAP_ANT                      SMAP_RAD                      SMAP_MWR                      VIIRS                      CMIS                      BIOMASS                      BIOMASS2             ))
+             CLOUD_MASK                      SMAP_ANT                      SMAP_RAD                      SMAP_MWR                      VIIRS                      CMIS                      BIOMASS             ))
 
 (factHistory 0)))
