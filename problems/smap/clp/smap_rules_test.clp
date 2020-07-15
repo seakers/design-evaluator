@@ -183,6 +183,29 @@
         (Horizontal-Spatial-Resolution-Cross-track# ?cross) (Swath# ?sw) (Field-of-view# ?alfa))
     )
 
+
+(defrule MANIFEST::compute-VIIRS-spatial-resolution
+    ?VIIRS <- (CAPABILITIES::Manifested-instrument (Name VIIRS)
+         (frequency# ?f&~nil) (orbit-altitude# ?h&~nil) (Aperture# ?a&~nil) (Horizontal-Spatial-Resolution# nil))
+    =>
+    (printout t "ben gorr spatial calc:" crlf)
+    (bind ?lambda (/ 3e8 ?f))
+    (bind ?x (/ (* 1.22 (* (* 1000 ?h) ?lambda)) ?a))
+    (bind ?along ?x)
+    (bind ?cross ?x)
+    (printout t "?x = " ?x crlf)
+    (modify ?VIIRS (Horizontal-Spatial-Resolution# ?along) (Horizontal-Spatial-Resolution-Along-track# ?along)
+        (Horizontal-Spatial-Resolution-Cross-track# ?cross))
+    )
+
+(defrule CAPABILITIES::compute-image-distortion-in-nadir-looking-instruments
+    "Computes image distortion for nadir-looking instruments"
+    ?instr <- (CAPABILITIES::Manifested-instrument (orbit-altitude# ?h&~nil)
+        (Geometry nadir) (characteristic-orbit ?href&~nil) (image-distortion# nil))
+    =>
+    (modify ?instr (image-distortion# 0))
+    )
+
 (defrule MANIFEST::compute-CMIS-spatial-resolution
     ?MWR <- (CAPABILITIES::Manifested-instrument  (Name CMIS)
          (frequency# ?f&~nil) (orbit-altitude# ?h&~nil) (dimension-x# ?D&~nil) (Horizontal-Spatial-Resolution# nil) (off-axis-angle-plus-minus# ?theta&~nil) (scanning-angle-plus-minus# ?alfa&~nil) (flies-in ?sat))
