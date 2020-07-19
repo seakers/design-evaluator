@@ -76,15 +76,6 @@ query EnabledInstruments($problem_id: Int!){
 
 
 
-
-
-
-
-
-
-
-
-
 #   ____       _     _ _
 #  / __ \     | |   (_) |
 # | |  | |_ __| |__  _| |_ ___
@@ -261,12 +252,6 @@ query CapabilityRule($group_id: Int!, $inst_ids: [Int!]) {
 }
 
 
-
-
-
-
-
-
 #   __  __ _         _
 #  |  \/  (_)       (_)
 #  | \  / |_ ___ ___ _  ___  _ __
@@ -314,13 +299,12 @@ query FuzzyAttribute($problem_id: Int) {
     }
 }
 
-
-
-
-
-
-
-
+query CostMissionAttribute($problem_id: Int, $attributes: [String!]!) {
+    items: Mission_Attribute(where: {problem_id: {_eq: $problem_id}, name: {_in: $attributes}}) {
+        id
+        name
+    }
+}
 
 
 #   _____ _        _        _           _     _
@@ -383,24 +367,95 @@ mutation UpdateArchitecture($problem_id: Int!, $input: String!, $science: float8
     }
 }
 
+
+
+
+
+# ---> Score Explanations
 mutation InsertArchitectureScoreExplanation($architecture_id: Int!, $panel_id: Int!, $satisfaction: float8){
     items: insert_ArchitectureScoreExplanation_one(object: {architecture_id: $architecture_id, panel_id: $panel_id, satisfaction: $satisfaction}) {
         id
     }
 }
-
 mutation InsertPanelScoreExplanation($architecture_id: Int!, $objective_id: Int!, $satisfaction: float8){
     items: insert_PanelScoreExplanation_one(object: {architecture_id: $architecture_id, objective_id: $objective_id, satisfaction: $satisfaction}) {
         id
     }
 }
-
 mutation InsertObjectiveScoreExplanation($architecture_id: Int!, $subobjective_id: Int!, $satisfaction: float8){
     items: insert_ObjectiveScoreExplanation_one(object: {architecture_id: $architecture_id, subobjective_id: $subobjective_id, satisfaction: $satisfaction}) {
         id
     }
 }
 
+
+# ---> Batch Score Explanations
+mutation InsertArchitectureScoreExplanationBatch($objects: [ArchitectureScoreExplanation_insert_input!]!){
+    items: insert_ArchitectureScoreExplanation(objects: $objects) {
+        affected_rows
+    }
+}
+mutation InsertPanelScoreExplanationBatch($objects: [PanelScoreExplanation_insert_input!]!){
+    items: insert_PanelScoreExplanation(objects: $objects) {
+        affected_rows
+    }
+}
+mutation InsertObjectiveScoreExplanationBatch($objects: [ObjectiveScoreExplanation_insert_input!]!){
+    items: insert_ObjectiveScoreExplanation(objects: $objects) {
+        affected_rows
+    }
+}
+
+# ---> Delete score explanations
+mutation DeleteScoreExplanations($arch_id: Int!){
+    delete_ArchitectureScoreExplanation(where: {architecture_id: {_eq: $arch_id}}) {
+        affected_rows
+    }
+    delete_PanelScoreExplanation(where: {architecture_id: {_eq: $arch_id}}) {
+        affected_rows
+    }
+    delete_ObjectiveScoreExplanation(where: {architecture_id: {_eq: $arch_id}}) {
+        affected_rows
+    }
+}
+
+
+# ---> Cost Information
+mutation InsertArchitectureCostInformation($architecture_id: Int!, $mission_name: String, $launch_vehicle: String, $cost: float8, $mass: float8, $power: float8, $others: float8){
+    items: insert_ArchitectureCostInformation_one(object: {architecture_id: $architecture_id, mission_name: "", launch_vehicle: $launch_vehicle, cost: $cost, mass: $mass, power: $power, others: $others}) {
+        id
+    }
+}
+mutation InsertArchitecturePayloadBatch($objects: [ArchitecturePayload_insert_input!]!){
+    items: insert_ArchitecturePayload(objects: $objects){
+        affected_rows
+    }
+}
+mutation InsertArchitectureBudgetBatch($objects: [ArchitectureBudget_insert_input!]!){
+    items: insert_ArchitectureBudget(objects: $objects){
+        affected_rows
+    }
+}
+
+# ---> Delete cost information
+query ArchitectureCostInformation($arch_id: Int!){
+    items: ArchitectureCostInformation(where: {architecture_id: {_eq: $arch_id}}) {
+        id
+    }
+}
+mutation DeleteArchitecturePayloadBudget($arch_cost_id: Int!){
+    delete_ArchitecturePayload(where: {arch_cost_id: {_eq: $arch_cost_id}}) {
+        affected_rows
+    }
+    delete_ArchitectureBudget(where: {arch_cost_id: {_eq: $arch_cost_id}}) {
+        affected_rows
+    }
+}
+mutation DeleteArchitectureCostInformationPK($arch_cost_id: Int!){
+    delete_ArchitectureCostInformation_by_pk(id: $arch_cost_id) {
+        id
+    }
+}
 
 
 

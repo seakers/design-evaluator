@@ -5,6 +5,7 @@ import com.apollographql.apollo.ApolloSubscriptionCall;
 import com.apollographql.apollo.exception.ApolloException;
 import com.apollographql.apollo.subscription.WebSocketSubscriptionTransport;
 import com.evaluator.*;
+import com.evaluator.type.*;
 import okhttp3.OkHttpClient;
 
 
@@ -23,10 +24,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 // QUERIES
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class QueryAPI {
 
@@ -291,7 +289,15 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items();
     }
 
-
+    public List<CostMissionAttributeQuery.Item> costMissionAttributeQuery(ArrayList<String> attributes){
+        CostMissionAttributeQuery iaQuery = CostMissionAttributeQuery.builder()
+                .problem_id(this.problem_id)
+                .attributes(attributes)
+                .build();
+        ApolloCall<CostMissionAttributeQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
+        Observable<Response<CostMissionAttributeQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items();
+    }
 
 
     // ---> STAKEHOLDERS
@@ -397,6 +403,103 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items().id();
     }
 
+    public int insertArchitectureScoreExplanationBatch(ArrayList<ArchitectureScoreExplanation_insert_input> items){
+        InsertArchitectureScoreExplanationBatchMutation mutation = InsertArchitectureScoreExplanationBatchMutation.builder()
+                .objects(items)
+                .build();
+        ApolloCall<InsertArchitectureScoreExplanationBatchMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<InsertArchitectureScoreExplanationBatchMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+
+        return observable.blockingFirst().getData().items().affected_rows();
+    }
+
+    public int insertPanelScoreExplanationBatch(ArrayList<PanelScoreExplanation_insert_input> items){
+        InsertPanelScoreExplanationBatchMutation mutation = InsertPanelScoreExplanationBatchMutation.builder()
+                .objects(items)
+                .build();
+        ApolloCall<InsertPanelScoreExplanationBatchMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<InsertPanelScoreExplanationBatchMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items().affected_rows();
+    }
+
+    public int insertObjectiveScoreExplanationBatch(ArrayList<ObjectiveScoreExplanation_insert_input> items){
+        InsertObjectiveScoreExplanationBatchMutation mutation = InsertObjectiveScoreExplanationBatchMutation.builder()
+                .objects(items)
+                .build();
+        ApolloCall<InsertObjectiveScoreExplanationBatchMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<InsertObjectiveScoreExplanationBatchMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+
+        return observable.blockingFirst().getData().items().affected_rows();
+    }
+
+    public int insertArchitectureCostInformation(int architecture_id, String mission_name, String launch_vehicle, double mass, double power, double cost, double others){
+        InsertArchitectureCostInformationMutation mutation = InsertArchitectureCostInformationMutation.builder()
+                .architecture_id(architecture_id)
+                .mission_name(mission_name)
+                .launch_vehicle(launch_vehicle)
+                .mass(mass)
+                .power(power)
+                .cost(cost)
+                .others(others)
+                .build();
+        ApolloCall<InsertArchitectureCostInformationMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<InsertArchitectureCostInformationMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items().id();
+    }
+
+    public int insertArchitecturePayloadBatch(ArrayList<ArchitecturePayload_insert_input> items){
+        InsertArchitecturePayloadBatchMutation mutation = InsertArchitecturePayloadBatchMutation.builder()
+                .objects(items)
+                .build();
+        ApolloCall<InsertArchitecturePayloadBatchMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<InsertArchitecturePayloadBatchMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items().affected_rows();
+    }
+
+    public int insertArchitectureBudgetBatch(ArrayList<ArchitectureBudget_insert_input> items){
+        InsertArchitectureBudgetBatchMutation mutation = InsertArchitectureBudgetBatchMutation.builder()
+                .objects(items)
+                .build();
+        ApolloCall<InsertArchitectureBudgetBatchMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<InsertArchitectureBudgetBatchMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items().affected_rows();
+    }
+
+    public void deleteArchitectureScoreExplanations(int archID){
+        DeleteScoreExplanationsMutation mutation = DeleteScoreExplanationsMutation.builder()
+                .arch_id(archID)
+                .build();
+        ApolloCall<DeleteScoreExplanationsMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<DeleteScoreExplanationsMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+    }
+
+    public List<ArchitectureCostInformationQuery.Item> queryArchitectureCostInformation(int archID){
+        ArchitectureCostInformationQuery query = ArchitectureCostInformationQuery.builder()
+                .arch_id(archID)
+                .build();
+        ApolloCall<ArchitectureCostInformationQuery.Data>           apolloCall  = this.apollo.query(query);
+        Observable<Response<ArchitectureCostInformationQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items();
+    }
+
+    public void deleteArchitectureCostInformationFK(int arch_cost_id){
+        DeleteArchitecturePayloadBudgetMutation mutation = DeleteArchitecturePayloadBudgetMutation.builder()
+                .arch_cost_id(arch_cost_id)
+                .build();
+        ApolloCall<DeleteArchitecturePayloadBudgetMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<DeleteArchitecturePayloadBudgetMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+    }
+
+    public void deleteArchitectureCostInformationPK(int arch_cost_id){
+        DeleteArchitectureCostInformationPKMutation mutation = DeleteArchitectureCostInformationPKMutation.builder()
+                .arch_cost_id(arch_cost_id)
+                .build();
+        ApolloCall<DeleteArchitectureCostInformationPKMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<DeleteArchitectureCostInformationPKMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+    }
+
+
+
     public boolean doesArchitectureExist(String input){
         ArchitectureCountQuery countQuery = ArchitectureCountQuery.builder()
                 .problem_id(this.problem_id)
@@ -420,7 +523,7 @@ public class QueryAPI {
 
     // ---> SUBSCRIPTIONS
     public ApolloSubscriptionCall subscribeToInstruments(){
-        System.out.println("\n\n-----> subscribeToInstruments");
+        System.out.println("-----> subscribeToInstruments");
 
         InstrumentSubscription sub = InstrumentSubscription.builder()
                 .problem_id(this.problem_id)
@@ -483,7 +586,7 @@ public class QueryAPI {
     }
 
     public ApolloSubscriptionCall subscribeToOrbits(){
-        System.out.println("\n\n-----> subscribeToOrbits");
+        System.out.println("-----> subscribeToOrbits");
 
         OrbitSubscription sub = OrbitSubscription.builder()
                 .problem_id(this.problem_id)
@@ -546,7 +649,7 @@ public class QueryAPI {
     }
 
     public ApolloSubscriptionCall subscribeToStakeholders(){
-        System.out.println("\n\n-----> subscribeToStakeholders");
+        System.out.println("-----> subscribeToStakeholders");
 
         AggregationRuleSubscription sub = AggregationRuleSubscription.builder()
                 .problem_id(this.problem_id)

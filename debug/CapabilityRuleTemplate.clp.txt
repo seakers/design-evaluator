@@ -15,7 +15,6 @@
         ?this  <- (CAPABILITIES::Manifested-instrument  (Name ?ins&SMAP_MWR) (Id ?id) (flies-in ?miss) (Intent ?int) (orbit-string ?orb) (Spectral-region ?sr) (orbit-type ?typ) (orbit-altitude# ?h) (orbit-inclination ?inc) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Illumination ?il) (factHistory ?fh1))
         ?this2 <- (CAPABILITIES::can-measure (instrument ?ins) (in-orbit ?orb) (can-take-measurements yes) (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (copied-to-measurement-fact no)(factHistory ?fh2))
         =>
-        (printout t "---> capability rule SMAP_MWR:" ?orb " " ?ins crlf)
         (if (and (numberp ?dc-d) (numberp ?dc-p)) then (bind ?*science-multiplier* (min ?dc-d ?dc-p)) else (bind ?*science-multiplier* 1.0))
         (assert (CAPABILITIES::resource-limitations (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::SMAP_MWR-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))
         (assert (REQUIREMENTS::Measurement (Parameter "3.4.1 Ocean surface wind speed") (Region-of-interest Global) (Coverage-of-region-of-interest Global) (Accuracy Low) (Accuracy# 2.5)  (taken-by SMAP_MWR) (flies-in ?miss) (orbit-altitude# ?h) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Id SMAP_MWR0) (Instrument SMAP_MWR) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::SMAP_MWR-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))
@@ -45,7 +44,6 @@
         ?this  <- (CAPABILITIES::Manifested-instrument  (Name ?ins&BIOMASS) (Id ?id) (flies-in ?miss) (Intent ?int) (orbit-string ?orb) (Spectral-region ?sr) (orbit-type ?typ) (orbit-altitude# ?h) (orbit-inclination ?inc) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Illumination ?il) (factHistory ?fh1))
         ?this2 <- (CAPABILITIES::can-measure (instrument ?ins) (in-orbit ?orb) (can-take-measurements yes) (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (copied-to-measurement-fact no)(factHistory ?fh2))
         =>
-        (printout t "---> capability rule BIOMASS:" ?orb " " ?ins crlf)
         (if (and (numberp ?dc-d) (numberp ?dc-p)) then (bind ?*science-multiplier* (min ?dc-d ?dc-p)) else (bind ?*science-multiplier* 1.0))
         (assert (CAPABILITIES::resource-limitations (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::BIOMASS-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))
         (assert (REQUIREMENTS::Measurement (Parameter "2.3.1 Freeze/thaw state") (Region-of-interest Global) (Coverage-of-region-of-interest Global) (Accuracy High) (Accuracy# 0.69)  (taken-by BIOMASS) (flies-in ?miss) (orbit-altitude# ?h) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Id BIOMASS0) (Instrument BIOMASS) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::BIOMASS-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))
@@ -73,7 +71,6 @@
         ?this  <- (CAPABILITIES::Manifested-instrument  (Name ?ins&VIIRS) (Id ?id) (flies-in ?miss) (Intent ?int) (orbit-string ?orb) (Spectral-region ?sr) (orbit-type ?typ) (orbit-altitude# ?h) (orbit-inclination ?inc) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Illumination ?il) (factHistory ?fh1))
         ?this2 <- (CAPABILITIES::can-measure (instrument ?ins) (in-orbit ?orb) (can-take-measurements yes) (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (copied-to-measurement-fact no)(factHistory ?fh2))
         =>
-        (printout t "---> capability rule VIIRS:" ?orb " " ?ins crlf)
         (if (and (numberp ?dc-d) (numberp ?dc-p)) then (bind ?*science-multiplier* (min ?dc-d ?dc-p)) else (bind ?*science-multiplier* 1.0))
         (assert (CAPABILITIES::resource-limitations (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::VIIRS-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))
         (assert (REQUIREMENTS::Measurement (Parameter "2.5.1 Surface temperature -land-") (Region-of-interest Global) (Coverage-of-region-of-interest Global) (Accuracy High)  (taken-by VIIRS) (flies-in ?miss) (orbit-altitude# ?h) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Id VIIRS0) (Instrument VIIRS) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::VIIRS-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))
@@ -105,7 +102,6 @@
         ?this  <- (CAPABILITIES::Manifested-instrument  (Name ?ins&CMIS) (Id ?id) (flies-in ?miss) (Intent ?int) (orbit-string ?orb) (Spectral-region ?sr) (orbit-type ?typ) (orbit-altitude# ?h) (orbit-inclination ?inc) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Illumination ?il) (factHistory ?fh1))
         ?this2 <- (CAPABILITIES::can-measure (instrument ?ins) (in-orbit ?orb) (can-take-measurements yes) (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (copied-to-measurement-fact no)(factHistory ?fh2))
         =>
-        (printout t "---> capability rule CMIS:" ?orb " " ?ins crlf)
         (if (and (numberp ?dc-d) (numberp ?dc-p)) then (bind ?*science-multiplier* (min ?dc-d ?dc-p)) else (bind ?*science-multiplier* 1.0))
         (assert (CAPABILITIES::resource-limitations (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::CMIS-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))
         (assert (REQUIREMENTS::Measurement (Parameter "3.4.1 Ocean surface wind speed") (Accuracy# 1.0) (Region-of-interest Global) (Coverage-of-region-of-interest Global) (Accuracy High)  (taken-by CMIS) (flies-in ?miss) (orbit-altitude# ?h) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Id CMIS0) (Instrument CMIS) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::CMIS-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))
@@ -137,7 +133,6 @@
         ?this  <- (CAPABILITIES::Manifested-instrument  (Name ?ins&SMAP_RAD) (Id ?id) (flies-in ?miss) (Intent ?int) (orbit-string ?orb) (Spectral-region ?sr) (orbit-type ?typ) (orbit-altitude# ?h) (orbit-inclination ?inc) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Illumination ?il) (factHistory ?fh1))
         ?this2 <- (CAPABILITIES::can-measure (instrument ?ins) (in-orbit ?orb) (can-take-measurements yes) (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (copied-to-measurement-fact no)(factHistory ?fh2))
         =>
-        (printout t "---> capability rule SMAP_RAD:" ?orb " " ?ins crlf)
         (if (and (numberp ?dc-d) (numberp ?dc-p)) then (bind ?*science-multiplier* (min ?dc-d ?dc-p)) else (bind ?*science-multiplier* 1.0))
         (assert (CAPABILITIES::resource-limitations (data-rate-duty-cycle# ?dc-d) (power-duty-cycle# ?dc-p) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::SMAP_RAD-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))
         (assert (REQUIREMENTS::Measurement (Parameter "2.3.1 Freeze/thaw state") (Region-of-interest Global) (Coverage-of-region-of-interest Global) (Accuracy High) (Accuracy# 0.79)  (taken-by SMAP_RAD) (flies-in ?miss) (orbit-altitude# ?h) (orbit-RAAN ?raan) (orbit-anomaly# ?ano) (Id SMAP_RAD0) (Instrument SMAP_RAD) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::SMAP_RAD-measurements) " A" (call ?this getFactId) " A" (call ?this2 getFactId) "}"))))

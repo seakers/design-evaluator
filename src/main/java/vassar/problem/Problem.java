@@ -69,6 +69,7 @@ public class Problem {
         public HashMap<String, ArrayList<String>> measurementsToSubobjectives;
         public HashMap<String, ArrayList<String>> instrumentsToMeasurements;
         public HashMap<String, ArrayList<String>> measurementsToInstruments;
+        // public HashMap<String, ArrayList<String>> objectivesToInstruments;
 
         // -- AGGREGATION --
         public ArrayList<Double>       panelWeights;
@@ -242,26 +243,20 @@ public class Problem {
         this.numObjectivesPerPanel = builder.numObjectivesPerPanel;
         this.panelDescriptions     = builder.panelDescriptions;
         this.numPanels             = builder.numPanels;
-
         this.objWeights            = builder.objWeights;
         this.objNames              = builder.objNames;
         this.objectiveDescriptions = builder.objectiveDescriptions;
-
         this.subobjWeights         = builder.subobjWeights;
         this.subobjectives         = builder.subobjectives;
         this.subobjDescriptions    = builder.subobjDescriptions;
         this.subobjWeightsMap      = builder.subobjWeightsMap;
 
-
-
-
-
-        this.requestMode           = builder.requestMode;
-        this.parameterList         = builder.parameterList;
+        this.requestMode                 = builder.requestMode;
+        this.parameterList               = builder.parameterList;
         this.subobjectivesToMeasurements = builder.subobjectivesToMeasurements;
         this.measurementsToSubobjectives = builder.measurementsToSubobjectives;
-        this.instrumentsToMeasurements = builder.instrumentsToMeasurements;
-        this.measurementsToInstruments = builder.measurementsToInstruments;
+        this.instrumentsToMeasurements   = builder.instrumentsToMeasurements;
+        this.measurementsToInstruments   = builder.measurementsToInstruments;
 
         this.instrumentList  = builder.instrumentList;
         this.orbitList       = builder.orbitList;

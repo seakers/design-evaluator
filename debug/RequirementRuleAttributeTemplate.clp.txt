@@ -24,7 +24,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule WEA1-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id WEA1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent WEA1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WEA1-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -50,7 +50,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule WEA2-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id WEA2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent WEA2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WEA2-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -76,7 +76,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  DD AM PM) ) (create$  1 0.67 0.67 0))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "AM/PM SSO (DD required) - degraded quality" )) (bind ?reason (str-cat ?reason  "AM/PM SSO (DD required) - degraded quality")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule WEA3-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id WEA3-1) (attributes  All-weather  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN ) (index 1) (parent WEA3) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WEA3-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -102,7 +102,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule CLI1-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id CLI1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent CLI1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::CLI1-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -125,7 +125,7 @@
                     (bind ?x7 (nth$ (find-bin-num ?val7  (create$  yes) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7 ))
-        (printout t "--> requirement rule CLI2-2  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id CLI2-2) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  Swath#  image-distortion#  orbit-inclination  All-weather ) (index 2) (parent CLI2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::CLI2-2-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -151,7 +151,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule HEA5-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id HEA5-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA5) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA5-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -177,7 +177,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule CLI1-2  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id CLI1-2) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 2) (parent CLI1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::CLI1-2-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -201,7 +201,7 @@
                     (bind ?x8 (nth$ (find-bin-num ?val8  (create$  yes) ) (create$  1 0.5))) (if (< ?x8 1.0) then (bind ?new-reasons (replace$  ?new-reasons 8 8 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8 ))
-        (printout t "--> requirement rule CLI2-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id CLI2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  Swath#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent CLI2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::CLI2-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -227,7 +227,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule HEA4-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id HEA4-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA4) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA4-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -253,7 +253,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule HEA3-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id HEA3-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA3) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA3-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -279,7 +279,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule HEA2-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id HEA2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA2-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -305,7 +305,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule ECO2-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id ECO2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent ECO2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::ECO2-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -331,7 +331,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule HEA1-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id HEA1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent HEA1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::HEA1-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -357,7 +357,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule ECO1-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id ECO1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent ECO1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::ECO1-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -383,7 +383,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule WAT1-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id WAT1-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 1) (parent WAT1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT1-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -409,7 +409,7 @@
                     (bind ?x10 (nth$ (find-bin-num ?val10  (create$  yes) ) (create$  1 0.5))) (if (< ?x10 1.0) then (bind ?new-reasons (replace$  ?new-reasons 10 10 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7  ?x8  ?x9  ?x10 ))
-        (printout t "--> requirement rule WAT1-2  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id WAT1-2) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  soil-penetration#  Swath#  sensitivity#  image-distortion#  orbit-inclination  orbit-RAAN  All-weather ) (index 2) (parent WAT1) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT1-2-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -432,7 +432,7 @@
                     (bind ?x7 (nth$ (find-bin-num ?val7  (create$  yes) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7 ))
-        (printout t "--> requirement rule WAT2-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id WAT2-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy#  Swath#  image-distortion#  orbit-inclination  All-weather ) (index 1) (parent WAT2) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT2-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -455,7 +455,7 @@
                     (bind ?x7 (nth$ (find-bin-num ?val7  (create$  yes) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7 ))
-        (printout t "--> requirement rule WAT3-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id WAT3-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy  Swath#  image-distortion#  orbit-inclination  All-weather ) (index 1) (parent WAT3) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT3-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
@@ -478,7 +478,7 @@
                     (bind ?x7 (nth$ (find-bin-num ?val7  (create$  yes) ) (create$  1 0.5))) (if (< ?x7 1.0) then (bind ?new-reasons (replace$  ?new-reasons 7 7 "Missing all-weather capability." )) (bind ?reason (str-cat ?reason  "Missing all-weather capability.")))
                 
         (bind ?list (create$  ?x1  ?x2  ?x3  ?x4  ?x5  ?x6  ?x7 ))
-        (printout t "--> requirement rule WAT4-1  new-reasons:" ?new-reasons " " ?list crlf)
+
         (assert (AGGREGATION::SUBOBJECTIVE (id WAT4-1) (attributes  Horizontal-Spatial-Resolution#  Temporal-resolution#  Accuracy  Swath#  image-distortion#  orbit-inclination  All-weather ) (index 1) (parent WAT4) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::WAT4-1-attrib) " A" (call ?m getFactId) "}")))))
 
   
