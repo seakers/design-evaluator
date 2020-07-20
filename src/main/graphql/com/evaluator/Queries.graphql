@@ -517,8 +517,25 @@ subscription AggregationRuleSubscription($problem_id: Int) {
     }
 }
 
+subscription InstrumentCharacteristicSubscription($problem_id: Int!){
+    items: Join__Instrument_Characteristic(where: {problem_id: {_eq: $problem_id}}) {
+        id
+        value
+    }
+}
 
 
+subscription LaunchVehicleSubscription($problem_id: Int!){
+    items: Join__Problem_Launch_Vehicle(where: {problem_id: {_eq: $problem_id}}) {
+        id
+        Launch_Vehicle {
+            name
+            Join__Launch_Vehicle_Attributes {
+                value
+            }
+        }
+    }
+}
 
 
 

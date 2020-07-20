@@ -65,6 +65,12 @@ public class DatabaseClient {
             subscriptions.add(
                     this.queryAPI.subscribeToStakeholders()
             );
+            subscriptions.add(
+                    this.queryAPI.subscribeToInstrumentCharacteristics()
+            );
+            subscriptions.add(
+                    this.queryAPI.subscribeToLaunchVehicles()
+            );
             return this;
         }
 

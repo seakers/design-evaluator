@@ -573,22 +573,85 @@ public class QueryAPI {
 
             @Override
             public void onFailure(@NotNull ApolloException e) {
-                System.out.println("\n\n\n\n-----> FAILURE");
+                System.out.println("-----> FAILURE");
             }
 
             @Override
             public void onCompleted() {
-                System.out.println("\n\n\n\n-----> COMPLETED");
+                System.out.println("-----> COMPLETED");
             }
 
             @Override
             public void onTerminated() {
-                System.out.println("\n\n\n\n-----> TERMINATED");
+                System.out.println("-----> TERMINATED");
             }
 
             @Override
             public void onConnected() {
-                System.out.println("\n\n\n\n-----> CONNECTED");
+                System.out.println("-----> CONNECTED");
+            }
+        });
+        return subCall;
+    }
+
+    public ApolloSubscriptionCall subscribeToInstrumentCharacteristics(){
+        System.out.println("-----> subscribeToInstrumentCharacteristics");
+
+        InstrumentCharacteristicSubscription sub = InstrumentCharacteristicSubscription.builder()
+                .problem_id(this.problem_id)
+                .build();
+
+        ApolloSubscriptionCall<InstrumentCharacteristicSubscription.Data> subCall = this.apollo.subscribe(sub);
+
+        subCall.execute( new ApolloSubscriptionCall.Callback<>() {
+            @Override
+            public void onResponse(@NotNull Response<InstrumentCharacteristicSubscription.Data> response) {
+                System.out.println("-----> INSTRUMENT CHARACTERISTIC CHANGE: REBUILD");
+                final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+                messageAttributes.put("msgType",
+                        MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("build")
+                                .build()
+                );
+                messageAttributes.put("group_id",
+                        MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("-1")
+                                .build()
+                );
+                messageAttributes.put("problem_id",
+                        MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("-1")
+                                .build()
+                );
+                client.sendMessage(SendMessageRequest.builder()
+                        .queueUrl(private_queue_url)
+                        .messageBody("")
+                        .messageAttributes(messageAttributes)
+                        .delaySeconds(1)
+                        .build());
+            }
+
+            @Override
+            public void onFailure(@NotNull ApolloException e) {
+                System.out.println("-----> FAILURE");
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("-----> COMPLETED");
+            }
+
+            @Override
+            public void onTerminated() {
+                System.out.println("-----> TERMINATED");
+            }
+
+            @Override
+            public void onConnected() {
+                System.out.println("-----> CONNECTED");
             }
         });
         return subCall;
@@ -636,22 +699,22 @@ public class QueryAPI {
 
             @Override
             public void onFailure(@NotNull ApolloException e) {
-                System.out.println("\n\n\n\n-----> FAILURE");
+                System.out.println("-----> FAILURE");
             }
 
             @Override
             public void onCompleted() {
-                System.out.println("\n\n\n\n-----> COMPLETED");
+                System.out.println("-----> COMPLETED");
             }
 
             @Override
             public void onTerminated() {
-                System.out.println("\n\n\n\n-----> TERMINATED");
+                System.out.println("-----> TERMINATED");
             }
 
             @Override
             public void onConnected() {
-                System.out.println("\n\n\n\n-----> CONNECTED");
+                System.out.println("-----> CONNECTED");
             }
         });
         return subCall;
@@ -699,22 +762,85 @@ public class QueryAPI {
 
             @Override
             public void onFailure(@NotNull ApolloException e) {
-                System.out.println("\n\n\n\n-----> FAILURE");
+                System.out.println("-----> FAILURE");
             }
 
             @Override
             public void onCompleted() {
-                System.out.println("\n\n\n\n-----> COMPLETED");
+                System.out.println("-----> COMPLETED");
             }
 
             @Override
             public void onTerminated() {
-                System.out.println("\n\n\n\n-----> TERMINATED");
+                System.out.println("-----> TERMINATED");
             }
 
             @Override
             public void onConnected() {
-                System.out.println("\n\n\n\n-----> CONNECTED");
+                System.out.println("-----> CONNECTED");
+            }
+        });
+        return subCall;
+    }
+
+    public ApolloSubscriptionCall subscribeToLaunchVehicles(){
+        System.out.println("-----> subscribeToLaunchVehicles");
+
+        LaunchVehicleSubscription sub = LaunchVehicleSubscription.builder()
+                .problem_id(this.problem_id)
+                .build();
+
+        ApolloSubscriptionCall<LaunchVehicleSubscription.Data> subCall = this.apollo.subscribe(sub);
+
+        subCall.execute( new ApolloSubscriptionCall.Callback<>() {
+            @Override
+            public void onResponse(@NotNull Response<LaunchVehicleSubscription.Data> response) {
+                System.out.println("-----> LAUNCH VEHICLE CHANGE: REBUILD");
+                final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+                messageAttributes.put("msgType",
+                        MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("build")
+                                .build()
+                );
+                messageAttributes.put("group_id",
+                        MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("-1")
+                                .build()
+                );
+                messageAttributes.put("problem_id",
+                        MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("-1")
+                                .build()
+                );
+                client.sendMessage(SendMessageRequest.builder()
+                        .queueUrl(private_queue_url)
+                        .messageBody("")
+                        .messageAttributes(messageAttributes)
+                        .delaySeconds(1)
+                        .build());
+            }
+
+            @Override
+            public void onFailure(@NotNull ApolloException e) {
+                System.out.println("-----> FAILURE");
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("-----> COMPLETED");
+            }
+
+            @Override
+            public void onTerminated() {
+                System.out.println("-----> TERMINATED");
+            }
+
+            @Override
+            public void onConnected() {
+                System.out.println("-----> CONNECTED");
             }
         });
         return subCall;
