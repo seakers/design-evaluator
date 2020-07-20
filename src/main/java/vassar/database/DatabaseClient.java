@@ -6,6 +6,7 @@ package vassar.database;
 import com.apollographql.apollo.ApolloSubscriptionCall;
 import com.evaluator.ArchitectureCostInformationQuery;
 import com.evaluator.CostMissionAttributeQuery;
+import com.evaluator.GlobalInstrumentQuery;
 import com.evaluator.InstrumentQuery;
 import com.evaluator.type.*;
 import vassar.database.service.DebugAPI;
@@ -152,8 +153,8 @@ public class DatabaseClient {
     }
     public HashMap<String, Integer> getInstrumentIDs(){
         HashMap<String, Integer>    insts = new HashMap<>();
-        List<InstrumentQuery.Item>  items = this.queryAPI.instrumentQuery();
-        for(InstrumentQuery.Item item: items){
+        List<GlobalInstrumentQuery.Item>  items = this.queryAPI.globalInstrumentQuery();
+        for(GlobalInstrumentQuery.Item item: items){
             insts.put(item.name(), item.id());
         }
         return insts;

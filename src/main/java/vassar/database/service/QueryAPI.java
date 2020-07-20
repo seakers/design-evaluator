@@ -117,6 +117,15 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items();
     }
 
+    public List<GlobalInstrumentQuery.Item> globalInstrumentQuery(){
+        GlobalInstrumentQuery iaQuery = GlobalInstrumentQuery.builder()
+                .group_id(this.group_id)
+                .build();
+        ApolloCall<GlobalInstrumentQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
+        Observable<Response<GlobalInstrumentQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items();
+    }
+
     public List<ProblemInstrumentsQuery.Item> problemInstrumentQuery(){
         ProblemInstrumentsQuery iaQuery = ProblemInstrumentsQuery.builder()
                 .problem_id(this.problem_id)

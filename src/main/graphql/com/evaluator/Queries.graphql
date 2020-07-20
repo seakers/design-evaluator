@@ -21,6 +21,13 @@ query Instrument($problem_id: Int) {
     }
 }
 
+query GlobalInstrument($group_id: Int!) {
+    items: Instrument(where: {group_id: {_eq: $group_id}}) {
+        id
+        name
+    }
+}
+
 query ProblemInstruments($problem_id: Int){
     items: Join__Instrument_Characteristic(where: {problem_id: {_eq: $problem_id}}, distinct_on: [instrument_id]) {
         Instrument {

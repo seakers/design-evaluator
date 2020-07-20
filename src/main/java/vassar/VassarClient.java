@@ -170,6 +170,7 @@ public class VassarClient {
     }
 
     private void indexArchitectureCostInformation(Result result, int archID){
+        System.out.println("---> Indexing architecture cost information");
         ArrayList<String> attributes = new ArrayList<>();
         String[] powerBudgetSlots    = { "payload-peak-power#", "satellite-BOL-power#" };
         String[] costBudgetSlots     = { "payload-cost#", "bus-cost#", "launch-cost#", "program-cost#", "IAT-cost#", "operations-cost#" };
@@ -222,6 +223,7 @@ public class VassarClient {
                 ArrayList<Integer> payloads = new ArrayList<>();                                                         // ArchitecturePayload!!!
                 ValueVector instruments = costFact.getSlotValue("instruments").listValue(null);
                 for (int i = 0; i < instruments.size(); ++i) {
+                    System.out.println("--> " + instruments.get(i).stringValue(null));
                     payloads.add(instKeys.get(instruments.get(i).stringValue(null)));
                 }
 
