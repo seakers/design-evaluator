@@ -375,9 +375,6 @@ mutation UpdateArchitecture($problem_id: Int!, $input: String!, $science: float8
 }
 
 
-
-
-
 # ---> Score Explanations
 mutation InsertArchitectureScoreExplanation($architecture_id: Int!, $panel_id: Int!, $satisfaction: float8){
     items: insert_ArchitectureScoreExplanation_one(object: {architecture_id: $architecture_id, panel_id: $panel_id, satisfaction: $satisfaction}) {
@@ -464,7 +461,13 @@ mutation DeleteArchitectureCostInformationPK($arch_cost_id: Int!){
     }
 }
 
-
+# ---> Update architecture critique
+mutation UpdateArchitectureCritique($arch_id: Int!, $critique: String){
+    update_Architecture_by_pk(pk_columns: {id: $arch_id}, _set: {critique: $critique}) {
+        id
+        critique
+    }
+}
 
 
 

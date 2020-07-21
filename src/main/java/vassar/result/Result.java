@@ -12,6 +12,7 @@ import jess.*;
 import java.io.Serializable;
 import java.util.TreeMap;
 import java.util.ArrayList;
+import java.util.Vector;
 
 public class Result implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -29,6 +30,10 @@ public class Result implements Serializable {
     public ArrayList<Fact> capabilities;
     private ArrayList<Fact> costFacts;
     private String taskType;
+
+    private Vector<String> performanceCritique;
+    private Vector<String> costCritique;
+
 
     //Constructors
     public Result(){}
@@ -71,6 +76,20 @@ public class Result implements Serializable {
     }
 
     //Getters and Setters
+    public void setPerformanceCritique(Vector<String> critique){
+        this.performanceCritique = critique;
+    }
+    public Vector<String> getPerformanceCritique(){
+        return this.performanceCritique;
+    }
+
+    public void setCostCritique(Vector<String> critique){
+        this.costCritique = critique;
+    }
+    public Vector<String> getCostCritique(){
+        return this.costCritique;
+    }
+
     public ArrayList<Fact> getCapabilities() {
         return capabilities;
     }

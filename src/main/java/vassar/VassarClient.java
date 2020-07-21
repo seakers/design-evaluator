@@ -25,6 +25,7 @@ import vassar.result.Result;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -118,6 +119,7 @@ public class VassarClient {
 
         this.indexArchitectureScoreExplanations(result, archID);
         this.indexArchitectureCostInformation(result, archID);
+        this.indexArchitectureCritique(result, archID);
     }
 
     private void indexArchitectureScoreExplanations(Result result, int archID){
@@ -291,7 +293,20 @@ public class VassarClient {
         }
     }
 
-
+    private void indexArchitectureCritique(Result result, int archID){
+        System.out.println("---> Indexing architecture critique");
+        Vector<String> performanceCritique = result.getPerformanceCritique();
+        Vector<String> costCritique = result.getCostCritique();
+        String critique = "";
+        for(String crit: performanceCritique){
+            critique = critique + crit + " | ";
+        }
+        for(String crit: costCritique){
+            critique = critique + crit + " | ";
+        }
+        System.out.println(critique);
+        this.engine.dbClient.updateArchitectureCritique(archID, critique);
+    }
 
 
 //  _____      _           _ _     _   _____

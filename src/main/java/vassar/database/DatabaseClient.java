@@ -137,7 +137,6 @@ public class DatabaseClient {
         int subobjectiveID = this.queryAPI.getSubobjectiveID(subobjName);
         this.queryAPI.insertObjectiveScoreExplanation(archID, subobjectiveID, satisfaction);
     }
-
     public void insertArchitectureScoreExplanationBatch(ArrayList<ArchitectureScoreExplanation_insert_input> items){
         this.queryAPI.insertArchitectureScoreExplanationBatch(items);
     }
@@ -173,6 +172,11 @@ public class DatabaseClient {
     }
     public void insertArchitectureBudgetBatch(ArrayList<ArchitectureBudget_insert_input> items){
         this.queryAPI.insertArchitectureBudgetBatch(items);
+    }
+
+    // ---> Index Critique
+    public void updateArchitectureCritique(int archID, String critique){
+        this.queryAPI.updateArchitectureCritique(archID, critique);
     }
 
     // ---> Getters

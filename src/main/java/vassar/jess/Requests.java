@@ -392,7 +392,27 @@ public class Requests {
                             .build()
             );
 
-
+            // 23 ---------- CRITIC RULES
+            build.requests.add(
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/critique/critique_performance_precalculation.clp")
+                            .build()
+            );
+            build.requests.add(
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/critique/critique_performance.clp")
+                            .build()
+            );
+            build.requests.add(
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/critique/critique_cost_precalculation.clp")
+                            .build()
+            );
+            build.requests.add(
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/critique/critique_cost.clp")
+                            .build()
+            );
 
 
 

@@ -480,6 +480,7 @@ public class QueryAPI {
                 .build();
         ApolloCall<DeleteScoreExplanationsMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
         Observable<Response<DeleteScoreExplanationsMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        observable.blockingFirst().getData();
     }
 
     public List<ArchitectureCostInformationQuery.Item> queryArchitectureCostInformation(int archID){
@@ -497,6 +498,7 @@ public class QueryAPI {
                 .build();
         ApolloCall<DeleteArchitecturePayloadBudgetMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
         Observable<Response<DeleteArchitecturePayloadBudgetMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        observable.blockingFirst().getData();
     }
 
     public void deleteArchitectureCostInformationPK(int arch_cost_id){
@@ -505,6 +507,17 @@ public class QueryAPI {
                 .build();
         ApolloCall<DeleteArchitectureCostInformationPKMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
         Observable<Response<DeleteArchitectureCostInformationPKMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        observable.blockingFirst().getData();
+    }
+
+    public void updateArchitectureCritique(int archID, String critique){
+        UpdateArchitectureCritiqueMutation mutation = UpdateArchitectureCritiqueMutation.builder()
+                .arch_id(archID)
+                .critique(critique)
+                .build();
+        ApolloCall<UpdateArchitectureCritiqueMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<UpdateArchitectureCritiqueMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        observable.blockingFirst().getData();
     }
 
 

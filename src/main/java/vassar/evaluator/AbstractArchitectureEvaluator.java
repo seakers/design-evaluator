@@ -10,6 +10,7 @@ import org.orekit.frames.TopocentricFrame;
 
 import vassar.jess.QueryBuilder;
 import vassar.jess.Resource;
+import vassar.jess.func.RawSafety;
 import vassar.result.FuzzyValue;
 import vassar.result.Result;
 import vassar.jess.utils.Interval;
@@ -88,6 +89,10 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         try {
             if (type.equalsIgnoreCase("Slow")) {
                 result = evaluatePerformance(params, r, arch, qb);
+
+                // TODO: critique design on performance
+                result.setPerformanceCritique(this.critiquePerformance(r, result));
+
                 r.eval("(reset)");
                 assertMissions(params, r, arch);
             }
@@ -95,6 +100,10 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 throw new Exception("Wrong type of task");
             }
             evaluateCost(params, r, arch, result, qb);
+
+            // TODO: critique design on cost
+            result.setCostCritique(this.critiqueCost(r, result));
+
             result.setTaskType(type);
         }
         catch (Exception e) {
@@ -107,6 +116,45 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
 
 
+    public Vector<String> critiquePerformance(Rete r, Result res){
+        System.out.println("--> Critiquing Performance");
+        Vector<String> critique = new Vector<>();
+
+        // 1. Load initial performance critique facts
+        try {
+            r.batch("/app/problems/smap/clp/critique/critique_performance_initialize_facts.clp");
+            r.setFocus("CRITIQUE-PERFORMANCE-PRECALCULATION");
+            r.run();
+            r.setFocus("CRITIQUE-PERFORMANCE");
+            r.run();
+            critique = RawSafety.castVector(r.getGlobalContext().getVariable("*p*").javaObjectValue(null));
+        }
+        catch(Exception e) {
+            System.out.println(e.getMessage()+" "+e.getClass());
+            e.printStackTrace();
+        }
+        return critique;
+    }
+
+    public Vector<String> critiqueCost(Rete r, Result res){
+        System.out.println("--> Critiquing Cost");
+        Vector<String> critique = new Vector<>();;
+
+        // 1. Load initial cost critique facts
+        try {
+            r.batch("/app/problems/smap/clp/critique/critique_cost_initialize_facts.clp");
+            r.setFocus("CRITIQUE-COST-PRECALCULATION");
+            r.run();
+            r.setFocus("CRITIQUE-COST");
+            r.run();
+            critique = RawSafety.castVector(r.getGlobalContext().getVariable("*q*").javaObjectValue(null));
+        }
+        catch(Exception e) {
+            System.out.println(e.getMessage()+" "+e.getClass());
+            e.printStackTrace();
+        }
+        return critique;
+    }
 
     protected Result evaluatePerformance(Problem params, Rete r, AbstractArchitecture arch, QueryBuilder qb) {
         System.out.println("----- EVALUATING PERFORMANCE");
