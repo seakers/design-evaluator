@@ -556,7 +556,7 @@ public class QueryAPI {
         subCall.execute( new ApolloSubscriptionCall.Callback<>() {
             @Override
             public void onResponse(@NotNull Response<InstrumentSubscription.Data> response) {
-                System.out.println("\n\n\n-----> INSTRUMENT CHANGE: REBUILD");
+                System.out.println("-----> INSTRUMENT CHANGE: REBUILD");
                 final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
                 messageAttributes.put("msgType",
                         MessageAttributeValue.builder()
