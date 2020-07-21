@@ -122,12 +122,17 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
         // 1. Load initial performance critique facts
         try {
+            r.eval("(bind ?*p* (new java.util.Vector))");
             r.batch("/app/problems/smap/clp/critique/critique_performance_initialize_facts.clp");
             r.setFocus("CRITIQUE-PERFORMANCE-PRECALCULATION");
             r.run();
             r.setFocus("CRITIQUE-PERFORMANCE");
             r.run();
             critique = RawSafety.castVector(r.getGlobalContext().getVariable("*p*").javaObjectValue(null));
+            for(String crit: critique){
+                System.out.println(crit);
+            }
+            r.reset();
         }
         catch(Exception e) {
             System.out.println(e.getMessage()+" "+e.getClass());
@@ -142,12 +147,16 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
         // 1. Load initial cost critique facts
         try {
+            r.eval("(bind ?*q* (new java.util.Vector))");
             r.batch("/app/problems/smap/clp/critique/critique_cost_initialize_facts.clp");
             r.setFocus("CRITIQUE-COST-PRECALCULATION");
             r.run();
             r.setFocus("CRITIQUE-COST");
             r.run();
             critique = RawSafety.castVector(r.getGlobalContext().getVariable("*q*").javaObjectValue(null));
+            for(String crit: critique){
+                System.out.println(crit);
+            }
         }
         catch(Exception e) {
             System.out.println(e.getMessage()+" "+e.getClass());
