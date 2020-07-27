@@ -339,7 +339,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                         }
 
                         therevtimesGlobal = coverageAnalysis.getRevisitTime(mergedEvents, latBounds, lonBounds)/3600;
-                        therevtimesUS = therevtimesGlobal;
+                        therevtimesUS     = therevtimesGlobal;
 
                     }else{
                         System.out.println("---> no new evaluations");

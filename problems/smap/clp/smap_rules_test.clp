@@ -165,25 +165,14 @@
     )
 
 
-(defrule MANIFEST::compute-SMAP-MWR-spatial-resolution
-    ?MWR <- (CAPABILITIES::Manifested-instrument  (Name SMAP_MWR)
-         (frequency# ?f&~nil) (orbit-altitude# ?h&~nil) (Horizontal-Spatial-Resolution# nil) (off-axis-angle-plus-minus# ?theta&~nil) (scanning-angle-plus-minus# ?alfa&~nil) (flies-in ?sat))
-    (CAPABILITIES::Manifested-instrument  (Name SMAP_ANT) (dimension-x# ?D&~nil) (flies-in ?sat))
-    =>
-    (bind ?dtheta (to-deg (/ 3e8 (* ?D ?f)))); lambda/D
-    (bind ?theta1 (- ?theta (/ ?dtheta 2)))
-    (bind ?theta2 (+ ?theta (/ ?dtheta 2)))
-    (bind ?x1 (* (* 1000 ?h) (tan ?theta1)))
-    (bind ?x2 (* (* 1000 ?h) (tan ?theta2)))
-    (bind ?along (- ?x2 ?x1))
-    (bind ?cross (* 2 (* (/ ?h (cos ?theta)) (tan (/ ?dtheta 2)))))
-    ;(printout t "(compute-swath-conical-MWR ?h ?alfa ?theta) = " (compute-swath-conical-MWR ?h ?alfa ?theta) crlf)
-    (bind ?sw (compute-swath-conical-MWR ?h ?alfa ?theta))
-    (modify ?MWR (Angular-resolution-elevation# ?dtheta) (Horizontal-Spatial-Resolution# ?along) (Horizontal-Spatial-Resolution-Along-track# ?along) 
-        (Horizontal-Spatial-Resolution-Cross-track# ?cross) (Swath# ?sw) (Field-of-view# ?alfa))
-    )
 
 
+
+
+
+
+
+; -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 (defrule MANIFEST::compute-VIIRS-spatial-resolution
     ?VIIRS <- (CAPABILITIES::Manifested-instrument (Name VIIRS)
          (frequency# ?f&~nil) (orbit-altitude# ?h&~nil) (Aperture# ?a&~nil) (Horizontal-Spatial-Resolution# nil))
@@ -206,6 +195,10 @@
     (modify ?instr (image-distortion# 0))
     )
 
+
+
+
+
 (defrule MANIFEST::compute-CMIS-spatial-resolution
     ?MWR <- (CAPABILITIES::Manifested-instrument  (Name CMIS)
          (frequency# ?f&~nil) (orbit-altitude# ?h&~nil) (dimension-x# ?D&~nil) (Horizontal-Spatial-Resolution# nil) (off-axis-angle-plus-minus# ?theta&~nil) (scanning-angle-plus-minus# ?alfa&~nil) (flies-in ?sat))
@@ -221,6 +214,26 @@
     (modify ?MWR (Angular-resolution-elevation# ?dtheta) (Horizontal-Spatial-Resolution# ?along) (Horizontal-Spatial-Resolution-Along-track# ?along) 
         (Horizontal-Spatial-Resolution-Cross-track# ?cross) (Swath# ?sw) (Field-of-view# ?alfa))
     )
+
+
+(defrule MANIFEST::compute-SMAP-MWR-spatial-resolution
+    ?MWR <- (CAPABILITIES::Manifested-instrument  (Name SMAP_MWR)
+         (frequency# ?f&~nil) (orbit-altitude# ?h&~nil) (Horizontal-Spatial-Resolution# nil) (off-axis-angle-plus-minus# ?theta&~nil) (scanning-angle-plus-minus# ?alfa&~nil) (flies-in ?sat))
+    (CAPABILITIES::Manifested-instrument  (Name SMAP_ANT) (dimension-x# ?D&~nil) (flies-in ?sat))
+    =>
+    (bind ?dtheta (to-deg (/ 3e8 (* ?D ?f)))); lambda/D
+    (bind ?theta1 (- ?theta (/ ?dtheta 2)))
+    (bind ?theta2 (+ ?theta (/ ?dtheta 2)))
+    (bind ?x1 (* (* 1000 ?h) (tan ?theta1)))
+    (bind ?x2 (* (* 1000 ?h) (tan ?theta2)))
+    (bind ?along (- ?x2 ?x1))
+    (bind ?cross (* 2 (* (/ ?h (cos ?theta)) (tan (/ ?dtheta 2)))))
+    ;(printout t "(compute-swath-conical-MWR ?h ?alfa ?theta) = " (compute-swath-conical-MWR ?h ?alfa ?theta) crlf)
+    (bind ?sw (compute-swath-conical-MWR ?h ?alfa ?theta))
+    (modify ?MWR (Angular-resolution-elevation# ?dtheta) (Horizontal-Spatial-Resolution# ?along) (Horizontal-Spatial-Resolution-Along-track# ?along)
+        (Horizontal-Spatial-Resolution-Cross-track# ?cross) (Swath# ?sw) (Field-of-view# ?alfa))
+    )
+
 
 (defrule MANIFEST::compute-SMAP-RAD-spatial-resolution
     ?RAD <- (CAPABILITIES::Manifested-instrument  (Name SMAP_RAD) (bandwidth# ?B&~nil) (off-axis-angle-plus-minus# ?theta&~nil) (number-of-looks# ?nl&~nil)  (scanning-angle-plus-minus# ?alfa&~nil)
@@ -250,6 +263,18 @@
         (Horizontal-Spatial-Resolution-Cross-track# ?range-res) (Swath# ?sw) 
         (Field-of-view# ?alfa))
     )
+; -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
 
 (defrule compute-sensitivity-to-soil-moisture-in-vegetation
     "This rule computes the sensitivity to soil moisture in the presence
