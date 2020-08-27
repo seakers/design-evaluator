@@ -136,6 +136,10 @@
     )
 
 
+
+
+
+
 (defrule MANIFEST::compute-spatial-resolution-and-swath-nadir-looking-no-scanning-imagers
     ?MWR <- (CAPABILITIES::Manifested-instrument  (Geometry nadir) (scanning no-scanning) (Intent "Imaging multi-spectral radiometers -passive MW-"|"Imaging multi-spectral radiometers -passive optical-"|"High resolution optical imagers")
          (Angular-resolution# ?dtheta&~nil) (orbit-altitude# ?h&~nil) (Field-of-view# ?fov&~nil) (Horizontal-Spatial-Resolution# nil) (flies-in ?sat)(factHistory ?fh))
@@ -177,7 +181,6 @@
         (Horizontal-Spatial-Resolution-Cross-track# ?cross) (Swath# ?sw)(factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::compute-spatial-resolution-and-swath-side-looking-conical-scanning-imagers) " " ?fh "}")))
     )
 
-
 (defrule MANIFEST::compute-SAR-spatial-resolution
     ?RAD <- (CAPABILITIES::Manifested-instrument  (bandwidth# ?B&~nil) (off-axis-angle-plus-minus# ?theta&~nil) (number-of-looks# ?nl&~nil)  (scanning-angle-plus-minus# ?alfa&~nil)
          (frequency# ?f&~nil) (orbit-altitude# ?h&~nil) (Aperture# ?D&~nil) (Horizontal-Spatial-Resolution# nil) (Intent "Imaging MW radars -SAR-") (off-axis-angle-plus-minus# ?theta&~nil) (flies-in ?sat) (factHistory ?fh))
@@ -191,6 +194,12 @@
         (Horizontal-Spatial-Resolution-Cross-track# ?range-res) (Swath# ?sw) (factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::compute-SAR-spatial-resolution) " " ?fh "}")) 
      )
     )
+
+
+
+
+
+
 
 (defrule compute-sensitivity-to-soil-moisture-in-vegetation
     "This rule computes the sensitivity to soil moisture in the presence

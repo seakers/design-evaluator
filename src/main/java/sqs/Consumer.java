@@ -81,14 +81,14 @@ public class Consumer implements Runnable{
 
         while(this.running){
             System.out.println("-----> Loop iteration: " + counter);
-            this.consumerSleep(1);
+            // this.consumerSleep(1);
             List<Message> messages;
             boolean privateMsg = true;
 
             // CHECK PRIVATE QUEUE FIRST - IF PRIVATE QUEUE EMPTY, CHECK EVAL QUEUE
             messages = this.getMessages(this.privateQueueUrl, 1, 1);
             if(messages.isEmpty()){
-                messages   = this.getMessages(this.queueUrl, 1, 5);
+                messages   = this.getMessages(this.queueUrl, 3, 5);
                 privateMsg = false;
             }
 
@@ -136,6 +136,7 @@ public class Consumer implements Runnable{
         String  input       = msg_contents.get("input");
         boolean ga_arch     = false;
         boolean re_evaluate = false;
+        boolean fast        = false;
 
         if(msg_contents.containsKey("ga")){
             ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
@@ -143,6 +144,10 @@ public class Consumer implements Runnable{
 
         if(msg_contents.containsKey("redo")){
             re_evaluate = Boolean.parseBoolean(msg_contents.get("redo"));
+        }
+
+        if(msg_contents.containsKey("fast")){
+            fast = Boolean.parseBoolean(msg_contents.get("fast"));
         }
 
         if(!re_evaluate) {
@@ -154,7 +159,7 @@ public class Consumer implements Runnable{
             }
         }
 
-        Result result = this.client.evaluateArchitecture(input, ga_arch, re_evaluate);
+        Result result = this.client.evaluateArchitecture(input, ga_arch, re_evaluate, fast);
 
         System.out.println("\n-------------------- EVALUATE REQUEST OUTPUT --------------------");
         System.out.println("-----> INPUT: " + input);

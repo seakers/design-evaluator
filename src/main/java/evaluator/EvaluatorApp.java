@@ -152,7 +152,7 @@ public class EvaluatorApp {
 
         Resource engine = new Resource.Builder(dbClient)
                                         .addUserFunctionBatch(userFuncs)      // - Improve(), SameOrBetter(), Worsen()
-                                        .setRequests(requests.getRequests()) // - eval: template requests (+ functions)
+                                        .setRequests(requests.getRequests())  // - eval: template requests (+ functions)
                                         .setRequestMode(requestMode)
                                         .build();
 
