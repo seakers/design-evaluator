@@ -18,6 +18,8 @@
 (defmodule FUZZY-AGGREGATION)
 (defmodule FUZZY-COST-ESTIMATION)
 (defmodule REASONING)
+(defmodule PARTITIONING)
+(defmodule PERMUTING)
 (defmodule ORBIT-SELECTION)
 (defmodule ORBIT)
 (defmodule LOOK-AROUND)

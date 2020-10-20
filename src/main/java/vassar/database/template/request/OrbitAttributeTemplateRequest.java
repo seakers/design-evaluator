@@ -4,7 +4,9 @@ package vassar.database.template.request;
         import vassar.database.service.QueryAPI;
         import vassar.database.template.TemplateRequest;
         import vassar.database.template.TemplateResponse;
+        import vassar.database.template.rules.Rules;
 
+        import java.util.ArrayList;
         import java.util.HashMap;
         import java.util.List;
         import java.util.Map;
@@ -34,6 +36,11 @@ public class OrbitAttributeTemplateRequest extends TemplateRequest {
         super(builder);
         this.template_header      = builder.template_header;
     }
+
+
+
+
+
 
     public TemplateResponse processRequest(QueryAPI api) {
         try {

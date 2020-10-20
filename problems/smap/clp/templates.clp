@@ -27,10 +27,10 @@
     (multislot instruments) (slot degree-of-cross-registration) (slot platform)(slot factHistory))
 
 (deftemplate REASONING::partially-satisfied "Requirements that are partially satisfied" (slot subobjective)
-    (slot objective) (slot parameter) (slot taken-by) (slot attribute) (slot required) (slot achieved)(slot factHistory))
+    (slot objective) (slot value) (slot requirement-id) (slot parameter) (slot taken-by) (slot attribute) (slot required) (slot achieved)(slot factHistory))
 
 (deftemplate REASONING::fully-satisfied "Requirements that are partially satisfied" (slot subobjective)
-    (slot objective) (slot parameter) (slot taken-by)(slot factHistory))
+    (slot objective) (slot value) (slot requirement-id) (slot parameter) (slot taken-by) (slot attribute) (slot factHistory))
 (deftemplate REASONING::stop-improving "Flag to stop improving a measurement through application of synergy rules" (slot Measurement)(slot factHistory))
 
 (deftemplate REASONING::architecture-eliminated "Reasons why architecture was eliminated" (slot arch-id) (slot fit) (slot arch-str) 

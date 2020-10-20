@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.io.File;
 
+import evaluator.EvaluatorApp;
 import org.orekit.geometry.fov.CircularFieldOfView;
 import seakers.orekit.analysis.Analysis;
 import seakers.orekit.constellations.Walker;
@@ -150,6 +151,14 @@ public class CoverageAnalysis {
     }
 
     public Map<TopocentricFrame, TimeIntervalArray> getAccesses(double fieldOfView, double inclination, double altitude, int numSats, int numPlanes, String raanLabel) throws OrekitException {
+        System.out.println("--> GET ACCESSES");
+        System.out.println(fieldOfView);
+        System.out.println(inclination);
+        System.out.println(altitude);
+        System.out.println(numSats);
+        System.out.println(numPlanes);
+        System.out.println(raanLabel);
+        // EvaluatorApp.sleep(10);
 
         CoverageAnalysisIO.AccessDataDefinition definition = new CoverageAnalysisIO.AccessDataDefinition(fieldOfView, inclination, altitude, numSats, numPlanes, this.coverageGridGranularity, raanLabel);
 
@@ -288,7 +297,6 @@ public class CoverageAnalysis {
 
         //propagator type
         PropagatorFactory propFactory = new PropagatorFactory(PropagatorType.J2, propertiesPropagator);
-
         //set the event analyses
         EventAnalysisFactory eventAnalysisFactory = new EventAnalysisFactory(startDate, endDate, inertialFrame, propFactory);
         ArrayList<EventAnalysis> eventanalyses = new ArrayList<>();

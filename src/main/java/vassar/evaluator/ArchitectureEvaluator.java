@@ -1,5 +1,6 @@
 package vassar.evaluator;
 
+import evaluator.EvaluatorApp;
 import jess.*;
 
 import vassar.architecture.AbstractArchitecture;

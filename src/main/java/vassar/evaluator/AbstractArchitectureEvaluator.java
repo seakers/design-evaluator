@@ -181,8 +181,12 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             r.eval("(watch rules)");
             r.eval("(facts)");
 
+
+            qb.missionFactQuery("missionFactsNonADD");
+
             r.setFocus("MANIFEST0");
             r.run();
+            qb.saveQuery("manifestedInstrument", "CAPABILITIES::Manifested-instrument");
 
             r.setFocus("MANIFEST");
             r.run();
@@ -405,6 +409,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             r.run();
 
             // VIIRS: all subobjective satisfaction values are 0
+            qb.saveQuery("aggregationFacts", "AGGREGATION::SUBOBJECTIVE");
             if ((params.getRequestMode().equalsIgnoreCase("FUZZY-CASES")) || (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES"))) {
                 r.setFocus("FUZZY-AGGREGATION");
             }

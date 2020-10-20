@@ -10,6 +10,9 @@ import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import vassar.GlobalScope;
 import vassar.VassarClient;
+import vassar.architecture.Optimization;
+import vassar.combinatorics.Combinatorics;
+import vassar.combinatorics.Nto1pair;
 import vassar.database.DatabaseClient;
 import vassar.database.service.DebugAPI;
 import vassar.database.service.QueryAPI;
@@ -25,14 +28,34 @@ import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsPro
 
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class EvaluatorApp {
 
     public static void main(String[] args) {
+
+
+//        Combinatorics.readNDSM_File("/app/output/DSM-2-2020-10-10-17-11-54.dat", 30);
+//        Combinatorics.readNDSM_File("/app/output/DSM-3-2020-10-10-17-16-40.dat", 30);
+//        Combinatorics.combineNDSM_File("DSM-2-2020-10-10-17-11-54", "SDSM");
+//        Combinatorics.combineNDSM_File("DSM-3-2020-10-10-17-16-40", "SDSM");
+//        Combinatorics.combineNDSM_File("DSM-5-2020-10-10-17-17-33", "SDSM");
+
+//        ArrayList<String> insts = new ArrayList<>();
+//        insts.add("SMAP_RAD");
+//        insts.add("SMAP_MWR");
+//        insts.add("VIIRS");
+//        insts.add("CMIS");
+//        insts.add("BIOMASS");
+//
+//        HashMap<Integer, ArrayList<String>> partition = Optimization.partitionInstruments(insts);
+//        System.out.println("-----> FINAL PARTITION");
+//        for(Integer key: partition.keySet()){
+//            System.out.println("--> " + key + " " + partition.get(key));
+//        }
+//        System.exit(0);
 
 //  _____ _   _ _____ _______
 // |_   _| \ | |_   _|__   __|
@@ -66,6 +89,8 @@ public class EvaluatorApp {
 
         int group_id   = Integer.parseInt(System.getenv("GROUP_ID"));
         int problem_id = Integer.parseInt(System.getenv("PROBLEM_ID"));
+        problem_id = 6; // HARDCODE
+
 
 
         ArrayList<Userfunction> userFuncs = new ArrayList<>() {{
@@ -80,6 +105,9 @@ public class EvaluatorApp {
         String jessGlobalFuncPath = rootPath + "/app/src/main/java/vassar/jess/utils/clp";
         String jessAppPath        = rootPath + "/app/problems/smap/clp";
         String requestMode        = System.getenv("REQUEST_MODE");
+        requestMode = "CRISP-CASES"; // HARDCODE
+
+
         Requests requests = new Requests.Builder()
                                         .setGlobalTemplatePath(jessGlobalTempPath)
                                         .setGlobalFunctionPath(jessGlobalFuncPath)
@@ -126,7 +154,7 @@ public class EvaluatorApp {
 
         // PRIVATE QUEUE
         String private_queue_url = EvaluatorApp.createPrivateQueue(sqsClient, private_queue_name, problem_id);
-
+        Consumer.purgeQueue(sqsClient, private_queue_url);
 
 
 
@@ -201,5 +229,11 @@ public class EvaluatorApp {
         }
         String saltStr = salt.toString();
         return saltStr;
+    }
+
+    // ---> SLEEP
+    public static void sleep(int seconds){
+        try                            { TimeUnit.SECONDS.sleep(seconds); }
+        catch (InterruptedException e) { e.printStackTrace(); }
     }
 }

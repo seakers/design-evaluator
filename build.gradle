@@ -19,6 +19,8 @@ repositories {
     mavenLocal()
 }
 
+
+
 dependencies {
 
     implementation 'org.apache.commons:commons-lang3:3.6'
@@ -56,6 +58,9 @@ dependencies {
     // APACHE COMMONS
     compile 'org.apache.commons:commons-lang3:3.9'
     compile 'org.apache.commons:commons-math3:3.6.1'
+
+    // COMBINITORIX
+    implementation 'com.github.dpaukov:combinatoricslib3:3.3.0'
 
 }
 

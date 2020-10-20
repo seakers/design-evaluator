@@ -29,6 +29,8 @@ public class Resource {
     private QueryBuilder   queryBuilder;
     private MatlabFunctions mFuncs;
 
+    public Problem.Builder            problemBuilder;
+
     public static class Builder {
 
         // Build Member Variables
@@ -131,9 +133,11 @@ public class Resource {
 
         private void loadPrecomputedQueries(){
             HashMap<String,Fact> db_instruments = new HashMap<>();
-            Problem params = this.problemBuilder.build();
+            Problem params = this.problemBuilder.build(this.dbClient);
+            System.out.println("----> NUM INSTRUMENTS " + params.getNumInstr());
             for (int i = 0; i < params.getNumInstr(); i++) {
                 String instr = params.getInstrumentList()[i];
+                System.out.println(instr);
                 ArrayList<Fact> facts = queryBuilder.makeQuery("DATABASE::Instrument (Name " + instr + ")");
                 Fact f = facts.get(0);
                 db_instruments.put(instr, f);
@@ -177,9 +181,10 @@ public class Resource {
             build.dbClient     = this.dbClient;
             build.engine       = this.engine;
             build.appPath      = this.appPath;
-            build.problem      = this.problemBuilder.build();
+            build.problem      = this.problemBuilder.build(build.dbClient);
             build.requestMode  = this.requestMode;
             build.queryBuilder = this.queryBuilder;
+            build.problemBuilder = this.problemBuilder;
             return build;
         }
 
@@ -210,4 +215,15 @@ public class Resource {
         Resource newResource = new Resource.Builder(this.dbClient).addUserFunctionBatch(this.buildFuncs).setRequests(newRequests).setRequestMode(this.requestMode).build();
         return   newResource;
     }
+
+    public void resetEngine(){
+        try{
+            this.engine.reset();
+        } catch (JessException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
 }

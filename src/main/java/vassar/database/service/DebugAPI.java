@@ -129,6 +129,63 @@ public class DebugAPI {
         }
     }
 
+    public void writeTemplateOutputFileName(String fileName, String content) {
+
+        fileName = "/" + fileName + ".txt";
+        File outputFile = new File(this.outputPath + fileName);
+        try{
+            if(!outputFile.createNewFile()) {
+                outputFile.delete();
+                outputFile.createNewFile();
+                outputFile.setWritable(true);
+                outputFile.setReadable(true);
+                FileWriter outputWriter = new FileWriter(this.outputPath + fileName);
+                outputWriter.write(content);
+                outputWriter.close();
+            }
+            else{
+                outputFile.setWritable(true);
+                outputFile.setReadable(true);
+                FileWriter outputWriter = new FileWriter(this.outputPath + fileName);
+                outputWriter.write(content);
+                outputWriter.close();
+            }
+        }
+        catch (Exception e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+
+
+    // file_name: contains the full path to the file
+    public void writeTemplateOutputFileDir(String file_name, String content) {
+
+        File outputFile = new File(file_name);
+        try{
+            if(!outputFile.createNewFile()) {
+                outputFile.delete();
+                outputFile.createNewFile();
+                outputFile.setWritable(true);
+                outputFile.setReadable(true);
+                FileWriter outputWriter = new FileWriter(file_name);
+                outputWriter.write(content);
+                outputWriter.close();
+            }
+            else{
+                outputFile.setWritable(true);
+                outputFile.setReadable(true);
+                FileWriter outputWriter = new FileWriter(file_name);
+                outputWriter.write(content);
+                outputWriter.close();
+            }
+        }
+        catch (Exception e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+
 
 
 

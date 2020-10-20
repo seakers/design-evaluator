@@ -163,6 +163,16 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items();
     }
 
+    public List<InstrumentMeasurementsQuery.Item> instrumentMeasurementQuery(String instrument){
+        InstrumentMeasurementsQuery iaQuery = InstrumentMeasurementsQuery.builder()
+                .problem_id(this.problem_id)
+                .instrument_name(instrument)
+                .build();
+        ApolloCall<InstrumentMeasurementsQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
+        Observable<Response<InstrumentMeasurementsQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items();
+    }
+
 
 
 
@@ -266,6 +276,17 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items();
     }
 
+    public List<SubobjectiveAttributeInformationQuery.Item> querySubobjectiveAttributeInformation(String name){
+        SubobjectiveAttributeInformationQuery iaQuery = SubobjectiveAttributeInformationQuery.builder()
+                .problem_id(this.problem_id)
+                .name(name)
+                .build();
+        ApolloCall<SubobjectiveAttributeInformationQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
+        Observable<Response<SubobjectiveAttributeInformationQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+
+        return observable.blockingFirst().getData().items();
+    }
+
 
 
 
@@ -341,6 +362,15 @@ public class QueryAPI {
         Observable<Response<SubobjectiveIdQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
 
         return observable.blockingFirst().getData().items().get(0).id();
+    }
+
+    // ---> HISTORICAL
+    public List<HistoricalMissionMeasurementContinuityQuery.Item> getHistoricalMissionMeasurementContinuity(){
+        HistoricalMissionMeasurementContinuityQuery iaQuery = HistoricalMissionMeasurementContinuityQuery.builder()
+                .build();
+        ApolloCall<HistoricalMissionMeasurementContinuityQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
+        Observable<Response<HistoricalMissionMeasurementContinuityQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items();
     }
 
 

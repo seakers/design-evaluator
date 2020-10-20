@@ -4,21 +4,23 @@ package vassar.database;
 
 // JSON
 import com.apollographql.apollo.ApolloSubscriptionCall;
-import com.evaluator.ArchitectureCostInformationQuery;
-import com.evaluator.CostMissionAttributeQuery;
-import com.evaluator.GlobalInstrumentQuery;
-import com.evaluator.InstrumentQuery;
+import com.evaluator.*;
 import com.evaluator.type.*;
+import com.google.gson.JsonObject;
+import evaluator.EvaluatorApp;
+import software.amazon.awssdk.utils.Pair;
 import vassar.database.service.DebugAPI;
 import vassar.database.service.QueryAPI;
 import vassar.database.template.TemplateRequest;
 import vassar.database.template.TemplateResponse;
 import vassar.problem.Problem;
 
+import javax.print.attribute.HashPrintJobAttributeSet;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 
 public class DatabaseClient {
@@ -27,6 +29,9 @@ public class DatabaseClient {
     private QueryAPI queryAPI;
     private DebugAPI debugAPI;
     private ArrayList<ApolloSubscriptionCall> subscriptions;
+
+    ArrayList<HashMap<String, ArrayList<Date>>> historical_info;
+    HashMap<String, JsonObject> subobjective_objects;
 
     public static class Builder {
 
@@ -80,6 +85,8 @@ public class DatabaseClient {
             api.queryAPI       = this.queryAPI;
             api.debugAPI       = this.debugAPI;
             api.subscriptions  = this.subscriptions;
+            api.historical_info = new ArrayList<>();
+            api.subobjective_objects = new HashMap<>();
             return api;
         }
     }
@@ -98,6 +105,66 @@ public class DatabaseClient {
         return response;
     }
 
+
+
+    // ---> Data Continuity Information
+    public ArrayList<HashMap<String, ArrayList<Date>>> getDataContinuityInformation(){
+        ArrayList<String> all_measurements = new ArrayList<>();
+
+        if(this.historical_info.isEmpty()){
+            // --> Each HashMap<String, ArrayList<String>> represents a mission
+            // -----> Key: measurement name
+            // -----> ArrayList<String>: [0] mission start - [1] mission end
+            ArrayList<HashMap<String, ArrayList<Date>>> all_missions = new ArrayList<>();
+            List<HistoricalMissionMeasurementContinuityQuery.Item> missions = this.queryAPI.getHistoricalMissionMeasurementContinuity();
+
+            for(HistoricalMissionMeasurementContinuityQuery.Item mission: missions){
+                HashMap<String, ArrayList<Date>> new_mission = new HashMap<>();
+
+                // Format: 2010-07-12T00:00:00
+                // Format: yyyy-MM-ddTHH:mm:ss
+                if(mission.start_date() == null || mission.end_date() == null){
+                    continue;
+                }
+                String start_date = mission.start_date().toString();
+                String end_date   = mission.end_date().toString();
+
+                Date s_date = new Date();
+                Date e_date = new Date();
+                try{
+                    s_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(start_date);
+                    e_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(end_date);
+                    ChronoUnit.SECONDS.between(s_date.toInstant(), e_date.toInstant());
+                }
+                catch (ParseException e){
+                    e.printStackTrace();
+                    System.out.println("---- ERORR PARSING MISSION DATE");
+                    System.out.println(start_date);
+                    System.out.println(end_date);
+                    System.exit(0);
+                }
+
+                // Iterate over mission instruments
+                for(HistoricalMissionMeasurementContinuityQuery.Instrument inst: mission.instruments()){
+                    for(HistoricalMissionMeasurementContinuityQuery.Measurement meas: inst.item().measurements()){
+                        String meas_name = meas.item().name();
+                        if(!all_measurements.contains(meas_name)){
+                            all_measurements.add(meas_name);
+                        }
+
+                        ArrayList<Date> dates = new ArrayList<>();
+                        dates.add(s_date);
+                        dates.add(e_date);
+                        new_mission.put(meas_name, dates);
+                    }
+                }
+                all_missions.add(new_mission);
+            }
+            this.historical_info = all_missions;
+        }
+
+        return this.historical_info;
+    }
 
 
 
@@ -190,6 +257,54 @@ public class DatabaseClient {
         return this.queryAPI.getSubobjectiveID(subobjName);
     }
 
+    public ArrayList<String> getInstrumentMeasurements(String instrument, boolean trim){
+        ArrayList<String> measurements = new ArrayList<>();
+
+        List<InstrumentMeasurementsQuery.Item> items = this.queryAPI.instrumentMeasurementQuery(instrument);
+        for(InstrumentMeasurementsQuery.Item item: items){
+            for(InstrumentMeasurementsQuery.Join__Instrument_Capability cap: item.Join__Instrument_Capabilities()){
+                String meas = cap.Measurement().name();
+                if(trim){
+                    String[] segments = meas.split("\\s+");
+                    ArrayList<String> shorter = new ArrayList<>();
+                    for(int x = 0; x < segments.length; x++){
+                        if(x == 0){
+                            continue;
+                        }
+                        shorter.add(segments[x]);
+                    }
+                    meas = String.join(" ", shorter);
+                }
+                measurements.add(meas);
+            }
+        }
+        return measurements;
+    }
+
+    public JsonObject getSubobjectiveAttributeInformation(String name){
+
+        if(this.subobjective_objects.containsKey(name)){
+            return this.subobjective_objects.get(name);
+        }
+        else{
+            List<SubobjectiveAttributeInformationQuery.Item> items = this.queryAPI.querySubobjectiveAttributeInformation(name);
+
+            if(items.size() == 0){
+                System.out.println("---> ERROR, ONE SUBOBJECTIVE SHOULD BE RETURNED");
+                EvaluatorApp.sleep(45);
+            }
+
+            JsonObject subjective_info = new JsonObject();
+            subjective_info.addProperty("name", name);
+            subjective_info.addProperty("description", items.get(0).description());
+            subjective_info.addProperty("weight", items.get(0).weight().toString());
+
+            this.subobjective_objects.put(name, subjective_info);
+            return subjective_info;
+        }
+    }
+
+
 
 
     public void setProblemID(int id){
@@ -208,5 +323,37 @@ public class DatabaseClient {
     public void writeDebugInfo() {
         this.debugAPI.writeJson();
     }
+
+
+
+    public static String transformHistoricalMeasurementName(String measurement){
+        if(measurement.equals("Sea-ice cover")) {
+            return "Sea ice cover";
+        }
+        else if(measurement.equals("Soil moisture at the surface")) {
+            return "Soil moisture";
+        }
+        else if(measurement.equals("Wind vector over sea surface (horizontal)") || measurement.equals("Wind speed over sea surface (horizontal)")) {
+            return "Ocean surface wind speed";
+        }
+        return measurement;
+    }
+
+
+    public static void printHistoricalMeasurements(ArrayList<HashMap<String, ArrayList<Date>>> historical_missions){
+        ArrayList<String> all_measurements = new ArrayList<>();
+        for(HashMap<String, ArrayList<Date>> mission: historical_missions){
+            for(String measurement: mission.keySet()){
+                if(!all_measurements.contains(measurement)){
+                    all_measurements.add(measurement);
+                }
+            }
+        }
+        Collections.sort(all_measurements);
+        System.out.println("\n---> ALL HISTORICAL MEASUREMENTS");
+        System.out.println(all_measurements);
+    }
+
+
 
 }

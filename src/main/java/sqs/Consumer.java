@@ -1,5 +1,6 @@
 package sqs;
 
+import evaluator.EvaluatorApp;
 import software.amazon.awssdk.services.sqs.model.*;
 import vassar.VassarClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -82,11 +83,11 @@ public class Consumer implements Runnable{
         while(this.running){
             System.out.println("-----> Loop iteration: " + counter);
             // this.consumerSleep(1);
-            List<Message> messages;
+            List<Message> messages = new ArrayList<>();
             boolean privateMsg = true;
 
             // CHECK PRIVATE QUEUE FIRST - IF PRIVATE QUEUE EMPTY, CHECK EVAL QUEUE
-            messages = this.getMessages(this.privateQueueUrl, 1, 1);
+            // messages = this.getMessages(this.privateQueueUrl, 1, 1);
             if(messages.isEmpty()){
                 messages   = this.getMessages(this.queueUrl, 3, 5);
                 privateMsg = false;
@@ -99,7 +100,25 @@ public class Consumer implements Runnable{
                 if(msg_contents.containsKey("msgType")){
                     String msgType = msg_contents.get("msgType");
                     if(msgType.equals("evaluate")){
-                        this.mgsTypeEvaluate(msg_contents);
+                        this.msgTypeEvaluate(msg_contents);
+                    }
+                    else if(msgType.equals("add")){
+                        this.msgTypeADD(msg_contents);
+                    }
+                    else if(msgType.equals("Instrument Selection")){
+                        this.msgTypeSELECTING(msg_contents);
+                    }
+                    else if(msgType.equals("Instrument Partitioning")){
+                        this.msgTypePARTITIONING(msg_contents);
+                    }
+                    else if(msgType.equals("TEST-EVAL")){
+                        this.msgTypeTEST_EVAL(msg_contents);
+                    }
+                    else if(msgType.equals("NDSM")){
+                        this.msgTypeNDSM(msg_contents);
+                    }
+                    else if(msgType.equals("ContinuityMatrix")){
+                        this.msgTypeContinuityMatrix(msg_contents);
                     }
                     else if(msgType.equals("build")){
                         this.msgTypeBuild(msg_contents);
@@ -131,12 +150,13 @@ public class Consumer implements Runnable{
 
 
     // ---> MESSAGE TYPES
-    public void mgsTypeEvaluate(HashMap<String, String> msg_contents){
+    public void msgTypeEvaluate(HashMap<String, String> msg_contents){
 
         String  input       = msg_contents.get("input");
         boolean ga_arch     = false;
         boolean re_evaluate = false;
         boolean fast        = false;
+
 
         if(msg_contents.containsKey("ga")){
             ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
@@ -169,6 +189,103 @@ public class Consumer implements Runnable{
         // this.consumerSleep(3);
     }
 
+    public void msgTypeADD(HashMap<String, String> msg_contents){
+
+        String input  = msg_contents.get("input");
+        String rQueue = msg_contents.get("rQueue");
+        String UUID   = msg_contents.get("UUID");
+
+        System.out.println("\n-------------------- EVALUATE ADD REQUEST INPUT --------------------");
+        System.out.println("---------> INPUT: " + input);
+        System.out.println("--> RETURN QUEUE: " + rQueue);
+        System.out.println("----------> UUID: " + UUID);
+        System.out.println("-------------------------------------------------------------------\n");
+
+        Result result = this.client.evaluateADDArchitecture(input);
+
+        this.sendResultMessage(rQueue, UUID, result);
+
+        System.out.println("\n-------------------- EVALUATE ADD REQUEST OUTPUT --------------------");
+        System.out.println("----> DESIGN STRING: " + result.getDesignString());
+        System.out.println("------------> INPUT: " + input);
+        System.out.println("-------------> COST: " + result.getCost());
+        System.out.println("----------> SCIENCE: " + result.getScience());
+        System.out.println("--> DATA CONTINUITY: " + result.getDataContinuityScore());
+        System.out.println("--------------------------------------------------------------------\n");
+        // this.consumerSleep(20);
+    }
+
+
+    public void msgTypeSELECTING(HashMap<String, String> msg_contents){
+
+        String input  = msg_contents.get("input");
+        String rQueue = msg_contents.get("rQueue");
+        String UUID   = msg_contents.get("UUID");
+
+        System.out.println("\n-------------------- EVALUATE SELECTING REQUEST INPUT --------------------");
+        System.out.println("---------> INPUT: " + input);
+        System.out.println("--> RETURN QUEUE: " + rQueue);
+        System.out.println("----------> UUID: " + UUID);
+        System.out.println("-------------------------------------------------------------------\n");
+        // EvaluatorApp.sleep(5);
+
+        Result result = this.client.evaluateSELECTINGArchitecture(input);
+
+        this.sendResultMessage(rQueue, UUID, result);
+
+        System.out.println("\n-------------------- EVALUATE ADD REQUEST OUTPUT --------------------");
+        System.out.println("------------> INPUT: " + input);
+        System.out.println("-------------> COST: " + result.getCost());
+        System.out.println("----------> SCIENCE: " + result.getScience());
+        System.out.println("--> DATA CONTINUITY: " + result.getDataContinuityScore());
+        System.out.println("----> DESIGN STRING: " + result.getDesignString());
+        System.out.println("--------------------------------------------------------------------\n");
+        System.out.println("--> SELECTING <--");
+        EvaluatorApp.sleep(5);
+    }
+
+    public void msgTypePARTITIONING(HashMap<String, String> msg_contents){
+
+        String input  = msg_contents.get("input");
+        String rQueue = msg_contents.get("rQueue");
+        String UUID   = msg_contents.get("UUID");
+
+        System.out.println("\n-------------------- EVALUATE SELECTING REQUEST INPUT --------------------");
+        System.out.println("---------> INPUT: " + input);
+        System.out.println("--> RETURN QUEUE: " + rQueue);
+        System.out.println("----------> UUID: " + UUID);
+        System.out.println("-------------------------------------------------------------------\n");
+
+        Result result = this.client.evaluatePARTITIONINGArchitecture(input);
+
+        this.sendResultMessage(rQueue, UUID, result);
+
+        System.out.println("\n-------------------- EVALUATE ADD REQUEST OUTPUT --------------------");
+        System.out.println("------------> INPUT: " + input);
+        System.out.println("-------------> COST: " + result.getCost());
+        System.out.println("----------> SCIENCE: " + result.getScience());
+        System.out.println("--> DATA CONTINUITY: " + result.getDataContinuityScore());
+//        System.out.println("----> DESIGN STRING: " + result.getDesignString());
+        System.out.println("--------------------------------------------------------------------\n");
+        // EvaluatorApp.sleep(5);
+    }
+
+    public void msgTypeTEST_EVAL(HashMap<String, String> msg_contents){
+
+        System.out.println("\n-------------------- TEST EVALUATION --------------------");
+
+        Result result = this.client.evaluateTESTArchitecture();
+
+        System.out.println("\n-------------------- EVALUATE ADD REQUEST OUTPUT --------------------");
+        System.out.println("-------------> COST: " + result.getCost());
+        System.out.println("----------> SCIENCE: " + result.getScience());
+        System.out.println("--> DATA CONTINUITY: " + result.getDataContinuityScore());
+        System.out.println("----> DESIGN STRING: " + result.getDesignString());
+        System.out.println("--------------------------------------------------------------------\n");
+        // EvaluatorApp.sleep(5);
+    }
+
+
     public void msgTypeBuild(HashMap<String, String> msg_contents){
         int group_id   = Integer.parseInt(msg_contents.get("group_id"));
         int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
@@ -180,6 +297,21 @@ public class Consumer implements Runnable{
         System.out.println("------> PROBLEM ID: " + problem_id);
         System.out.println("-------------------------------------------------------\n");
         // this.consumerSleep(5);
+    }
+
+    public void msgTypeNDSM(HashMap<String, String> msg_contents){
+
+        System.out.println("---> COMPUTING NDSM");
+        EvaluatorApp.sleep(1);
+        this.client.computeNDSMs();
+    }
+
+    public void msgTypeContinuityMatrix(HashMap<String, String> msg_contents){
+
+
+        System.out.println("---> COMPUTING CONTINUITY MATRIX");
+        EvaluatorApp.sleep(1);
+        this.client.computeContinuityMatrix();
     }
 
 
@@ -221,7 +353,6 @@ public class Consumer implements Runnable{
             this.sqsClient.deleteMessage(deleteMessageRequest);
         }
     }
-
 
     // ---> THREAD SLEEP
     public void consumerSleep(int seconds){
@@ -296,9 +427,53 @@ public class Consumer implements Runnable{
         this.sendMessage(messageAttributes, delay);
     }
 
+    public void sendResultMessage(String url, String UUID, Result result){
+        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+        messageAttributes.put("UUID",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(UUID)
+                        .build()
+        );
+        messageAttributes.put("science",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(Double.toString(result.getScience()))
+                        .build()
+        );
+        messageAttributes.put("cost",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(Double.toString(result.getCost()))
+                        .build()
+        );
+        messageAttributes.put("design",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(result.getDesignString())
+                        .build()
+        );
+        messageAttributes.put("data_continuity",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(Double.toString(result.getDataContinuityScore()))
+                        .build()
+        );
+        this.sendDirectMessage(url, messageAttributes, 0);
+    }
+
     private void sendMessage(Map<String, MessageAttributeValue> messageAttributes, int delay){
         this.sqsClient.sendMessage(SendMessageRequest.builder()
                 .queueUrl(queueUrl)
+                .messageBody("")
+                .messageAttributes(messageAttributes)
+                .delaySeconds(delay)
+                .build());
+    }
+
+    private void sendDirectMessage(String url, Map<String, MessageAttributeValue> messageAttributes, int delay){
+        this.sqsClient.sendMessage(SendMessageRequest.builder()
+                .queueUrl(url)
                 .messageBody("")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(delay)
@@ -312,4 +487,17 @@ public class Consumer implements Runnable{
         List<Message> messages = this.getMessages(this.privateQueueUrl, 10, 1);
         this.deleteMessages(messages, this.privateQueueUrl);
     }
+
+
+    public static boolean purgeQueue(SqsClient sqsClient, String queue_url){
+        System.out.println("---> PURGE QUEUE: " + queue_url);
+        // App.sleep(2);
+
+        PurgeQueueRequest purgeQueueRequest = PurgeQueueRequest.builder()
+                .queueUrl(queue_url)
+                .build();
+        sqsClient.purgeQueue(purgeQueueRequest);
+        return true;
+    }
+
 }

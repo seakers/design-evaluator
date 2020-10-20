@@ -1,8 +1,10 @@
 package vassar.problem;
 
 import com.evaluator.*;
+import com.google.gson.JsonObject;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.extension.AbstractExtension;
+import vassar.database.DatabaseClient;
 import vassar.database.template.TemplateRequest;
 import vassar.database.template.request.CapabilityRuleTemplateRequest;
 
@@ -30,6 +32,7 @@ public class Problem {
     public ArrayList<ArrayList<String>> objNames;
     public HashMap<String, String>      objectiveDescriptions;
     public ArrayList<ArrayList<ArrayList<String>>> subobjectives;
+    public HashMap<String, JsonObject>             subobjectiveDetails;
 
     public ArrayList<ArrayList<ArrayList<Double>>> subobjWeights;
     public HashMap<String, String> subobjDescriptions;
@@ -232,10 +235,10 @@ public class Problem {
             return (T) this;
         }
 
-        public Problem build() { return new Problem(this);}
+        public Problem build(DatabaseClient client) { return new Problem(this, client);}
     }
 
-    protected Problem(Builder<?> builder){
+    protected Problem(Builder<?> builder, DatabaseClient client){
 
         // -- AGGREGATION --
         this.panelNames            = builder.panelNames;
@@ -287,6 +290,15 @@ public class Problem {
         catch (Exception e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
+        }
+
+        this.subobjectiveDetails = new HashMap<>();
+        for(ArrayList<ArrayList<String>> panels: this.subobjectives){
+            for(ArrayList<String> objectives: panels){
+                for(String subobjective: objectives){
+                    this.subobjectiveDetails.put(subobjective, client.getSubobjectiveAttributeInformation(subobjective));
+                }
+            }
         }
     }
 

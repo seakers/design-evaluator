@@ -182,6 +182,13 @@ public class Orbit {
         return type + "-" + altitude + "-" + inclination + "-" + raan;
     }
     public String toJessSlots() {
+        // MISSING
+        // num-of-planes#         1
+        // num-of-sats-per-plane# 1
+        // mission-architecture   single_arch
+        // orbit-eccentricity     0
+        // orbit-string           SSO-600-SSO-DD
+
         return " (num-of-planes# " + nplanes + ")" +
                 " (num-of-sats-per-plane# "  + num_sats_per_plane + ")"  +
                 " (mission-architecture " + mission_arch + ") " +

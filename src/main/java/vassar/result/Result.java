@@ -5,6 +5,8 @@ package vassar.result;
  * @author Ana-Dani
  */
 
+import com.google.gson.JsonObject;
+import vassar.architecture.ADDArchitecture;
 import vassar.architecture.AbstractArchitecture;
 
 import jess.*;
@@ -19,6 +21,8 @@ public class Result implements Serializable {
 
     private double science;
     private double cost;
+    private double dataContinuity;
+    private double fairnessScore;
     private ArrayList<ArrayList<ArrayList<Double>>> subobjectiveScores;
     private ArrayList<ArrayList<Double>> objectiveScores;
     private ArrayList<Double> panelScores;
@@ -26,6 +30,7 @@ public class Result implements Serializable {
     private FuzzyValue fuzzyCost;
     private AbstractArchitecture arch;
     public TreeMap<String,ArrayList<Fact>> explanations;
+    private TreeMap<String,ArrayList<Fact>> capabilityList;
     private TreeMap<String,Double> subobjectiveScoresMap;
     public ArrayList<Fact> capabilities;
     private ArrayList<Fact> costFacts;
@@ -33,6 +38,12 @@ public class Result implements Serializable {
 
     private Vector<String> performanceCritique;
     private Vector<String> costCritique;
+
+    public String designString;
+
+    public String mission_launch_mass;
+
+    public JsonObject subobjectiveInfo;
 
 
     //Constructors
@@ -52,6 +63,9 @@ public class Result implements Serializable {
         taskType = "Fast";
         this.fuzzyScience = null;
         this.fuzzyCost = null;
+
+        this.dataContinuity = -1;
+        this.fairnessScore  = -1;
     }
 
     public Result(AbstractArchitecture arch,
@@ -73,6 +87,38 @@ public class Result implements Serializable {
         this.objectiveScores = obj_scores;
         this.panelScores = panel_scores;
         this.subobjectiveScoresMap = subobj_scores_map;
+        this.designString = "";
+        this.subobjectiveInfo = new JsonObject();
+        this.mission_launch_mass = "";
+    }
+
+    public Result(AbstractArchitecture arch,
+                  double science,
+                  double cost,
+                  ArrayList<ArrayList<ArrayList<Double>>> subobj_scores,
+                  ArrayList<ArrayList<Double>> obj_scores,
+                  ArrayList<Double> panel_scores,
+                  TreeMap<String,Double> subobj_scores_map) {
+
+        this.arch = arch;
+        this.science = science;
+        this.cost = cost;
+        this.fuzzyScience = null;
+        this.fuzzyCost = null;
+        this.subobjectiveScores = subobj_scores;
+        this.objectiveScores = obj_scores;
+        this.panelScores = panel_scores;
+        this.subobjectiveScoresMap = subobj_scores_map;
+        this.designString = "";
+        this.subobjectiveInfo = new JsonObject();
+        this.mission_launch_mass = "";
+    }
+
+
+
+
+    public void setSubobjectiveInfo(JsonObject subobjectiveInfo){
+        this.subobjectiveInfo = subobjectiveInfo;
     }
 
     //Getters and Setters
@@ -132,6 +178,20 @@ public class Result implements Serializable {
         this.cost = cost;
     }
 
+    public void setDesignString(String designString){
+        this.designString = designString;
+    }
+    public String getDesignString(){
+        return this.designString;
+    }
+
+    public TreeMap<String,ArrayList<Fact>> getCapabilityList() {
+        return capabilityList;
+    }
+    public void setCapabilityList(TreeMap<String,ArrayList<Fact>> capabilityList) {
+        this.capabilityList = capabilityList;
+    }
+
     public ArrayList<ArrayList<ArrayList<Double>>> getSubobjectiveScores() {
         return subobjectiveScores;
     }
@@ -166,12 +226,27 @@ public class Result implements Serializable {
         this.fuzzyCost = fuzzyCost;
     }
 
-    public static double SumDollar(ArrayList<Double> a) {
-        double res = 0.0;
-        for (Double num: a) {
-            res += num;
-        }
-        return res;
+    public double getDataContinuityScore(){
+        return this.dataContinuity;
+    }
+    public void setDataContinuityScore(double dataContinuity){
+        this.dataContinuity = dataContinuity;
+    }
+
+    public double getFairnessScore(){
+        return this.fairnessScore;
+    }
+    public void setFairnessScore(double fairnessScore){
+        this.fairnessScore = fairnessScore;
+    }
+
+
+
+
+
+
+    public static double sumProduct(ArrayList<Double> a, ArrayList<Double> b) throws Exception {
+        return SumDollar(dotMult(a, b));
     }
 
     public static ArrayList<Double> dotMult(ArrayList<Double> a, ArrayList<Double> b) throws Exception {
@@ -188,9 +263,20 @@ public class Result implements Serializable {
         return c;
     }
 
-    public static double sumProduct(ArrayList<Double> a, ArrayList<Double> b) throws Exception {
-        return SumDollar(dotMult(a, b));
+    public static double SumDollar(ArrayList<Double> a) {
+        double res = 0.0;
+        for (Double num: a) {
+            res += num;
+        }
+        return res;
     }
+
+
+
+
+
+
+
 
     @Override
     public String toString() {

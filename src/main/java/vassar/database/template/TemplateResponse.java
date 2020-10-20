@@ -2,6 +2,8 @@ package vassar.database.template;
 
 import jess.Rete;
 
+import java.util.ArrayList;
+
 public class TemplateResponse {
 
     protected String  templateString;
@@ -44,6 +46,16 @@ public class TemplateResponse {
     // -------------------------------------------------
     // ------------------ EVALUATE ---------------------
     // -------------------------------------------------
+    public void evaluateChromosome(ArrayList<Integer> chromosome){
+
+
+
+
+    }
+
+
+
+
     public void evaluate(Rete r){
         if (this.isBatch) {
             try{

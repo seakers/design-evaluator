@@ -37,26 +37,27 @@
     )
 
 (deffunction get-instrument-mass (?instr)
-    (printout t "get-instrument-mass " ?instr crlf)
+    ;(printout t "get-instrument-mass " ?instr crlf)
     (bind ?result (run-query* search-instrument-by-name ?instr))
-    (printout t "get-instrument-mass-result " ?result crlf)
+    ;(printout t "get-instrument-mass-result " ?result crlf)
     (?result next)
-    (printout t "get-instrument-mass-result-next " ?result crlf)
+    ;(printout t "get-instrument-mass-result-next " ?result crlf)
     (return (?result getDouble m))
     )
 
 
 (deffunction get-instrument-peak-power (?instr)
+    (printout t "get-instrument-peak-power " ?instr crlf)
     (bind ?result (run-query* search-instrument-by-name ?instr))
     (?result next)
-    (return (?result getDouble ppp))
+    (return (?result getDouble pp))
     )
 
 
 (deffunction get-instrument-power (?instr)
     (bind ?result (run-query* search-instrument-by-name ?instr))
     (?result next)
-    (return (?result getDouble ppp))
+    (return (?result getDouble p))
     )
 
 (deffunction get-instrument-datarate (?instr)
@@ -99,6 +100,7 @@
     ;;(printout t "compute-payload-dimensions" ?payload crlf)
     (bind ?X 0) (bind ?Y 0) (bind ?Z 0) (bind ?nadir-area 0)
     (foreach ?instr ?payload
+        (printout t "-->  QUERY DATABASE::Instrument BY Name " ?instr crlf)
         (bind ?result (run-query* search-instrument-by-name ?instr))
         (?result next)
         (bind ?dx (?result getDouble dx))
@@ -213,9 +215,22 @@
          (avg-revisit-time-northern-hemisphere# nil) 
         (avg-revisit-time-southern-hemisphere# nil) 
         (avg-revisit-time-cold-regions# nil) (avg-revisit-time-US# nil) (factHistory ?fh1))
-    ?sub <- (DATABASE::Revisit-time-of (mission-architecture ?arch) (num-of-sats-per-plane# ?nsats) 
-        (num-of-planes# ?nplanes) (orbit-altitude# ?h) (orbit-inclination ?inc) 
-        (instrument-field-of-view# ?fov2&:(eq ?fov2 (round-to-5deg ?fov))) (orbit-raan ?raan2)  (avg-revisit-time-global# ?revtime-global) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH) (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US) )
+
+    ?sub <- (DATABASE::Revisit-time-of
+                (mission-architecture ?arch)
+                (num-of-sats-per-plane# ?nsats)
+                (num-of-planes# ?nplanes)
+                (orbit-altitude# ?h)
+                (orbit-inclination ?inc)
+                (instrument-field-of-view# ?fov2&:(eq ?fov2 (round-to-5deg ?fov)))
+                (orbit-raan ?raan2)
+                (avg-revisit-time-global# ?revtime-global)
+                (avg-revisit-time-tropics# ?revtime-tropics)
+                (avg-revisit-time-northern-hemisphere# ?revtime-NH)
+                (avg-revisit-time-southern-hemisphere# ?revtime-SH)
+                (avg-revisit-time-cold-regions# ?revtime-cold)
+                (avg-revisit-time-US# ?revtime-US)
+    )
      (test (or (eq ?raan ?raan2) (eq ?raan NA)))
     =>
     (modify ?instr (avg-revisit-time-global# ?revtime-global) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH) (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US) (factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::get-instrument-revisit-times-from-database) " " ?fh1 " S" (call ?sub getFactId) "}")))
@@ -365,18 +380,18 @@
 
 (defrule MANIFEST::compute-cloud-radar-properties-horizontal-spatial-resolution
     ?instr <- (CAPABILITIES::Manifested-instrument  (Intent "Cloud profile and rain radars")
-         (frequency# ?f&~nil) (Aperture# ?D) (orbit-altitude# ?h&~nil) (Horizontal-Spatial-Resolution# nil) (factHistory ?fh))
+         (frequency# ?f&~nil) (dimension-x# ?D) (orbit-altitude# ?h&~nil) (Horizontal-Spatial-Resolution# nil))
     =>
-    (bind ?hsr (* 1000 (/ 3e8 (* ?D ?f)) ?h)); hsr = lambda/D*h, lambda=c/f
-    (modify ?instr (Horizontal-Spatial-Resolution# ?hsr) (factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::compute-cloud-radar-properties-horizontal-spatial-resolution) " " ?fh "}")))
+    (bind ?hsr (* (/ 3e8 (* ?D ?f)) ?h)); hsr = lambda/D*h, lambda=c/f
+    (modify ?instr (Horizontal-Spatial-Resolution# ?hsr))
     )
 
 (defrule MANIFEST::compute-cloud-radar-properties-swath
-    ?instr <- (CAPABILITIES::Manifested-instrument (Intent "Cloud profile and rain radars") 
-        (off-axis-angle-plus-minus# ?theta&~nil) (scanning conical) (orbit-altitude# ?h&~nil) (Swath# nil) (factHistory ?fh))
+    ?instr <- (CAPABILITIES::Manifested-instrument (Intent "Cloud profile and rain radars")
+        (off-axis-angle-plus-minus# ?theta&~nil) (scanning conical) (orbit-altitude# ?h&~nil) (Swath# nil))
     =>
-    (bind ?sw (* 2 ?h (tan ?theta ))); hsr = lambda/D*h, lambda=c/f
-    (modify ?instr (Swath# ?sw) (factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::compute-cloud-radar-properties-swath) " " ?fh "}")))
+    (bind ?sw (* 2 ?h (matlabf tan (* ?theta (/ (pi) 180)) ))); hsr = lambda/D*h, lambda=c/f
+    (modify ?instr (Swath# ?sw))
     )
 ;; ********************************** 
 ;; **********************************

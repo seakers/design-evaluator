@@ -15,9 +15,7 @@
     (slot Continuity-over-time)
     (slot Coverage)
     (slot Coverage-of-region-of-interest)
-    (slot data-rate-duty-cycle#)
     (slot Day-Night)
-    (slot diurnal-cycle)
     (slot Field-of-view#)
     (slot flies-in)
     (slot Geometry)
@@ -51,7 +49,6 @@
     (slot Penetration)
     (slot Pointing-capability)
     (slot Polarimetry)
-    (slot power-duty-cycle#)
     (slot Radiometric-accuracy)
     (slot Radiometric-accuracy#)
     (slot Region-of-interest)
@@ -95,6 +92,9 @@
     (slot ThreeD)
     (slot Vertical-Spatial-Resolution)
     (slot Vertical-Spatial-Resolution#)
+    (slot data-rate-duty-cycle#)
+    (slot diurnal-cycle)
+    (slot power-duty-cycle#)
     (slot factHistory)
 
 

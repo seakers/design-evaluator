@@ -587,6 +587,7 @@
  (propellant-injection hydrazine) (slew-angle 2.0)
 )
 )
+
 ;(defrule CAPABILITIES::cross-register-measurements-from-cross-registered-instruments;
 ;	(CAPABILITIES::Manifested-instrument (Name ?ins1) (measurement-ids $?m1))
 	;(CAPABILITIES::Manifested-instrument (Name ?ins2&~?ins1) (measurement-ids $?m2))
@@ -601,7 +602,7 @@
 (defrule CAPABILITIES-CROSS-REGISTER::cross-register-measurements-from-cross-registered-instruments
 	(SYNERGIES::cross-registered-instruments (instruments $?ins))
 	?c <- (accumulate (bind ?str "")                        ;; initializer
-                (bind ?str (str-cat ?str " " $?m1))                    ;; action
+                (bind ?str (str-cat ?str " " $?m1))         ;; action
                 ?str                                        ;; result
                 (CAPABILITIES::Manifested-instrument (Name ?ins1&:(contains$ $?ins ?ins1)) (measurement-ids $?m1))
 				) ;; CE

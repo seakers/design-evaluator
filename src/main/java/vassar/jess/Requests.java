@@ -5,10 +5,12 @@ import vassar.database.template.functions.JessExtension;
 import vassar.database.template.request.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Requests {
 
     private ArrayList<TemplateRequest> requests;
+    public HashMap<String, TemplateRequest> requests_map;
 
     public static class Builder {
 
@@ -62,6 +64,42 @@ public class Requests {
         }
 
 
+        public Requests buildOrbits(){
+            Requests build = new Requests();
+
+            build.requests_map = new HashMap<>();
+
+            // ---------- ORBIT RULES
+            build.requests_map.put("orbit_rules",
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/orbit_rules.clp")
+                            .build()
+            );
+            build.requests_map.put("orbit_selection_rules",
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/orbit_selection_rules.clp")
+                            .build()
+            );
+            build.requests.add(
+                    new OrbitAttributeTemplateRequest.Builder()
+                            .applyExtension(new JessExtension())
+                            .templateFilePath(this.globalTemplatePath + "/AttributeTemplateRequest.clp")
+                            .templateHeader("DATABASE::Orbit")
+                            .build()
+            );
+            build.requests_map.put("OrbitTemplateRequest",
+                    new OrbitTemplateRequest.Builder()
+                            .applyExtension(new JessExtension())
+                            .templateFilePath(this.globalTemplatePath + "/OrbitTemplateRequest.clp")
+                            .orbitHeader("DATABASE::Orbit")
+                            .templateHeader("orbit-information-facts")
+                            .build()
+            );
+
+            return build;
+        }
+
+
 
         public Requests build() {
             Requests build = new Requests();
@@ -111,7 +149,7 @@ public class Requests {
             build.requests.add(
                     new MissionAttributeTemplateRequest.Builder()
                             .applyExtension(new JessExtension())
-                            .templateFilePath(this.globalTemplatePath + "/AttributeTemplateRequest.clp")
+                            .templateFilePath(this.globalTemplatePath + "/MissionAttributeTemplateRequest.clp")
                             .templateHeader("MANIFEST::Mission")
                             .build()
             );
@@ -134,6 +172,11 @@ public class Requests {
                             .templateFilePath(this.jessAppPath + "/templates.clp")
                             .build()
             );
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/mission_template.clp")
+//                            .build()
+//            );
 
             // ---------- FUNCTIONS
             build.requests.add(
@@ -185,9 +228,14 @@ public class Requests {
             // ---------- ATTRIBUTE INHERITANCE RULES
             build.requests.add(
                     new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules.clp")
+                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules_not_scuffed.clp")
                             .build()
             );
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules.clp")
+//                            .build()
+//            );
             build.requests.add(
                     new AttributeInheritanceTemplateRequest.Builder()
                             .applyExtension(new JessExtension())
@@ -199,6 +247,11 @@ public class Requests {
             build.requests.add(
                     new BatchFileTemplateRequest.Builder()
                             .templateFilePath(this.jessAppPath + "/orbit_rules.clp")
+                            .build()
+            );
+            build.requests.add(
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/orbit_selection_rules.clp")
                             .build()
             );
 
@@ -286,6 +339,13 @@ public class Requests {
                                 .build()
                 );
             }
+            if ( this.requestMode.equalsIgnoreCase("CRISP-CASES") ) {
+                build.requests.add(
+                        new RequirementRuleCaseTemplateRequest.Builder()
+                                .templateFilePath(this.globalTemplatePath + "/RequirementRuleCaseTemplate.clp")
+                                .build()
+                );
+            }
 //            else if ( this.requestMode.equalsIgnoreCase("FUZZY-ATTRIBUTES") ) {
 //                build.requests.add(
 //                        new RequirementRuleAttributeTemplateRequest.Builder()
@@ -294,6 +354,11 @@ public class Requests {
 //                                .build()
 //                );
 //            }
+
+
+
+
+
 
             // 15 ---------- CAPABILITY RULES
             build.requests.add(
@@ -338,6 +403,11 @@ public class Requests {
                             .templateFilePath(this.jessAppPath + "/smap_rules_test.clp")
                             .build()
             );
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/Decadal_specific_rules.clp")
+//                            .build()
+//            );
 
             // 19 ---------- DOWN SELECTION RULES
             build.requests.add(

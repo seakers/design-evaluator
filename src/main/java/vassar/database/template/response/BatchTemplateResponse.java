@@ -45,6 +45,7 @@ public class BatchTemplateResponse extends TemplateResponse {
         this.useString   = builder.useString;
     }
 
+    @Override
     public void evaluate(Rete r){
 
         if (this.useString) {
@@ -68,6 +69,7 @@ public class BatchTemplateResponse extends TemplateResponse {
         }
     }
 
+    @Override
     public String getTemplateString() {
 
         if (this.useString) {

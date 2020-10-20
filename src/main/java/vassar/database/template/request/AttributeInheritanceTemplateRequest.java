@@ -3,6 +3,7 @@ package vassar.database.template.request;
         import com.evaluator.*;
         import vassar.database.service.QueryAPI;
         import vassar.database.template.TemplateRequest;
+        import vassar.database.template.TemplateResponse;
         import vassar.database.template.response.BatchTemplateResponse;
 
         import java.util.ArrayList;
@@ -28,23 +29,23 @@ public class AttributeInheritanceTemplateRequest extends TemplateRequest {
         super(builder);
     }
 
-    public BatchTemplateResponse processRequest(QueryAPI api) {
+
+
+
+
+    public TemplateResponse processRequest(QueryAPI api) {
         try {
-            ArrayList<String> batch = new ArrayList<>();
 
             // QUERY
             List<AttributeInheritanceQuery.Item> items = api.attributeInheritanceQuery();
 
-            for ( AttributeInheritanceQuery.Item item : items){
-                Map<String, Object> context = new HashMap<>();
-                this.context.put("item", item);
-                this.template.evaluate(this.writer, this.context);
-                batch.add(this.writer.toString());
-            }
+            this.context.put("items", items);
+            this.template.evaluate(this.writer, this.context);
 
-            return new BatchTemplateResponse.Builder()
-                                            .setBatch(batch)
-                                            .build();
+            return new TemplateResponse.Builder()
+                    .setTemplateString(this.writer.toString())
+                    .build();
+
         }
         catch (Exception e) {
             System.out.println("Error processing orbit template request: " +e.getClass() + " : " + e.getMessage());

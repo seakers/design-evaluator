@@ -1,15 +1,15 @@
 package vassar.database.template.request;
 
-        import com.evaluator.*;
-        import vassar.database.service.QueryAPI;
-        import vassar.database.template.TemplateRequest;
-        import vassar.database.template.TemplateResponse;
-        import vassar.database.template.response.BatchTemplateResponse;
+import com.evaluator.*;
+import vassar.database.service.QueryAPI;
+import vassar.database.template.TemplateRequest;
+import vassar.database.template.TemplateResponse;
+import vassar.database.template.response.BatchTemplateResponse;
 
-        import java.util.ArrayList;
-        import java.util.HashMap;
-        import java.util.List;
-        import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class FuzzyAttributeTemplateRequest extends TemplateRequest {
