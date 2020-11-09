@@ -205,36 +205,104 @@
     (return (* 5 (round (/ ?fov 5))))
     )
 
-(defrule MANIFEST::get-instrument-revisit-times-from-database
-    (declare (salience 5))
-    ?instr <- (CAPABILITIES::Manifested-instrument (Name ?name) (Field-of-view# ?fov&~nil)
-         (mission-architecture ?arch) (num-of-planes# ?nplanes&~nil)
-         (num-of-sats-per-plane# ?nsats&~nil) 
-        (orbit-altitude# ?h&~nil) (orbit-RAAN ?raan&~nil) (orbit-inclination ?inc&~nil)
-        (avg-revisit-time-global# nil) (avg-revisit-time-tropics# nil)
-         (avg-revisit-time-northern-hemisphere# nil) 
-        (avg-revisit-time-southern-hemisphere# nil) 
-        (avg-revisit-time-cold-regions# nil) (avg-revisit-time-US# nil) (factHistory ?fh1))
+;(defrule MANIFEST::get-instrument-revisit-times-from-database
+;    (declare (salience 5))
+;    ?instr <- (CAPABILITIES::Manifested-instrument (Name ?name)
+;
+    ; QUERY BY
+;    (Field-of-view# ?fov&~nil)
+;    (mission-architecture ?arch)
+;    (num-of-planes# ?nplanes&~nil)
+;    (num-of-sats-per-plane# ?nsats&~nil)
+;    (orbit-altitude# ?h&~nil)
+;    (orbit-RAAN ?raan&~nil)
+;    (orbit-inclination ?inc&~nil)
+;
+;    (avg-revisit-time-global# nil) (avg-revisit-time-tropics# nil)
+;    (avg-revisit-time-northern-hemisphere# nil)
+;    (avg-revisit-time-southern-hemisphere# nil)
+;    (avg-revisit-time-cold-regions# nil) (avg-revisit-time-US# nil) (factHistory ?fh1))
+;
+;    ?sub <- (DATABASE::Revisit-time-of
+;                (mission-architecture ?arch)
+;                (num-of-sats-per-plane# ?nsats)
+;                (num-of-planes# ?nplanes)
+;                (orbit-altitude# ?h)
+;                (orbit-inclination ?inc)
+;                (instrument-field-of-view# ?fov2&:(eq ?fov2 (round-to-5deg ?fov)))
+;                (orbit-raan ?raan2)
+;                (avg-revisit-time-global# ?revtime-global)
+;                (avg-revisit-time-tropics# ?revtime-tropics)
+;                (avg-revisit-time-northern-hemisphere# ?revtime-NH)
+;                (avg-revisit-time-southern-hemisphere# ?revtime-SH)
+;                (avg-revisit-time-cold-regions# ?revtime-cold)
+;                (avg-revisit-time-US# ?revtime-US)
+;    )
+;     (test (or (eq ?raan ?raan2) (eq ?raan NA)))
+;    =>
+;    (modify ?instr (avg-revisit-time-global# ?revtime-global) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH) (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US) (factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::get-instrument-revisit-times-from-database) " " ?fh1 " S" (call ?sub getFactId) "}")))
+;    )
 
-    ?sub <- (DATABASE::Revisit-time-of
-                (mission-architecture ?arch)
-                (num-of-sats-per-plane# ?nsats)
-                (num-of-planes# ?nplanes)
-                (orbit-altitude# ?h)
-                (orbit-inclination ?inc)
-                (instrument-field-of-view# ?fov2&:(eq ?fov2 (round-to-5deg ?fov)))
-                (orbit-raan ?raan2)
-                (avg-revisit-time-global# ?revtime-global)
-                (avg-revisit-time-tropics# ?revtime-tropics)
-                (avg-revisit-time-northern-hemisphere# ?revtime-NH)
-                (avg-revisit-time-southern-hemisphere# ?revtime-SH)
-                (avg-revisit-time-cold-regions# ?revtime-cold)
-                (avg-revisit-time-US# ?revtime-US)
+(defrule MANIFEST::get-instrument-revisit-times-from-database
+
+    ?instr <- (CAPABILITIES::Manifested-instrument
+      (Name ?name)
+      (Field-of-view# ?fov)
+      (mission-architecture ?arch)
+      (num-of-planes# ?nplanes)
+      (num-of-sats-per-plane# ?nsats)
+      (orbit-altitude# ?h)
+      (orbit-inclination ?inc)
     )
-     (test (or (eq ?raan ?raan2) (eq ?raan NA)))
+
+    (DATABASE::Revisit-time-of
+      (mission-architecture ?arch)
+      (num-of-sats-per-plane# ?nsats)
+      (num-of-planes# ?nplanes)
+      (orbit-altitude# ?h)
+      (orbit-inclination ?inc)
+      (instrument-field-of-view# ?fov)
+      (avg-revisit-time-global# ?revtime-global)
+      (avg-revisit-time-tropics# ?revtime-tropics)
+      (avg-revisit-time-northern-hemisphere# ?revtime-NH)
+      (avg-revisit-time-southern-hemisphere# ?revtime-SH)
+      (avg-revisit-time-cold-regions# ?revtime-cold)
+      (avg-revisit-time-US# ?revtime-US)
+    )
+
     =>
-    (modify ?instr (avg-revisit-time-global# ?revtime-global) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH) (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US) (factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::get-instrument-revisit-times-from-database) " " ?fh1 " S" (call ?sub getFactId) "}")))
+
+    (modify ?instr (avg-revisit-time-global# ?revtime-global) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH) (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US))
     )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 (defrule MANIFEST::compute-hsr-cross-track-from-instrument-and-orbit 
     "Compute horizontal spatial resolution from instrument angular resolution 
@@ -283,35 +351,56 @@
 ;    (modify ?instr (Swath# ?sw) ) 
 ;    )
 
+
+; Angular-resolution#
+; num-pixels#
 (defrule MANIFEST::compute-fov-from-angular-res-and-npixels-square 
     "Compute field of view in degrees from angular resolution (IFOV)
     and number of pixels for a square image"
     (declare (salience 4))
-    ?instr <- (CAPABILITIES::Manifested-instrument  (Field-of-view# nil) 
-        (Angular-resolution-azimuth# nil) (Angular-resolution-elevation# nil)
-        (Angular-resolution# ?ifov&~nil) (num-pixels# ?npix&~nil) (factHistory ?fh) ) ; only square images
+    ?instr <- (CAPABILITIES::Manifested-instrument
+                (Field-of-view# nil)
+                (Angular-resolution-azimuth# nil)
+                (Angular-resolution-elevation# nil)
+                (Angular-resolution# ?ifov&~nil) ; Angular-resolution#
+                (num-pixels# ?npix&~nil)         ; num-pixels#
+                (factHistory ?fh)
+            ) ; only square images
     =>
 	(bind ?fov (* ?ifov ?npix)); 
     (modify ?instr (Field-of-view# ?fov) (factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::compute-fov-from-angular-res-and-npixels-square) " " ?fh "}")))
     )
 
+
+; Angular-resolution-elevation#
+; num-pixels-along-track#
 (defrule MANIFEST::compute-fov-from-angular-res-and-npixels-elevation 
     "Compute field of view in degrees from angular resolution (IFOV)
     and number of pixels for the elevation direction in a rectangular image"
     (declare (salience 4))
-    ?instr <- (CAPABILITIES::Manifested-instrument  (Field-of-view-elevation# nil) 
-       (Angular-resolution-elevation# ?ara&~nil) (num-pixels-along-track# ?npix&~nil) (factHistory ?fh) )
+    ?instr <- (CAPABILITIES::Manifested-instrument
+                   (Field-of-view-elevation# nil)
+                   (Angular-resolution-elevation# ?ara&~nil)
+                   (num-pixels-along-track# ?npix&~nil)
+                   (factHistory ?fh)
+               )
     =>
-	(bind ?fov (* ?ara ?npix)); 
+	(bind ?fov (* ?ara ?npix))
     (modify ?instr (Field-of-view-elevation# ?fov) (factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::compute-fov-from-angular-res-and-npixels-elevation) " " ?fh "}")))
     )
 
+; Angular-resolution-azimuth#
+; num-pixels-cross-track#
 (defrule MANIFEST::compute-fov-from-angular-res-and-npixels-azimuth 
     "Compute field of view in degrees from angular resolution (IFOV)
     and number of pixels for the azimuth direction in a rectangular image"
     (declare (salience 4))
-    ?instr <- (CAPABILITIES::Manifested-instrument  (Field-of-view-azimuth# nil) 
-       (Angular-resolution-azimuth# ?ara&~nil) (num-pixels-cross-track# ?npix&~nil) (factHistory ?fh))
+    ?instr <- (CAPABILITIES::Manifested-instrument
+                    (Field-of-view-azimuth# nil)
+                    (Angular-resolution-azimuth# ?ara&~nil)
+                    (num-pixels-cross-track# ?npix&~nil)
+                    (factHistory ?fh)
+               )
     =>
 	(bind ?fov (* ?ara ?npix)); 
     (modify ?instr (Field-of-view-azimuth# ?fov) (factHistory (str-cat "{R" (?*rulesMap* get MANIFEST::compute-fov-from-angular-res-and-npixels-azimuth) " " ?fh "}")))
@@ -390,7 +479,8 @@
     ?instr <- (CAPABILITIES::Manifested-instrument (Intent "Cloud profile and rain radars")
         (off-axis-angle-plus-minus# ?theta&~nil) (scanning conical) (orbit-altitude# ?h&~nil) (Swath# nil))
     =>
-    (bind ?sw (* 2 ?h (matlabf tan (* ?theta (/ (pi) 180)) ))); hsr = lambda/D*h, lambda=c/f
+    ; (bind ?sw (* 2 ?h (matlabf tan (* ?theta (/ (pi) 180))))); hsr = lambda/D*h, lambda=c/f
+    (bind ?sw (* 2 ?h (call java.lang.Math tan (* ?theta (/ (pi) 180))))); hsr = lambda/D*h, lambda=c/f
     (modify ?instr (Swath# ?sw))
     )
 ;; ********************************** 
@@ -417,11 +507,11 @@
 ; *** LIDARS
 
 
-
+;; power returned to a radar
 ;; probert-jones equation pr = pt*g^2*theta^2*pulse width*pi^3*k^2*L*Z/1024ln(2)/lambda^2/R^2
 
 
-;; SYNERGIES:: dual frequency ==> Ka improves sensitiviyty in rain
+;; SYNERGIES:: dual frequency ==> Ka improves sensitivity in rain
 
 ;; SYNERGIES:: dual polarization allows particle shape and phase transition
 

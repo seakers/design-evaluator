@@ -316,7 +316,7 @@
     (test (member$ ?id1 $?m))
     (test (member$ ?id2 $?m))
     =>
-    ; (printout t "worth-improving " (worth-improving-measurement ?p) crlf)
+    (printout t "--> SYNERGY column vs profile, accuracy before / after: " ?acc1 " | " (eval (Improve Accuracy ?acc1)) crlf)
     (duplicate ?col (Accuracy (eval (Improve Accuracy ?acc1))) (Id (str-cat ?id1 "-syn-" ?id2))
         (taken-by (str-cat ?ins1 "-syn-" ?ins2 )) (Vertical-Spatial-Resolution ?vsr) (synergy-level# (+ 1 (max ?s1 ?s2)))(factHistory (str-cat "{R" (?*rulesMap* get SYNERGIES::column-vs-profile-chemistry-measurements) " D" (call ?col getFactId) " S" (call ?sub getFactId) "}")))
     
@@ -380,29 +380,29 @@
     )
 
 ; num soundings per day
-(defrule SYNERGIES::count-num-soundings-per-day
-    "Computes number of soundings per day from number of satellites carrying 
+(defrule count-num-soundings-per-day
+    "Computes number of soundings per day from number of satellites carrying
     GPS receivers, based on paper Research on the Number and Distribution of GPS
 Occultation Events for Orbit Selection for Global/Regional Observation, RAST 2007"
-    
+
     ?m <- (REQUIREMENTS::Measurement (Parameter "1.3.3 GPS radio occultation") (taken-by ?tk)
-        (num-soundings-per-day# nil) (num-of-planes# ?np&~nil) (num-of-sats-per-plane# ?ns&~nil) (factHistory ?fh))
-    => 
+        (num-soundings-per-day# nil) (num-of-planes# ?np&~nil) (num-of-sats-per-plane# ?ns&~nil) )
+    =>
     (bind ?ns (* 450 (* ?ns ?np))); 450 soundings/day per satellite
-    (modify ?m (num-soundings-per-day# ?ns) (factHistory (str-cat "{R" (?*rulesMap* get SYNERGIES::count-num-soundings-per-day) " " ?fh "}")))
+    (modify ?m (num-soundings-per-day# ?ns))
     ;(printout t "nsoundings of " ?tk " = " ?ns crlf)
     )
 
-(defrule SYNERGIES::count-num-soundings-per-day-when-nil
-    "Computes number of soundings per day from number of satellites carrying 
+(defrule count-num-soundings-per-day-when-nil
+    "Computes number of soundings per day from number of satellites carrying
     GPS receivers, based on paper Research on the Number and Distribution of GPS
 Occultation Events for Orbit Selection for Global/Regional Observation, RAST 2007"
-    
+
    ?m <-  (REQUIREMENTS::Measurement (Parameter "1.3.3 GPS radio occultation") (taken-by ?tk)
         (num-soundings-per-day# nil) (num-of-planes# nil) (num-of-sats-per-plane# nil) )
-    => 
+    =>
     (bind ?ns 450); 450 soundings/day per satellite
-    (modify ?m (num-soundings-per-day# ?ns) (factHistory (str-cat "{R" (?*rulesMap* get SYNERGIES::count-num-soundings-per-day-when-nil) " D" (call ?m1 getFactId) " S" (call ?m2 getFactId) "}")))
+    (modify ?m (num-soundings-per-day# ?ns))
     ;(printout t "nsoundings of " ?tk " = " ?ns crlf)
     )
 

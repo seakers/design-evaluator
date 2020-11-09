@@ -3,6 +3,7 @@ package vassar.database.service;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import evaluator.Files;
 import org.json.simple.JSONObject;
 
 // I/O
@@ -21,6 +22,7 @@ public class DebugAPI {
     private FileWriter     jsonWriter;
     private String         outputFilePath; // = "/app/logs/jessInitDB.json"; ???
     private String         outputPath;
+
 
     public static class Builder {
 
@@ -131,29 +133,32 @@ public class DebugAPI {
 
     public void writeTemplateOutputFileName(String fileName, String content) {
 
-        fileName = "/" + fileName + ".txt";
-        File outputFile = new File(this.outputPath + fileName);
-        try{
-            if(!outputFile.createNewFile()) {
-                outputFile.delete();
-                outputFile.createNewFile();
-                outputFile.setWritable(true);
-                outputFile.setReadable(true);
-                FileWriter outputWriter = new FileWriter(this.outputPath + fileName);
-                outputWriter.write(content);
-                outputWriter.close();
+        if(Files.write_files){
+            fileName = "/" + fileName + ".txt";
+            File outputFile = new File(this.outputPath + fileName);
+            try{
+                System.out.println("--> FULL FILE PATH: " + this.outputPath + fileName);
+                if(!outputFile.createNewFile()) {
+                    outputFile.delete();
+                    outputFile.createNewFile();
+                    outputFile.setWritable(true);
+                    outputFile.setReadable(true);
+                    FileWriter outputWriter = new FileWriter(this.outputPath + fileName);
+                    outputWriter.write(content);
+                    outputWriter.close();
+                }
+                else{
+                    outputFile.setWritable(true);
+                    outputFile.setReadable(true);
+                    FileWriter outputWriter = new FileWriter(this.outputPath + fileName);
+                    outputWriter.write(content);
+                    outputWriter.close();
+                }
             }
-            else{
-                outputFile.setWritable(true);
-                outputFile.setReadable(true);
-                FileWriter outputWriter = new FileWriter(this.outputPath + fileName);
-                outputWriter.write(content);
-                outputWriter.close();
+            catch (Exception e) {
+                System.out.println("An error occurred writing: " + fileName);
+                e.printStackTrace();
             }
-        }
-        catch (Exception e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
         }
     }
 

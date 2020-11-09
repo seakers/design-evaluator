@@ -1,1 +1,1 @@
-/app/src/main/java/vassar/database/template/defs/ExplanationRuleTemplate.clp
+/home/gabe/repos/seakers/design-evaluator/src/main/java/vassar/database/template/defs/ExplanationRuleTemplate.clp

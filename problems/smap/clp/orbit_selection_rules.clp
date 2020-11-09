@@ -13,7 +13,7 @@
         (foreach ?h (create$ 275 400 600 800 1300)
             (foreach ?i (create$ polar SSO near-polar)
                 (foreach ?raan (create$ AM PM DD NA)
-                    (if (valid-orbit ?typ ?h ?i ?raan) then (duplicate ?orig (in-orbit (eval (str-cat ?typ "-" ?h "-" ?i "-" ?raan))) (orbit-string (eval (str-cat ?typ "-" ?h "-" ?i "-" ?raan))) (num-of-planes# 1) (num-of-sats-per-plane# 1) (mission-architecture ?arch) (orbit-altitude# ?h) (orbit-type ?typ) (orbit-RAAN ?raan) (orbit-inclination ?i) (mission-architecture single_arch) (orbit-eccentricity 0) )))
+                    (if (valid-orbit ?typ ?h ?i ?raan) then (duplicate ?orig (in-orbit (eval (str-cat ?typ "-" ?h "-" ?i "-" ?raan))) (orbit-string (eval (str-cat ?typ "-" ?h "-" ?i "-" ?raan))) (num-of-planes# 1) (num-of-sats-per-plane# 1) (mission-architecture single-sat) (orbit-altitude# ?h) (orbit-type ?typ) (orbit-RAAN ?raan) (orbit-inclination ?i) (orbit-eccentricity 0) )))
                     ;(if (valid-orbit ?typ ?h ?i ?raan) then (duplicate ?orig (in-orbit (str-cat ?typ "-" ?h "-" ?i "-" ?raan)) (num-of-planes# ?np) (num-of-sats-per-plane# ?ns) (mission-architecture ?arch) (orbit-altitude# ?h) (orbit-type ?typ) (orbit-RAAN ?raan) (orbit-inclination ?i) )))
         )))
     (retract ?orig)

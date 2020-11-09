@@ -80,11 +80,12 @@
 
 (defrule CAPABILITIES::resource-limitations-datarate
     (declare (salience 10))
-    ?l1 <- (CAPABILITIES::can-measure (instrument ?ins1) (in-orbit ?miss) (can-take-measurements yes) (data-rate-duty-cycle# nil) (factHistory ?fh1))
+    ?l1 <- (CAPABILITIES::can-measure (instrument ?ins1) (in-mission ?miss) (can-take-measurements yes) (data-rate-duty-cycle# nil) (factHistory ?fh1))
     ?i1 <- (CAPABILITIES::Manifested-instrument (Name ?ins1&~nil) (flies-in ?miss&~nil) (factHistory ?fh2))
     ?sub <- (MANIFEST::Mission  (Name ?miss) (sat-data-rate-per-orbit# ?rbo&~nil) (factHistory ?fh3))
     =>
     (bind ?dc (min 1.0 (/ (* 1 7 60 500 (/ 1 8192)) ?rbo))); you get 1 7' pass at 500Mbps max
+    (printout t "--> DATA-RATE DUTY-CYCLE (" ?ins1 "): " (/ (* 1 7 60 500 (/ 1 8192)) ?rbo) crlf)
     (modify ?l1 (data-rate-duty-cycle# ?dc) (reason "Cumulative spacecraft data rate cannot be downloaded to ground stations") (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::resource-limitations-datarate) " " ?fh1 " S" (call ?i1 getFactId) " S" (call ?sub getFactId) "}")))
 	(modify ?i1 (data-rate-duty-cycle# ?dc) (factHistory (str-cat "{R" (?*rulesMap* get CAPABILITIES::resource-limitations-datarate) " " ?fh2 " S" (call ?l1 getFactId) " S" (call ?sub getFactId) "}")))
     ;(if (< ?dc 1.0) then (printout t "resource-limitations-datarate " ?ins1 " dc = " ?dc crlf))
@@ -92,7 +93,7 @@
 
 (defrule CAPABILITIES::resource-limitations-power
     (declare (salience 10))
-    ?l1 <- (CAPABILITIES::can-measure (instrument ?ins1) (in-orbit ?miss) (can-take-measurements yes) (power-duty-cycle# nil) (factHistory ?fh1))
+    ?l1 <- (CAPABILITIES::can-measure (instrument ?ins1) (in-mission ?miss) (can-take-measurements yes) (power-duty-cycle# nil) (factHistory ?fh1))
 	?i1 <- (CAPABILITIES::Manifested-instrument (Name ?ins1&~nil) (flies-in ?miss&~nil) (factHistory ?fh2))
     ?sub <- (MANIFEST::Mission  (satellite-BOL-power# ?pow&~nil) (factHistory ?fh3))
     =>
@@ -102,20 +103,38 @@
     ;(if (< ?dc 1.0) then (printout t "resource-limitations-power " ?ins1 " dc = " ?dc crlf))
     )
         
-;(defrule CAPABILITIES::get-instrument-revisit-times-from-database
-;    (declare (salience 5))
-;    ?instr <- (CAPABILITIES::Manifested-instrument (Name ?name) (Field-of-view# ?fov&~nil)
-;         (mission-architecture ?arch) (num-of-planes# ?nplanes&~nil)
-;         (num-of-sats-per-plane# ?nsats&~nil) 
-;        (orbit-altitude# ?h&~nil) (orbit-RAAN ?raan&~nil) (orbit-inclination ?inc&~nil)
-;        (avg-revisit-time-global# nil) (avg-revisit-time-tropics# nil)
-;         (avg-revisit-time-northern-hemisphere# nil) 
-;        (avg-revisit-time-southern-hemisphere# nil) 
-;        (avg-revisit-time-cold-regions# nil) (avg-revisit-time-US# nil))
-;    (DATABASE::Revisit-time-of (mission-architecture ?arch) (num-of-sats-per-plane# ?nsats) (num-of-planes# ?nplanes) (orbit-altitude# ?h) (orbit-inclination ?inc) (instrument-field-of-view# ?fov) (orbit-raan ?raan)  (avg-revisit-time-global# ?revtime-global) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH) (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US))
-;    =>
-;    (modify ?instr (avg-revisit-time-global# ?revtime-global) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH) (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US))
-;    )
+(defrule CAPABILITIES::get-instrument-revisit-times-from-database
+    (declare (salience 5))
+
+    ?instr <- (CAPABILITIES::Manifested-instrument
+      (Name ?name)
+      (Field-of-view# ?fov)
+      (mission-architecture ?arch)
+      (num-of-planes# ?nplanes)
+      (num-of-sats-per-plane# ?nsats)
+      (orbit-altitude# ?h)
+      (orbit-inclination ?inc)
+    )
+
+    (DATABASE::Revisit-time-of
+      (mission-architecture ?arch)
+      (num-of-sats-per-plane# ?nsats)
+      (num-of-planes# ?nplanes)
+      (orbit-altitude# ?h)
+      (orbit-inclination ?inc)
+      (instrument-field-of-view# ?fov)
+      (avg-revisit-time-global# ?revtime-global)
+      (avg-revisit-time-tropics# ?revtime-tropics)
+      (avg-revisit-time-northern-hemisphere# ?revtime-NH)
+      (avg-revisit-time-southern-hemisphere# ?revtime-SH)
+      (avg-revisit-time-cold-regions# ?revtime-cold)
+      (avg-revisit-time-US# ?revtime-US)
+    )
+
+    =>
+
+    (modify ?instr (avg-revisit-time-global# ?revtime-global) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH) (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US))
+)
 
 (defrule CAPABILITIES::cryospheric-instruments-want-polar-orbits
     "If a cryospheric instrument is flown on a non polar orbit then 

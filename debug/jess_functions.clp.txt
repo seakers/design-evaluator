@@ -1,1 +1,1 @@
-/app/problems/smap/clp/jess_functions.clp
+/home/gabe/repos/seakers/design-evaluator/problems/smap/clp/jess_functions.clp

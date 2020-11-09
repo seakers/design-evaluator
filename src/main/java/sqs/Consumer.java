@@ -200,6 +200,7 @@ public class Consumer implements Runnable{
         System.out.println("--> RETURN QUEUE: " + rQueue);
         System.out.println("----------> UUID: " + UUID);
         System.out.println("-------------------------------------------------------------------\n");
+//        EvaluatorApp.sleep(5);
 
         Result result = this.client.evaluateADDArchitecture(input);
 
@@ -233,7 +234,7 @@ public class Consumer implements Runnable{
 
         this.sendResultMessage(rQueue, UUID, result);
 
-        System.out.println("\n-------------------- EVALUATE ADD REQUEST OUTPUT --------------------");
+        System.out.println("\n-------------------- EVALUATE SELECTING REQUEST OUTPUT --------------------");
         System.out.println("------------> INPUT: " + input);
         System.out.println("-------------> COST: " + result.getCost());
         System.out.println("----------> SCIENCE: " + result.getScience());
@@ -241,7 +242,7 @@ public class Consumer implements Runnable{
         System.out.println("----> DESIGN STRING: " + result.getDesignString());
         System.out.println("--------------------------------------------------------------------\n");
         System.out.println("--> SELECTING <--");
-        EvaluatorApp.sleep(5);
+        // EvaluatorApp.sleep(5);
     }
 
     public void msgTypePARTITIONING(HashMap<String, String> msg_contents){
@@ -250,7 +251,7 @@ public class Consumer implements Runnable{
         String rQueue = msg_contents.get("rQueue");
         String UUID   = msg_contents.get("UUID");
 
-        System.out.println("\n-------------------- EVALUATE SELECTING REQUEST INPUT --------------------");
+        System.out.println("\n-------------------- EVALUATE PARTITIONING REQUEST INPUT --------------------");
         System.out.println("---------> INPUT: " + input);
         System.out.println("--> RETURN QUEUE: " + rQueue);
         System.out.println("----------> UUID: " + UUID);
@@ -260,7 +261,7 @@ public class Consumer implements Runnable{
 
         this.sendResultMessage(rQueue, UUID, result);
 
-        System.out.println("\n-------------------- EVALUATE ADD REQUEST OUTPUT --------------------");
+        System.out.println("\n-------------------- EVALUATE PARTITIONING REQUEST OUTPUT --------------------");
         System.out.println("------------> INPUT: " + input);
         System.out.println("-------------> COST: " + result.getCost());
         System.out.println("----------> SCIENCE: " + result.getScience());

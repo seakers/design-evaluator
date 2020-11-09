@@ -62,6 +62,13 @@ dependencies {
     // COMBINITORIX
     implementation 'com.github.dpaukov:combinatoricslib3:3.3.0'
 
+
+    // MATLAB
+    implementation files('/home/gabe/repos/seakers/design-evaluator/jars/matlabcontrol-4.1.0.jar')
+
+    // MATLAB ENGINE
+    implementation files('/usr/local/MATLAB/R2020a/extern/engines/java/jar/engine.jar')
+
 }
 
 application {

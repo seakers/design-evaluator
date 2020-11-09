@@ -51,7 +51,7 @@
 (deftemplate ORBIT-SELECTION::orbit (slot orb) (slot of-instrument) (slot in-mission) (slot is-type) (slot h) (slot i) (slot e) (slot a) (slot raan) (slot anomaly) (slot penalty-var)(slot factHistory) )
 (deftemplate ORBIT-SELECTION::launcher (slot lv) (multislot performance) (slot cost) (slot diameter) (slot height)(slot factHistory) )
 	
-(deftemplate CAPABILITIES::can-measure (slot instrument) (slot in-orbit) (slot orbit-type) (slot orbit-altitude#) (slot data-rate-duty-cycle#) (slot power-duty-cycle#) (slot data-rate-constraint) (slot orbit-inclination) (slot orbit-RAAN) (slot can-take-measurements) (slot reason)(slot copied-to-measurement-fact)(slot factHistory))
+(deftemplate CAPABILITIES::can-measure (slot in-mission) (slot instrument) (slot in-orbit) (slot orbit-type) (slot orbit-altitude#) (slot data-rate-duty-cycle#) (slot power-duty-cycle#) (slot data-rate-constraint) (slot orbit-inclination) (slot orbit-RAAN) (slot can-take-measurements) (slot reason)(slot copied-to-measurement-fact)(slot factHistory))
 (deftemplate CAPABILITIES::resource-limitations (slot mission) (multislot instruments) (slot data-rate-duty-cycle#) (slot power-duty-cycle#) (slot reason)(slot factHistory))
 (deftemplate DOWN-SELECTION::MAX-COST (slot max-cost) (slot factHistory))	
 (deftemplate DOWN-SELECTION::MIN-SCIENCE (slot min-benefit)(slot factHistory))

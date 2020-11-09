@@ -36,4 +36,8 @@ public class LaunchVehicle {
     public double getCost() {
         return cost;
     }
+
+    public HashMap<String, ValueVector> getPayloadCoeffs(){
+        return this.payloadCoeffs;
+    }
 }

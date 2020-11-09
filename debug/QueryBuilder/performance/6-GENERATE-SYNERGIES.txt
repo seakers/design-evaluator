@@ -1,54 +1,6 @@
 
 --------------- SYNERGIES::cross-registered - 1 ---------------
-(measurements ACE-POL0 ACE-POL1 ACE-POL2 ACE-POL3 ACE-POL4 ACE-POL5 ACE-POL6 ACE-POL7 ACE-POL8 ACE-POL9 ACE-POL10 ACE-POL11 ACE-POL12 ACE-POL13 ACE-POL14 ACE-POL15 ACE-POL16)
+(measurements SWOT_GPS0 SWOT_GPS1 SWOT_GPS2 SWOT_GPS3 SWOT_GPS4)
 (degree-of-cross-registration instrument)
 (platform nil)
-(factHistory "{Rnil A352 A459}")
-
---------------- SYNERGIES::cross-registered - 2 ---------------
-(measurements CALIPSO-CALIOP0 CALIPSO-CALIOP1 CALIPSO-CALIOP2 CALIPSO-CALIOP3 CALIPSO-CALIOP4 CALIPSO-CALIOP5 CALIPSO-CALIOP6 CALIPSO-CALIOP7 CALIPSO-CALIOP8 CALIPSO-CALIOP9 CALIPSO-CALIOP10 CALIPSO-CALIOP11 CALIPSO-CALIOP12 CALIPSO-CALIOP13)
-(degree-of-cross-registration instrument)
-(platform nil)
-(factHistory "{Rnil A358 A452}")
-
---------------- SYNERGIES::cross-registered - 3 ---------------
-(measurements ACE-LID0 ACE-LID1 ACE-LID2 ACE-LID3 ACE-LID4 ACE-LID5 ACE-LID6 ACE-LID7 ACE-LID8 ACE-LID9 ACE-LID10 ACE-LID11)
-(degree-of-cross-registration instrument)
-(platform nil)
-(factHistory "{Rnil A359 A451}")
-
---------------- SYNERGIES::cross-registered - 4 ---------------
-(measurements EARTHCARE-ATLID0 EARTHCARE-ATLID1 EARTHCARE-ATLID2 EARTHCARE-ATLID3 EARTHCARE-ATLID4 EARTHCARE-ATLID5 EARTHCARE-ATLID6)
-(degree-of-cross-registration instrument)
-(platform nil)
-(factHistory "{Rnil A355 A454}")
-
---------------- SYNERGIES::cross-registered - 5 ---------------
-(measurements EARTHCARE-CPR0 EARTHCARE-CPR1 EARTHCARE-CPR2 EARTHCARE-CPR3 EARTHCARE-CPR4 EARTHCARE-CPR5 EARTHCARE-CPR6 EARTHCARE-CPR7 EARTHCARE-CPR8)
-(degree-of-cross-registration instrument)
-(platform nil)
-(factHistory "{Rnil A356 A455}")
-
---------------- SYNERGIES::cross-registered - 6 ---------------
-(measurements EARTHCARE-MSI0 EARTHCARE-MSI1 EARTHCARE-MSI2 EARTHCARE-MSI3 EARTHCARE-MSI4 EARTHCARE-MSI5 EARTHCARE-MSI6)
-(degree-of-cross-registration instrument)
-(platform nil)
-(factHistory "{Rnil A351 A458}")
-
---------------- SYNERGIES::cross-registered - 7 ---------------
-(measurements DIAL0 DIAL1 DIAL2 DIAL3 DIAL4 DIAL5 DIAL6 DIAL7)
-(degree-of-cross-registration instrument)
-(platform nil)
-(factHistory "{Rnil A353 A456}")
-
---------------- SYNERGIES::cross-registered - 8 ---------------
-(measurements ACE-OCI0 ACE-OCI1 ACE-OCI2 ACE-OCI3 ACE-OCI4 ACE-OCI5 ACE-OCI6 ACE-OCI7 ACE-OCI8 ACE-OCI9 ACE-OCI10 ACE-OCI11 ACE-OCI12)
-(degree-of-cross-registration instrument)
-(platform nil)
-(factHistory "{Rnil A354 A457}")
-
---------------- SYNERGIES::cross-registered - 9 ---------------
-(measurements CALIPSO-IIR0 CALIPSO-IIR1 CALIPSO-IIR2 CALIPSO-IIR3 CALIPSO-IIR4 CALIPSO-IIR5)
-(degree-of-cross-registration instrument)
-(platform nil)
-(factHistory "{Rnil A357 A453}")
+(factHistory "{Rnil A672 A685}")

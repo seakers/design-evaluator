@@ -3,6 +3,7 @@ package vassar.combinatorics;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import evaluator.EvaluatorApp;
+import evaluator.Files;
 import org.paukov.combinatorics3.IGenerator;
 import vassar.architecture.SingleSat;
 import vassar.evaluator.ADDEvaluator;
@@ -157,7 +158,7 @@ public class Combinatorics {
         try{
             SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd-HH-mm-ss" );
             String stamp = dateFormat.format( new Date() );
-            FileOutputStream file = new FileOutputStream( "/app/output/DSM-Decadal"+dim+"-" + stamp + ".dat");
+            FileOutputStream file = new FileOutputStream( Files.root_directory + "/output/DSM-Decadal"+dim+"-" + stamp + ".dat");
             ObjectOutputStream os = new ObjectOutputStream( file );
             os.writeObject( dsm_map );
             os.close();

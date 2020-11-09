@@ -1,5 +1,6 @@
 package vassar.evaluator;
 
+import evaluator.Files;
 import jess.*;
 
 
@@ -123,7 +124,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         // 1. Load initial performance critique facts
         try {
             r.eval("(bind ?*p* (new java.util.Vector))");
-            r.batch("/app/problems/smap/clp/critique/critique_performance_initialize_facts.clp");
+            r.batch(Files.root_directory + "/problems/smap/clp/critique/critique_performance_initialize_facts.clp");
             r.setFocus("CRITIQUE-PERFORMANCE-PRECALCULATION");
             r.run();
             r.setFocus("CRITIQUE-PERFORMANCE");
@@ -148,7 +149,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         // 1. Load initial cost critique facts
         try {
             r.eval("(bind ?*q* (new java.util.Vector))");
-            r.batch("/app/problems/smap/clp/critique/critique_cost_initialize_facts.clp");
+            r.batch(Files.root_directory + "/problems/smap/clp/critique/critique_cost_initialize_facts.clp");
             r.setFocus("CRITIQUE-COST-PRECALCULATION");
             r.run();
             r.setFocus("CRITIQUE-COST");

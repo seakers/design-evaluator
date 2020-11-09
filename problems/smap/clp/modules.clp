@@ -51,3 +51,7 @@
 (defmodule CRITIQUE-COST)
 (defmodule CRITIQUE-COST-PRECALCULATION)
 (defmodule CRITIQUE-COST-PARAM)
+
+
+;; Module for applying (power-duty-cycle / data-rate-duty-cycle) constraints on temporal-resolution
+(defmodule DUTY-CYCLE-CONSTRAINTS)

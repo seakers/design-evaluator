@@ -10,7 +10,7 @@
 
 (defrule REQUIREMENTS::{{rule.subobjective().name()}}-attrib{{rule.rule()}}
     ?m <- (REQUIREMENTS::Measurement
-            (Parameter "{{rule.measurement().name()}}")
+            (Parameter "{{rule.measurement().name()}}") (science-multiplier ?mult)
             {% for attr in rule.measurement_attributes() %}
                 {% if attr.operation().equalsIgnoreCase("ContainsRegion") %}
                     ({{attr.Measurement_Attribute().name()}} ?val{{loop.index + 1}}&~nil)
@@ -48,7 +48,8 @@
             (requirement-id (?m getFactId))
         )
     )
-    (bind ?*subobj-{{rule.subobjective.name()}}* (max ?*subobj-{{rule.subobjective.name()}}* {{rule.value()}}))
+    (bind ?*subobj-{{rule.subobjective.name()}}* (max ?*subobj-{{rule.subobjective.name()}}* (* {{rule.value()}} ?mult)))
+    ;(bind ?*subobj-{{rule.subobjective.name()}}* (max ?*subobj-{{rule.subobjective.name()}}* {{rule.value()}}))
 )
 
 

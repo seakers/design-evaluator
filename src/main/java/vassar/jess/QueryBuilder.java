@@ -1,11 +1,14 @@
 package vassar.jess;
 
 import evaluator.EvaluatorApp;
+import evaluator.Files;
 import jess.*;
 import vassar.database.service.DebugAPI;
 import vassar.problem.Problem;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 
@@ -30,11 +33,11 @@ public class QueryBuilder {
             QueryBuilder build = new QueryBuilder();
             build.r = this.r;
             build.precomputedQueries = this.precomputedQueries;
-            build.debug_dir = "/app/debug/QueryBuilder";
+            build.debug_dir = Files.root_directory + "/debug/QueryBuilder";
 
-            build.debugAPI = new DebugAPI.Builder("/app/debug/QueryBuilder/output.json")
+            build.debugAPI = new DebugAPI.Builder(Files.root_directory + "/debug/QueryBuilder/output.json")
                     .newFile()
-                    .setOutputPath("/app/debug/QueryBuilder")
+                    .setOutputPath(Files.root_directory + "/debug/QueryBuilder")
                     .build();
 
             return build;
@@ -107,6 +110,35 @@ public class QueryBuilder {
         return instruments;
     }
 
+
+    public ArrayList<Fact> getMeasurementFacts(String measurement){
+        ArrayList<Fact> facts = new ArrayList<>();
+        ArrayList<String> instruments = new ArrayList<>();
+
+        String query_call = "(defquery modify-query ?f <- (REQUIREMENTS::Measurement (Parameter "+measurement+")))";
+        try{
+            this.r.eval(query_call);
+            QueryResult q_result = r.runQueryStar("modify-query", new ValueVector());
+            while(q_result.next())
+                facts.add((Fact) q_result.getObject("f"));
+            this.r.removeDefrule("modify-query");
+
+            if(facts.isEmpty()){
+                System.out.println("---> MEASUREMENT FACT NOT FOUND: " + measurement);
+                // EvaluatorApp.sleep(1);
+                return facts;
+            }
+
+            return facts;
+        }
+        catch(JessException e){
+            e.printStackTrace();
+        }
+        return facts;
+    }
+
+
+
     // Assumes there is only one mission !!!
     public String getMissionSlotValue(String slot_name){
         ArrayList<Fact> facts = new ArrayList<>();
@@ -165,20 +197,26 @@ public class QueryBuilder {
             System.out.println(e.getMessage());
         }
 
-        String debug = "empty query";
-        if(!facts.isEmpty()){
-            debug = "";
-            int counter = 1;
-            for(Fact fct: facts){
-                debug += "\n--------------- " + template + " - " + counter + " ---------------\n";
+        if(Files.write_files){
+            String debug = "empty query";
+            if(!facts.isEmpty()){
+                debug = "";
+                int counter = 1;
+
+                // Sort facts based on an attribute value
+                Collections.sort(facts, this.getFactComparator());
+
+                for(Fact fct: facts){
+                    debug += "\n--------------- " + template + " - " + counter + " ---------------\n";
 
 
-                debug += this.transformFactString(fct.toStringWithParens());
-                counter++;
+                    debug += this.transformFactString(fct.toStringWithParens());
+                    counter++;
+                }
             }
+            this.debugAPI.writeTemplateOutputFileName(fileName, debug);
         }
 
-        this.debugAPI.writeTemplateOutputFileName(fileName, debug);
         return facts;
     }
 
@@ -225,12 +263,54 @@ public class QueryBuilder {
 
         Matcher m = java.util.regex.Pattern.compile("\\((.*?)\\)").matcher(clipped);
         while(m.find()) {
-            System.out.println(m.group(1));
             trans += (m.group() + "\n");
         }
 
         return trans;
     }
+
+
+
+
+    public Comparator<Fact> getFactComparator(){
+        Rete engine = this.r;
+        return new Comparator<Fact>() {
+            @Override
+            public int compare(Fact o1, Fact o2) {
+                Deftemplate f1 = o1.getDeftemplate();
+                String[] slot_names = f1.getSlotNames();
+                String true_slot = "";
+                boolean slot_found = false;
+                for(String slot_name: slot_names) {
+
+
+                    // Comparison on Name attribute
+                    if (slot_name.equals("Name")) {
+                        true_slot = slot_name;
+                        slot_found = true;
+                    } else if (slot_name.equals("Parameter")) {
+                        true_slot = slot_name;
+                        slot_found = true;
+                    }
+
+                    // Evaluate and return
+                    if (slot_found) {
+                        try {
+                            String v1 = o1.getSlotValue(true_slot).stringValue(engine.getGlobalContext());
+                            String v2 = o2.getSlotValue(true_slot).stringValue(engine.getGlobalContext());
+                            return v1.compareTo(v2);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            System.exit(0);
+                        }
+                    }
+                }
+                return 0;
+            }
+        };
+    }
+
+
 
 
 

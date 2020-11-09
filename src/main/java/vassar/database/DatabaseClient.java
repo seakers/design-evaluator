@@ -167,6 +167,10 @@ public class DatabaseClient {
     }
 
 
+    public List<WalkerMissionAnalysisQuery.Item> getWalkerMissionAnalysis(){
+        return this.queryAPI.walkerMissionAnalysisQuery();
+    }
+
 
     // ---> Index Architecture
     public int indexArchitecture(String input, double science, double cost, boolean ga, boolean redo){

@@ -173,7 +173,14 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items();
     }
 
-
+    public List<WalkerMissionAnalysisQuery.Item> walkerMissionAnalysisQuery(){
+        WalkerMissionAnalysisQuery iaQuery = WalkerMissionAnalysisQuery.builder()
+                .problem_id(this.problem_id)
+                .build();
+        ApolloCall<WalkerMissionAnalysisQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
+        Observable<Response<WalkerMissionAnalysisQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items();
+    }
 
 
 

@@ -244,11 +244,17 @@ public class Result implements Serializable {
 
 
 
-
+    // a: array of subobjective weights
+    // b: array of subobjective scores
+    // ||b|| == ||a||
     public static double sumProduct(ArrayList<Double> a, ArrayList<Double> b) throws Exception {
         return SumDollar(dotMult(a, b));
     }
 
+    // a: array of subobjective weights
+    // b: array of subobjective scores
+    // returns c: each element of a and b multiplied together
+    // ||b|| == ||a|| == ||c||
     public static ArrayList<Double> dotMult(ArrayList<Double> a, ArrayList<Double> b) throws Exception {
         int n1 = a.size();
         int n2 = b.size();

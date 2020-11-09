@@ -114,7 +114,8 @@ public class Resource {
                     ValueVector payload_MEO = lv.getSlotValue("payload-MEO").listValue(this.engine.getGlobalContext());
                     ValueVector payload_GEO = lv.getSlotValue("payload-GEO").listValue(this.engine.getGlobalContext());
                     ValueVector payload_HEO = lv.getSlotValue("payload-HEO").listValue(this.engine.getGlobalContext());
-                    payload_coeffs.put("LEO-polar", payload_LEO_polar);
+                    payload_coeffs.put("LEO-polar", payload_LEO_polar); // LEO-near-polar
+                    payload_coeffs.put("LEO-near-polar", payload_LEO_polar);
                     payload_coeffs.put("SSO-SSO", payload_SSO);
                     payload_coeffs.put("LEO-equat", payload_LEO_equat);
                     payload_coeffs.put("MEO-polar", payload_MEO);

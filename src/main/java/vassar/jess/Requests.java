@@ -1,5 +1,6 @@
 package vassar.jess;
 
+import evaluator.EvaluatorApp;
 import vassar.database.template.TemplateRequest;
 import vassar.database.template.functions.JessExtension;
 import vassar.database.template.request.*;
@@ -226,16 +227,16 @@ public class Requests {
             );
 
             // ---------- ATTRIBUTE INHERITANCE RULES
-            build.requests.add(
-                    new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules_not_scuffed.clp")
-                            .build()
-            );
 //            build.requests.add(
 //                    new BatchFileTemplateRequest.Builder()
-//                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules.clp")
+//                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules_not_scuffed.clp")
 //                            .build()
 //            );
+            build.requests.add(
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules.clp")
+                            .build()
+            );
             build.requests.add(
                     new AttributeInheritanceTemplateRequest.Builder()
                             .applyExtension(new JessExtension())
@@ -252,6 +253,13 @@ public class Requests {
             build.requests.add(
                     new BatchFileTemplateRequest.Builder()
                             .templateFilePath(this.jessAppPath + "/orbit_selection_rules.clp")
+                            .build()
+            );
+
+            // ----------- MATLAB
+            build.requests.add(
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/matlab_rules.clp")
                             .build()
             );
 
@@ -358,6 +366,13 @@ public class Requests {
 
 
 
+            // 14.5 MISSION ANALYSIS DATABASE
+            build.requests.add(
+                    new WalkerMissionAnalysisTemplateRequest.Builder()
+                            .templateFilePath(this.globalTemplatePath + "/WalkerMissionAnalysisTemplate.clp")
+                            .build()
+            );
+
 
 
             // 15 ---------- CAPABILITY RULES
@@ -371,6 +386,13 @@ public class Requests {
                             .templateFilePath(this.globalTemplatePath + "/CapabilityRuleTemplate.clp")
                             .build()
             );
+
+            // 15.1 DUTY CYCLE CONSTRAINTS
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/duty_cycle_constraints.clp")
+//                            .build()
+//            );
 
 
             // 16 ---------- SYNERGY RULES
@@ -398,35 +420,35 @@ public class Requests {
                             .templateFilePath(this.globalTemplatePath + "/AdHocRuleTemplate.clp")
                             .build()
             );
-            build.requests.add(
-                    new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/smap_rules_test.clp")
-                            .build()
-            );
 //            build.requests.add(
 //                    new BatchFileTemplateRequest.Builder()
-//                            .templateFilePath(this.jessAppPath + "/Decadal_specific_rules.clp")
+//                            .templateFilePath(this.jessAppPath + "/smap_rules_test.clp")
+//                            .build()
+//            );
+            build.requests.add(
+                    new BatchFileTemplateRequest.Builder()
+                            .templateFilePath(this.jessAppPath + "/Decadal_specific_rules.clp")
+                            .build()
+            );
+
+            // 19 ---------- DOWN SELECTION RULES
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/down_selection_rules_smap.clp")
 //                            .build()
 //            );
 
-            // 19 ---------- DOWN SELECTION RULES
-            build.requests.add(
-                    new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/down_selection_rules_smap.clp")
-                            .build()
-            );
-
             // 20 ---------- SEARCH RULES
-            build.requests.add(
-                    new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.globalTemplatePath + "/SearchRuleTemplate.clp")
-                            .build()
-            );
-            build.requests.add(
-                    new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/search_heuristic_rules_smap_improveOrbit.clp")
-                            .build()
-            );
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.globalTemplatePath + "/SearchRuleTemplate.clp")
+//                            .build()
+//            );
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/search_heuristic_rules_smap_improveOrbit.clp")
+//                            .build()
+//            );
             build.requests.add(
                     new ResetRequest.Builder()
                             .setFocus("DATABASE")

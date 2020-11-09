@@ -3,6 +3,16 @@
 ;; SMAP specific rules
 ;; *******************
 
+(defrule MANIFEST::put-ADCS-values-by-default
+"Use values  by default for satellite parameters"
+?miss <- (MANIFEST::Mission  (ADCS-requirement nil))
+=>
+(modify ?miss (ADCS-requirement 0.01) (ADCS-type three-axis) (propellant-ADCS hydrazine)
+ (propellant-injection hydrazine) (slew-angle 2.0)
+)
+)
+
+
 ;(defrule SYNERGIES::SMAP-spatial-disaggregation "A frequent coarse spatial resolution measurement can be combined with a sparse high spatial resolution measurement to produce a frequent high spatial resolution measurement with average accuracy"
 ;    ?m1 <- (REQUIREMENTS::Measurement (Parameter "2.3.2 soil moisture") (Horizontal-Spatial-Resolution ?hsr1&~nil) (Accuracy ?a1&~nil) (Id ?id1) (taken-by ?ins1))
 ;    ?m2 <- (REQUIREMENTS::Measurement (Parameter "2.3.2 soil moisture") (Horizontal-Spatial-Resolution ?hsr2&~nil) (Accuracy ?a2&~nil) (Id ?id2) (taken-by ?ins2))

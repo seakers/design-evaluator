@@ -96,6 +96,7 @@
     (slot diurnal-cycle)
     (slot power-duty-cycle#)
     (slot factHistory)
+    (slot science-multiplier)
 
 
 )

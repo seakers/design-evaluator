@@ -36,7 +36,7 @@ public class Orbit {
         raan = tokens[3];
         nplanes = String.valueOf(np);
         num_sats_per_plane = String.valueOf(nsat);
-        mission_arch = "single_arch";
+        mission_arch = "single-sat";
         eccentricity = "0.0";
         this.saveOrbitalParamInNumbers(altitude, inclination);
     }
@@ -49,7 +49,7 @@ public class Orbit {
         raan = tokens[3];
         nplanes = "1";
         num_sats_per_plane = "1";
-        mission_arch = "single_arch";
+        mission_arch = "single-sat";
         eccentricity = "0.0";
         this.saveOrbitalParamInNumbers(altitude, inclination);
     }
@@ -60,7 +60,7 @@ public class Orbit {
         inclination = i;
         raan = ra;
         nplanes = "1";
-        mission_arch = "single_arch";
+        mission_arch = "single-sat";
         eccentricity = "0.0";
         this.saveOrbitalParamInNumbers(altitude, inclination);
     }

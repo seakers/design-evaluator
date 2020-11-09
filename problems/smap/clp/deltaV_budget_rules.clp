@@ -44,7 +44,7 @@
     ?miss <- (MANIFEST::Mission (ADCS-type ?adcs) (delta-V-ADCS nil) 
         (lifetime ?life&~nil) (factHistory ?fh))
     =>
-    
+    (printout t "---> COMPUTING DELTA-V FROM ADCS: " ?adcs crlf)
     (if (eq ?adcs three-axis) then (bind ?dV 20)
         elif (eq ?adcs grav-gradient) then (bind ?dV 0))
     

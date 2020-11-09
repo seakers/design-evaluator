@@ -169,18 +169,6 @@
 )
 
 
-(defrule MANIFEST::inherit-Instrument-characteristic-power#-TO-Manifested-instrument
-    (declare (no-loop TRUE))
-
-    ?sub <- (DATABASE::Instrument (characteristic-power# ?x&~nil)(Name ?id&~nil) )
-    ?old <- (CAPABILITIES::Manifested-instrument(Name ?id) (factHistory ?fh)(characteristic-power# nil))
-
-    =>
-
-    (modify ?old (characteristic-power# ?x)(factHistory (str-cat "{R"(?*rulesMap* get MANIFEST::inherit-Instrument-characteristic-power#-TO-Manifested-instrument) " " ?fh " S"(call ?sub getFactId) "}")))
-)
-
-
 (defrule MANIFEST::inherit-Instrument-Concept-TO-Manifested-instrument
     (declare (no-loop TRUE))
 
@@ -1309,7 +1297,7 @@
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Accuracy-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Accuracy-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Accuracy ?x&~nil)(Name ?id&~nil) )
@@ -1317,11 +1305,11 @@
 
     =>
 
-    (modify ?old (Accuracy ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Accuracy-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Accuracy ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Accuracy-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Accuracy#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Accuracy#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Accuracy# ?x&~nil)(Name ?id&~nil) )
@@ -1329,11 +1317,11 @@
 
     =>
 
-    (modify ?old (Accuracy# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Accuracy#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Accuracy# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Accuracy#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Accuracy2-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Accuracy2-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Accuracy2 ?x&~nil)(Name ?id&~nil) )
@@ -1341,7 +1329,7 @@
 
     =>
 
-    (modify ?old (Accuracy2 ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Accuracy2-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Accuracy2 ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Accuracy2-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
@@ -1357,7 +1345,7 @@
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-All-weather-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-All-weather-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (All-weather ?x&~nil)(Name ?id&~nil) )
@@ -1365,11 +1353,11 @@
 
     =>
 
-    (modify ?old (All-weather ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-All-weather-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (All-weather ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-All-weather-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-cold-regions#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-cold-regions#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (avg-revisit-time-cold-regions# ?x&~nil)(Name ?id&~nil) )
@@ -1377,11 +1365,11 @@
 
     =>
 
-    (modify ?old (avg-revisit-time-cold-regions# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-cold-regions#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (avg-revisit-time-cold-regions# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-cold-regions#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-global#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-global#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (avg-revisit-time-global# ?x&~nil)(Name ?id&~nil) )
@@ -1389,11 +1377,11 @@
 
     =>
 
-    (modify ?old (avg-revisit-time-global# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-global#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (avg-revisit-time-global# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-global#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-northern-hemisphere#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-northern-hemisphere#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (avg-revisit-time-northern-hemisphere# ?x&~nil)(Name ?id&~nil) )
@@ -1401,11 +1389,11 @@
 
     =>
 
-    (modify ?old (avg-revisit-time-northern-hemisphere# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-northern-hemisphere#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (avg-revisit-time-northern-hemisphere# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-northern-hemisphere#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-southern-hemisphere#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-southern-hemisphere#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (avg-revisit-time-southern-hemisphere# ?x&~nil)(Name ?id&~nil) )
@@ -1413,11 +1401,11 @@
 
     =>
 
-    (modify ?old (avg-revisit-time-southern-hemisphere# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-southern-hemisphere#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (avg-revisit-time-southern-hemisphere# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-southern-hemisphere#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-tropics#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-tropics#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (avg-revisit-time-tropics# ?x&~nil)(Name ?id&~nil) )
@@ -1425,11 +1413,11 @@
 
     =>
 
-    (modify ?old (avg-revisit-time-tropics# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-tropics#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (avg-revisit-time-tropics# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-tropics#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-US#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-US#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (avg-revisit-time-US# ?x&~nil)(Name ?id&~nil) )
@@ -1437,11 +1425,11 @@
 
     =>
 
-    (modify ?old (avg-revisit-time-US# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-avg-revisit-time-US#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (avg-revisit-time-US# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-avg-revisit-time-US#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-band-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-band-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (band ?x&~nil)(Name ?id&~nil) )
@@ -1449,23 +1437,11 @@
 
     =>
 
-    (modify ?old (band ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-band-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (band ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-band-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-data-rate-duty-cycle#-TO-Measurement
-    (declare (no-loop TRUE))
-
-    ?sub <- (CAPABILITIES::Manifested-instrument (data-rate-duty-cycle# ?x&~nil)(Name ?id&~nil) )
-    ?old <- (REQUIREMENTS::Measurement(taken-by ?id) (factHistory ?fh)(data-rate-duty-cycle# nil))
-
-    =>
-
-    (modify ?old (data-rate-duty-cycle# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-data-rate-duty-cycle#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
-)
-
-
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Day-Night-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Day-Night-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Day-Night ?x&~nil)(Name ?id&~nil) )
@@ -1473,11 +1449,11 @@
 
     =>
 
-    (modify ?old (Day-Night ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Day-Night-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Day-Night ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Day-Night-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Field-of-view#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Field-of-view#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Field-of-view# ?x&~nil)(Name ?id&~nil) )
@@ -1485,11 +1461,11 @@
 
     =>
 
-    (modify ?old (Field-of-view# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Field-of-view#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Field-of-view# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Field-of-view#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-flies-in-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-flies-in-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (flies-in ?x&~nil)(Name ?id&~nil) )
@@ -1497,11 +1473,11 @@
 
     =>
 
-    (modify ?old (flies-in ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-flies-in-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (flies-in ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-flies-in-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Geometry-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Geometry-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Geometry ?x&~nil)(Name ?id&~nil) )
@@ -1509,11 +1485,11 @@
 
     =>
 
-    (modify ?old (Geometry ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Geometry-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Geometry ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Geometry-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-High-lat-sensitivity-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-High-lat-sensitivity-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (High-lat-sensitivity ?x&~nil)(Name ?id&~nil) )
@@ -1521,11 +1497,11 @@
 
     =>
 
-    (modify ?old (High-lat-sensitivity ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-High-lat-sensitivity-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (High-lat-sensitivity ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-High-lat-sensitivity-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Horizontal-Spatial-Resolution ?x&~nil)(Name ?id&~nil) )
@@ -1533,11 +1509,11 @@
 
     =>
 
-    (modify ?old (Horizontal-Spatial-Resolution ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Horizontal-Spatial-Resolution ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Horizontal-Spatial-Resolution# ?x&~nil)(Name ?id&~nil) )
@@ -1545,11 +1521,11 @@
 
     =>
 
-    (modify ?old (Horizontal-Spatial-Resolution# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Horizontal-Spatial-Resolution# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution2-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution2-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Horizontal-Spatial-Resolution2 ?x&~nil)(Name ?id&~nil) )
@@ -1557,11 +1533,11 @@
 
     =>
 
-    (modify ?old (Horizontal-Spatial-Resolution2 ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution2-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Horizontal-Spatial-Resolution2 ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution2-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Along-track-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Along-track-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Horizontal-Spatial-Resolution-Along-track ?x&~nil)(Name ?id&~nil) )
@@ -1569,11 +1545,11 @@
 
     =>
 
-    (modify ?old (Horizontal-Spatial-Resolution-Along-track ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Along-track-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Horizontal-Spatial-Resolution-Along-track ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Along-track-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Along-track#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Along-track#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Horizontal-Spatial-Resolution-Along-track# ?x&~nil)(Name ?id&~nil) )
@@ -1581,11 +1557,11 @@
 
     =>
 
-    (modify ?old (Horizontal-Spatial-Resolution-Along-track# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Along-track#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Horizontal-Spatial-Resolution-Along-track# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Along-track#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Cross-track-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Cross-track-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Horizontal-Spatial-Resolution-Cross-track ?x&~nil)(Name ?id&~nil) )
@@ -1593,11 +1569,11 @@
 
     =>
 
-    (modify ?old (Horizontal-Spatial-Resolution-Cross-track ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Cross-track-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Horizontal-Spatial-Resolution-Cross-track ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Cross-track-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Cross-track#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Cross-track#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Horizontal-Spatial-Resolution-Cross-track# ?x&~nil)(Name ?id&~nil) )
@@ -1605,11 +1581,11 @@
 
     =>
 
-    (modify ?old (Horizontal-Spatial-Resolution-Cross-track# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Cross-track#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Horizontal-Spatial-Resolution-Cross-track# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Horizontal-Spatial-Resolution-Cross-track#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Illumination-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Illumination-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Illumination ?x&~nil)(Name ?id&~nil) )
@@ -1617,11 +1593,11 @@
 
     =>
 
-    (modify ?old (Illumination ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Illumination-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Illumination ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Illumination-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-image-distortion#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-image-distortion#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (image-distortion# ?x&~nil)(Name ?id&~nil) )
@@ -1629,11 +1605,11 @@
 
     =>
 
-    (modify ?old (image-distortion# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-image-distortion#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (image-distortion# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-image-distortion#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-launch-date-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-launch-date-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (launch-date ?x&~nil)(Name ?id&~nil) )
@@ -1641,11 +1617,11 @@
 
     =>
 
-    (modify ?old (launch-date ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-launch-date-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (launch-date ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-launch-date-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-lifetime-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-lifetime-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (lifetime ?x&~nil)(Name ?id&~nil) )
@@ -1653,11 +1629,11 @@
 
     =>
 
-    (modify ?old (lifetime ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-lifetime-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (lifetime ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-lifetime-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-mission-architecture-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-mission-architecture-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (mission-architecture ?x&~nil)(Name ?id&~nil) )
@@ -1665,11 +1641,11 @@
 
     =>
 
-    (modify ?old (mission-architecture ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-mission-architecture-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (mission-architecture ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-mission-architecture-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-num-of-planes#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-num-of-planes#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (num-of-planes# ?x&~nil)(Name ?id&~nil) )
@@ -1677,11 +1653,11 @@
 
     =>
 
-    (modify ?old (num-of-planes# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-num-of-planes#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (num-of-planes# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-num-of-planes#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-num-of-sats-per-plane#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-num-of-sats-per-plane#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (num-of-sats-per-plane# ?x&~nil)(Name ?id&~nil) )
@@ -1689,11 +1665,11 @@
 
     =>
 
-    (modify ?old (num-of-sats-per-plane# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-num-of-sats-per-plane#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (num-of-sats-per-plane# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-num-of-sats-per-plane#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-On-board-calibration-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-On-board-calibration-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (On-board-calibration ?x&~nil)(Name ?id&~nil) )
@@ -1701,11 +1677,11 @@
 
     =>
 
-    (modify ?old (On-board-calibration ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-On-board-calibration-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (On-board-calibration ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-On-board-calibration-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-altitude#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-orbit-altitude#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (orbit-altitude# ?x&~nil)(Name ?id&~nil) )
@@ -1713,11 +1689,11 @@
 
     =>
 
-    (modify ?old (orbit-altitude# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-altitude#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (orbit-altitude# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-orbit-altitude#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-anomaly#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-orbit-anomaly#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (orbit-anomaly# ?x&~nil)(Name ?id&~nil) )
@@ -1725,11 +1701,11 @@
 
     =>
 
-    (modify ?old (orbit-anomaly# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-anomaly#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (orbit-anomaly# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-orbit-anomaly#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-inclination-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-orbit-inclination-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (orbit-inclination ?x&~nil)(Name ?id&~nil) )
@@ -1737,11 +1713,11 @@
 
     =>
 
-    (modify ?old (orbit-inclination ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-inclination-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (orbit-inclination ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-orbit-inclination-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-RAAN-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-orbit-RAAN-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (orbit-RAAN ?x&~nil)(Name ?id&~nil) )
@@ -1749,11 +1725,11 @@
 
     =>
 
-    (modify ?old (orbit-RAAN ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-RAAN-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (orbit-RAAN ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-orbit-RAAN-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-string-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-orbit-string-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (orbit-string ?x&~nil)(Name ?id&~nil) )
@@ -1761,11 +1737,11 @@
 
     =>
 
-    (modify ?old (orbit-string ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-string-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (orbit-string ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-orbit-string-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-type-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-orbit-type-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (orbit-type ?x&~nil)(Name ?id&~nil) )
@@ -1773,11 +1749,11 @@
 
     =>
 
-    (modify ?old (orbit-type ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-orbit-type-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (orbit-type ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-orbit-type-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Penetration-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Penetration-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Penetration ?x&~nil)(Name ?id&~nil) )
@@ -1785,11 +1761,11 @@
 
     =>
 
-    (modify ?old (Penetration ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Penetration-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Penetration ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Penetration-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Pointing-capability-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Pointing-capability-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Pointing-capability ?x&~nil)(Name ?id&~nil) )
@@ -1797,11 +1773,11 @@
 
     =>
 
-    (modify ?old (Pointing-capability ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Pointing-capability-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Pointing-capability ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Pointing-capability-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Polarimetry-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Polarimetry-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Polarimetry ?x&~nil)(Name ?id&~nil) )
@@ -1809,23 +1785,11 @@
 
     =>
 
-    (modify ?old (Polarimetry ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Polarimetry-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Polarimetry ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Polarimetry-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-power-duty-cycle#-TO-Measurement
-    (declare (no-loop TRUE))
-
-    ?sub <- (CAPABILITIES::Manifested-instrument (power-duty-cycle# ?x&~nil)(Name ?id&~nil) )
-    ?old <- (REQUIREMENTS::Measurement(taken-by ?id) (factHistory ?fh)(power-duty-cycle# nil))
-
-    =>
-
-    (modify ?old (power-duty-cycle# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-power-duty-cycle#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
-)
-
-
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Radiometric-accuracy-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Radiometric-accuracy-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Radiometric-accuracy ?x&~nil)(Name ?id&~nil) )
@@ -1833,11 +1797,11 @@
 
     =>
 
-    (modify ?old (Radiometric-accuracy ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Radiometric-accuracy-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Radiometric-accuracy ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Radiometric-accuracy-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Radiometric-accuracy#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Radiometric-accuracy#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Radiometric-accuracy# ?x&~nil)(Name ?id&~nil) )
@@ -1845,11 +1809,11 @@
 
     =>
 
-    (modify ?old (Radiometric-accuracy# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Radiometric-accuracy#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Radiometric-accuracy# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Radiometric-accuracy#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-rms-system-instrument#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-rms-system-instrument#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (rms-system-instrument# ?x&~nil)(Name ?id&~nil) )
@@ -1857,11 +1821,11 @@
 
     =>
 
-    (modify ?old (rms-system-instrument# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-rms-system-instrument#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (rms-system-instrument# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-rms-system-instrument#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-sensitivity#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (sensitivity# ?x&~nil)(Name ?id&~nil) )
@@ -1869,11 +1833,11 @@
 
     =>
 
-    (modify ?old (sensitivity# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (sensitivity# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-sensitivity#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-cirrus-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-cirrus-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (sensitivity-in-cirrus ?x&~nil)(Name ?id&~nil) )
@@ -1881,11 +1845,11 @@
 
     =>
 
-    (modify ?old (sensitivity-in-cirrus ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-cirrus-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (sensitivity-in-cirrus ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-cirrus-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-convective-clouds-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-convective-clouds-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (sensitivity-in-convective-clouds ?x&~nil)(Name ?id&~nil) )
@@ -1893,11 +1857,11 @@
 
     =>
 
-    (modify ?old (sensitivity-in-convective-clouds ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-convective-clouds-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (sensitivity-in-convective-clouds ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-convective-clouds-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-low-troposphere-PBL-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-low-troposphere-PBL-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (sensitivity-in-low-troposphere-PBL ?x&~nil)(Name ?id&~nil) )
@@ -1905,11 +1869,11 @@
 
     =>
 
-    (modify ?old (sensitivity-in-low-troposphere-PBL ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-low-troposphere-PBL-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (sensitivity-in-low-troposphere-PBL ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-low-troposphere-PBL-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-upper-stratosphere-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-upper-stratosphere-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (sensitivity-in-upper-stratosphere ?x&~nil)(Name ?id&~nil) )
@@ -1917,11 +1881,11 @@
 
     =>
 
-    (modify ?old (sensitivity-in-upper-stratosphere ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-upper-stratosphere-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (sensitivity-in-upper-stratosphere ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-upper-stratosphere-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-upper-troposphere-and-stratosphere-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-upper-troposphere-and-stratosphere-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (sensitivity-in-upper-troposphere-and-stratosphere ?x&~nil)(Name ?id&~nil) )
@@ -1929,11 +1893,11 @@
 
     =>
 
-    (modify ?old (sensitivity-in-upper-troposphere-and-stratosphere ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-in-upper-troposphere-and-stratosphere-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (sensitivity-in-upper-troposphere-and-stratosphere ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-sensitivity-in-upper-troposphere-and-stratosphere-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-NEDT#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-sensitivity-NEDT#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (sensitivity-NEDT# ?x&~nil)(Name ?id&~nil) )
@@ -1941,11 +1905,11 @@
 
     =>
 
-    (modify ?old (sensitivity-NEDT# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-NEDT#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (sensitivity-NEDT# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-sensitivity-NEDT#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-over-lands-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-sensitivity-over-lands-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (sensitivity-over-lands ?x&~nil)(Name ?id&~nil) )
@@ -1953,11 +1917,11 @@
 
     =>
 
-    (modify ?old (sensitivity-over-lands ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-over-lands-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (sensitivity-over-lands ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-sensitivity-over-lands-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-over-oceans-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-sensitivity-over-oceans-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (sensitivity-over-oceans ?x&~nil)(Name ?id&~nil) )
@@ -1965,11 +1929,11 @@
 
     =>
 
-    (modify ?old (sensitivity-over-oceans ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-sensitivity-over-oceans-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (sensitivity-over-oceans ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-sensitivity-over-oceans-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-soil-penetration#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-soil-penetration#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (soil-penetration# ?x&~nil)(Name ?id&~nil) )
@@ -1977,11 +1941,11 @@
 
     =>
 
-    (modify ?old (soil-penetration# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-soil-penetration#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (soil-penetration# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-soil-penetration#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Spectral-region-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Spectral-region-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Spectral-region ?x&~nil)(Name ?id&~nil) )
@@ -1989,11 +1953,11 @@
 
     =>
 
-    (modify ?old (Spectral-region ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Spectral-region-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Spectral-region ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Spectral-region-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Spectral-resolution-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Spectral-resolution-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Spectral-resolution ?x&~nil)(Name ?id&~nil) )
@@ -2001,11 +1965,11 @@
 
     =>
 
-    (modify ?old (Spectral-resolution ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Spectral-resolution-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Spectral-resolution ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Spectral-resolution-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Spectral-resolution#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Spectral-resolution#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Spectral-resolution# ?x&~nil)(Name ?id&~nil) )
@@ -2013,11 +1977,11 @@
 
     =>
 
-    (modify ?old (Spectral-resolution# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Spectral-resolution#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Spectral-resolution# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Spectral-resolution#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Spectral-sampling-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Spectral-sampling-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Spectral-sampling ?x&~nil)(Name ?id&~nil) )
@@ -2025,11 +1989,11 @@
 
     =>
 
-    (modify ?old (Spectral-sampling ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Spectral-sampling-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Spectral-sampling ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Spectral-sampling-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Swath-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Swath-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Swath ?x&~nil)(Name ?id&~nil) )
@@ -2037,11 +2001,11 @@
 
     =>
 
-    (modify ?old (Swath ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Swath-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Swath ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Swath-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Swath#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Swath#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Swath# ?x&~nil)(Name ?id&~nil) )
@@ -2049,11 +2013,11 @@
 
     =>
 
-    (modify ?old (Swath# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Swath#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Swath# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Swath#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Swath2-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Swath2-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Swath2 ?x&~nil)(Name ?id&~nil) )
@@ -2061,11 +2025,11 @@
 
     =>
 
-    (modify ?old (Swath2 ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Swath2-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Swath2 ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Swath2-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Temporal-resolution-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Temporal-resolution-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Temporal-resolution ?x&~nil)(Name ?id&~nil) )
@@ -2073,11 +2037,11 @@
 
     =>
 
-    (modify ?old (Temporal-resolution ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Temporal-resolution-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Temporal-resolution ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Temporal-resolution-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Temporal-resolution#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Temporal-resolution#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Temporal-resolution# ?x&~nil)(Name ?id&~nil) )
@@ -2085,11 +2049,11 @@
 
     =>
 
-    (modify ?old (Temporal-resolution# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Temporal-resolution#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Temporal-resolution# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Temporal-resolution#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-ThreeD-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-ThreeD-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (ThreeD ?x&~nil)(Name ?id&~nil) )
@@ -2097,11 +2061,11 @@
 
     =>
 
-    (modify ?old (ThreeD ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-ThreeD-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (ThreeD ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-ThreeD-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Vertical-Spatial-Resolution-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Vertical-Spatial-Resolution-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Vertical-Spatial-Resolution ?x&~nil)(Name ?id&~nil) )
@@ -2109,11 +2073,11 @@
 
     =>
 
-    (modify ?old (Vertical-Spatial-Resolution ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Vertical-Spatial-Resolution-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Vertical-Spatial-Resolution ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Vertical-Spatial-Resolution-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-Vertical-Spatial-Resolution#-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-Vertical-Spatial-Resolution#-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (Vertical-Spatial-Resolution# ?x&~nil)(Name ?id&~nil) )
@@ -2121,11 +2085,11 @@
 
     =>
 
-    (modify ?old (Vertical-Spatial-Resolution# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-Vertical-Spatial-Resolution#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (Vertical-Spatial-Resolution# ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-Vertical-Spatial-Resolution#-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 
-(defrule CAPABILITIES-GENERATE::inherit-Manifested-instrument-spectral-bands-TO-Measurement
+(defrule CAPABILITIES::inherit-Manifested-instrument-spectral-bands-TO-Measurement
     (declare (no-loop TRUE))
 
     ?sub <- (CAPABILITIES::Manifested-instrument (spectral-bands $?x&:(> (length$ $?x) 0))(Name ?id&~nil) )
@@ -2133,7 +2097,7 @@
 
     =>
 
-    (modify ?old (spectral-bands ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES-GENERATE::inherit-Manifested-instrument-spectral-bands-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
+    (modify ?old (spectral-bands ?x)(factHistory (str-cat "{R"(?*rulesMap* get CAPABILITIES::inherit-Manifested-instrument-spectral-bands-TO-Measurement) " " ?fh " S"(call ?sub getFactId) "}")))
 )
 
 

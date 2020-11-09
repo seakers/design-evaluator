@@ -21,6 +21,12 @@
 )
 
 
+(deffunction torad (?rad)
+    (return (* 180 (/ ?rad (pi))))
+)
+
+
+
 ; UPDATE FOVS ;
 (deffunction update-fovs (?param ?orbit-list)
     (printout t "--> UPDATING FOVS FOR MEASUREMENT: " ?param " WITH ORBITS: " ?orbit-list crlf)
@@ -38,6 +44,28 @@
     )
     (if (eq ?some FALSE) then (return FALSE) else (return ?fovs))
 )
+
+; UPDATE AGGREGATE FOVS ;
+(deffunction update-aggregate-fovs (?param ?orbit-list)
+    (printout t "--> UPDATING FOVS FOR MEASUREMENT: " ?param " WITH ORBITS: " ?orbit-list crlf)
+    (bind ?results (run-query* REQUIREMENTS::get-measurement-param-fov-and-orbit ?param))
+    (bind ?n (length$ ?orbit-list))
+    (bind ?fovs (repeat$ -1 ?n))
+    (bind ?some FALSE)
+    (while (?results next)
+        (bind ?some TRUE)
+        (bind ?fov (?results get fov))
+        (bind ?orb (?results get orb))
+        ;; ITERATE OVER PROBLEM ORBITS
+        (for (bind ?i 1) (<= ?i ?n) (++ ?i)
+            ;; IF THIS ORBIT MATCHES THE MEASUREMENT'S ORBIT
+            (if (eq (nth$ ?i ?orbit-list) ?orb) then
+                (bind ?fovs (replace$ ?fovs ?i ?i (max (nth$ ?i ?fovs) ?fov)))))
+    )
+    (if (eq ?some FALSE) then (return FALSE) else (return ?fovs))
+)
+
+
 
 (deffunction compute-cost-overrun (?trls)
 	(bind ?min-trl 10)

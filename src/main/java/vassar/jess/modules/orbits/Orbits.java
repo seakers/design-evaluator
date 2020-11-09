@@ -1,6 +1,7 @@
 package vassar.jess.modules.orbits;
 
 import evaluator.EvaluatorApp;
+import evaluator.Files;
 import jess.Defrule;
 import jess.Fact;
 import jess.Rete;
@@ -98,7 +99,7 @@ public class Orbits {
         this.resource  = resource;
         this.q_builder = resource.getQueryBuilder();
         this.engine    = resource.getEngine();
-        this.output_path = "/app/src/main/java/vassar/jess/modules/orbits/output/";
+        this.output_path = Files.root_directory + "/src/main/java/vassar/jess/modules/orbits/output/";
     }
 
 

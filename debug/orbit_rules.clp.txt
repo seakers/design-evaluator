@@ -1,1 +1,1 @@
-/app/problems/smap/clp/orbit_rules.clp
+/home/gabe/repos/seakers/design-evaluator/problems/smap/clp/orbit_rules.clp

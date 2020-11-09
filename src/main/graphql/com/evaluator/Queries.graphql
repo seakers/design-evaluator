@@ -298,6 +298,27 @@ query SubobjectiveAttributeInformation($problem_id: Int, $name: String) {
 #  | |  | | \__ \__ \ | (_) | | | |
 #  |_|  |_|_|___/___/_|\___/|_| |_|
 
+
+query WalkerMissionAnalysis($problem_id: Int){
+    items: Walker_Mission_Analysis(where: {problem_id: {_eq: $problem_id}}) {
+        sats_per_plane
+        problem_id
+        orbit_inclination
+        orbit_altitude
+        num_planes
+        mission_architecture
+        instrument_fov
+        avg_revisit_time_us
+        avg_revisit_time_tropics
+        avg_revisit_time_southern_hemisphere
+        avg_revisit_time_northern_hemisphere
+        avg_revisit_time_global
+        avg_revisit_time_cold_regiouis
+    }
+}
+
+
+
 query MissionAttribute($problem_id: Int) {
     items: Mission_Attribute(where: {Problem: {id: {_eq: $problem_id}}}) {
         id

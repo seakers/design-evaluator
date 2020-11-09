@@ -4,14 +4,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import evaluator.EvaluatorApp;
 import jess.*;
-import org.checkerframework.checker.units.qual.A;
+import org.checkerframework.checker.units.qual.C;
 import org.hipparchus.util.FastMath;
 import org.orekit.frames.TopocentricFrame;
 import seakers.orekit.coverage.access.TimeIntervalArray;
 import seakers.orekit.event.EventIntervalMerger;
 import vassar.architecture.ADDArchitecture;
 import vassar.architecture.AbstractArchitecture;
-import vassar.database.DatabaseClient;
 import vassar.evaluator.coverage.CoverageAnalysis;
 import vassar.evaluator.spacecraft.Orbit;
 import vassar.jess.QueryBuilder;
@@ -24,6 +23,7 @@ import vassar.result.Result;
 
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class ADDEvaluator implements Callable<Result> {
@@ -34,6 +34,8 @@ public class ADDEvaluator implements Callable<Result> {
     private QueryBuilder    q_builder;
     private ADDArchitecture arch;
     private Set<Orbit>      orbitsUsed;
+
+    private ArrayList<Fact> arch_measurements;
 
     public boolean evalPerformance;
     public boolean evalCost;
@@ -112,7 +114,8 @@ public class ADDEvaluator implements Callable<Result> {
             build.evalPerformance = this.evalPerformance;
             build.evalScheduling  = this.evalScheduling;
             build.orbitsUsed      = new HashSet<>();
-            build.orbitSelection  = this.orbitSelection;
+            build.arch_measurements  = new ArrayList<>();
+            build.orbitSelection     = this.orbitSelection;
             build.synergyDeclaration = this.synergyDeclaration;
             build.extractLaunchMass  = this.extractLaunchMass;
 
@@ -172,7 +175,7 @@ public class ADDEvaluator implements Callable<Result> {
             }
             this.evaluateCost(result);
             if(this.evalScheduling){
-                this.evaluateSeheduling(result);
+                this.evaluateScheduling(result);
             }
         }
 
@@ -235,13 +238,23 @@ public class ADDEvaluator implements Callable<Result> {
             engine.setFocus("MANIFEST0");
             engine.run();
             this.q_builder.saveQuery("performance/3-MANIFESTED-INSTRUMENTS", "CAPABILITIES::Manifested-instrument");
+            this.q_builder.saveQuery("performance/3-REVISIT-TIMES", "DATABASE::Revisit-time-of");
 
             // MEASUREMENT CAPABILITIES / DESIGN PROPULTION SYSTEM
             engine.setFocus("MANIFEST");
             engine.run();
+            this.q_builder.saveQuery("performance/4-REVISIT-TIMES", "DATABASE::Revisit-time-of");
             this.q_builder.saveQuery("performance/4-CAN-MEASURE", "CAPABILITIES::can-measure");
             this.q_builder.saveQuery("performance/4-PROPULTION-SYSTEM", "MANIFEST::Mission");
-            // CAPABILITIES::can-measure
+            this.q_builder.saveQuery("performance/4-MANIFESTED-INSTRUMENTS", "CAPABILITIES::Manifested-instrument");
+
+            // Sets
+            // - power-duty-cycle
+            // - data-rate-duty-cycle
+            this.designSpacecraft(this.engine, this.arch, this.q_builder);
+
+            // New module that applies the min of (power-duty-cycle / data-rate-duty-cycle)
+
 
 
             // Modifies: CAPABILITIES::can-measure
@@ -249,13 +262,15 @@ public class ADDEvaluator implements Callable<Result> {
             engine.run();
             this.q_builder.saveQuery("performance/5-SOLVE-CAN-MEASURE", "CAPABILITIES::can-measure");
             this.q_builder.saveQuery("performance/5-SOLVE-MANIFESTED-INSTRUMENTS", "CAPABILITIES::Manifested-instrument");
-
+            this.q_builder.saveQuery("performance/5-MISSION-CAPABILITIES", "MANIFEST::Mission");
 
             engine.setFocus("CAPABILITIES-REMOVE-OVERLAPS");
             engine.run();
 
+            // Asserts: REQUIREMENT::Measurement
             engine.setFocus("CAPABILITIES-GENERATE");
             engine.run();
+            // EvaluatorApp.sleep(10);
 
             this.q_builder.saveQuery("performance/6-GENERATE-REQUIREMENTS", "REQUIREMENTS::Measurement");
             this.q_builder.saveQuery("performance/6-GENERATE-SYNERGIES", "SYNERGIES::cross-registered");
@@ -271,11 +286,14 @@ public class ADDEvaluator implements Callable<Result> {
 
             engine.setFocus("SYNERGIES");
             engine.run();
+            // EvaluatorApp.sleep(10);
 
-            this.evaluateCoverage(engine, params);
+            // this.evaluateCoverage();
 
             engine.setFocus("ASSIMILATION2");
             engine.run();
+
+            this.q_builder.saveQuery("performance/9-MEASUREMENT-REVISIT-TIME", "REQUIREMENTS::Measurement");
 
             engine.setFocus("ASSIMILATION");
             engine.run();
@@ -283,11 +301,15 @@ public class ADDEvaluator implements Callable<Result> {
             engine.setFocus("FUZZY");
             engine.run();
 
+            this.q_builder.saveQuery("performance/10-MEASUREMENT-AFTER-FUZZY", "REQUIREMENTS::Measurement");
+
             engine.setFocus("SYNERGIES");
             engine.run();
 
             engine.setFocus("SYNERGIES-ACROSS-ORBITS");
             engine.run();
+
+            this.q_builder.saveQuery("requirements/requirement_facts", "REQUIREMENTS::Measurement");
 
             // REQUIREMENTS
             if ((params.getRequestMode().equalsIgnoreCase("FUZZY-CASES")) || (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES"))) {
@@ -307,12 +329,20 @@ public class ADDEvaluator implements Callable<Result> {
             }
             engine.run();
 
+            // --> Record all measurement facts for data continuity calculations
+            this.q_builder.saveQuery("performance/11-MEASUREMENT-FINAL", "REQUIREMENTS::Measurement");
+            this.arch_measurements = this.q_builder.makeQuery("REQUIREMENTS::Measurement");
+
+
             if ((params.getRequestMode().equalsIgnoreCase("CRISP-ATTRIBUTES")) || (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES"))) {
                 result = this.aggregate_performance_score_facts();
             }
             else{
                 result = this.aggregate_performance_score();
             }
+
+            this.q_builder.saveQuery("performance/END-PERFORMANCE", "MANIFEST::Mission");
+
 
 
         }
@@ -392,12 +422,17 @@ public class ADDEvaluator implements Callable<Result> {
             // Remove the mission orbits with the highest penalties
             Set<String> mission_keys = mission_orbits.keySet();
             HashMap<String, ArrayList<String>> best_orbits = new HashMap<>();
+
+            // Find the best orbits for each mission
             for(String mission_key: mission_keys){
                 Double init_penalty = 100000.0;
+
+                // Get the penalties for each orbit
                 HashMap<String, Double> penalties = mission_orbits.get(mission_key);
                 ArrayList<String> best_orbit = new ArrayList<>();
                 best_orbits.put(mission_key, best_orbit);
                 for(String penalty_key: penalties.keySet()){
+                    // The orbit's penalty
                     Double single_penalty = penalties.get(penalty_key);
                     if(single_penalty < init_penalty){
                         best_orbit = new ArrayList<>();
@@ -405,20 +440,20 @@ public class ADDEvaluator implements Callable<Result> {
                         best_orbit.add(penalty_key);
                         best_orbits.put(mission_key, best_orbit);
                     }
-                    else if(single_penalty == init_penalty){
+                    else if(single_penalty.equals(init_penalty)){
                         best_orbit.add(penalty_key);
                         best_orbits.put(mission_key, best_orbit);
                     }
                 }
             }
-            System.out.println("\n\n" + best_orbits);
+            System.out.println("\n\n  BEST ORBITS: " + best_orbits);
 
 
             // Arbitrarily choose the first of top orbits and retract all unnecessary Mission facts
             for(String mission_key: best_orbits.keySet()){
                 ArrayList<String> orbits = best_orbits.get(mission_key);
                 Random rand = new Random();
-                String random_orbit = orbits.get(rand.nextInt(orbits.size()));
+                String random_orbit = orbits.get(orbits.size()-1);
                 int start_idx = random_orbit.indexOf('-') + 1;
                 String random_orbit_trm = random_orbit.substring(start_idx);
                 System.out.println(random_orbit_trm);
@@ -477,237 +512,6 @@ public class ADDEvaluator implements Callable<Result> {
             this.orbitsUsed.add(new Orbit(orbit_name, 1, 1));
         }
     }
-
-    private void evaluateCoverage(Rete engine, Problem params){
-
-        try{
-            int javaAssertedFactID = 1;
-
-            // transform the orbit list into a binary list indicating if that orbit is precomputed
-//            int[] revTimePrecomputedIndex = new int[params.getOrbitList().length];
-//            String[] revTimePrecomputedOrbitList = {"LEO-600-polar-NA","SSO-600-SSO-AM","SSO-600-SSO-DD","SSO-800-SSO-DD","SSO-800-SSO-PM"};
-
-//            for(int i = 0; i < params.getOrbitList().length; i++){
-//                String orb = params.getOrbitList()[i];
-//                int matchedIndex = -1;
-//                for(int j = 0; j < revTimePrecomputedOrbitList.length; j++){
-//                    if(revTimePrecomputedOrbitList[j].equalsIgnoreCase(orb)){
-//                        matchedIndex = j;
-//                        break;
-//                    }
-//                }
-//
-//                // Assign -1 if unmatched. Otherwise, assign the corresponding index
-//                revTimePrecomputedIndex[i] = matchedIndex;
-//            }
-
-            // ITERATE OVER MEASUREMENTS
-            for (String param: params.measurementsToInstruments.keySet()) {
-
-                // 1. Create an array of all the orbits considered in this problem
-                // 2. Create a new array of size(orbits) and for each idx corresponding to an orbit that measurement is taken in, put the fov of the measurement
-                Value v = engine.eval("(update-fovs " + param + " (create$ " + MatlabFunctions.stringArraytoStringWithSpaces(params.getOrbitList()) + "))");
-
-                // Ex.
-                // measurement: soil moisture
-                // orbits: [orb1, orb2, orb3]
-                // fovs:   [fov1, fov2, ----]
-
-
-                // If this measurement is taken from any orbit
-                if (RU.getTypeName(v.type()).equalsIgnoreCase("LIST")) {
-
-
-                    ValueVector thefovs = v.listValue(engine.getGlobalContext());
-
-                    // Ex.
-                    // measurement: soil moisture
-                    // revT:   [  -1,    2,   -1] <-- pre-computed revisit times
-                    // orbits: [orb1, orb2, orb3]
-                    // fovs:   [fov1, fov2, ----]
-                    // fovs:   [  35,   55, ----]
-
-//                    String[] fovs = new String[thefovs.size()];
-//                    for (int i = 0; i < thefovs.size(); i++) {
-//                        int tmp = thefovs.get(i).intValue(engine.getGlobalContext());
-//                        fovs[i] = String.valueOf(tmp);
-//                    }
-
-//                    boolean recalculateRevisitTime = false;
-//                    // if any of the measurement's fovs corresponding orbits are not pre-calculated, then calc them
-//                    for(int i = 0; i < fovs.length; i++){
-//                        if(revTimePrecomputedIndex[i] == -1){
-//                            // If there exists a single orbit that is different from pre-calculated ones, re-calculate
-//                            recalculateRevisitTime = true;
-//                        }
-//                    }
-
-//                    Double therevtimesGlobal;
-//                    Double therevtimesUS;
-//
-//                    if(recalculateRevisitTime){
-//
-//                        int coverageGranularity = 20;
-//
-//                        //Revisit times
-//                        CoverageAnalysis coverageAnalysis = new CoverageAnalysis(1, coverageGranularity, true, true, params.orekitResourcesPath);
-//                        double[] latBounds = new double[]{FastMath.toRadians(-70), FastMath.toRadians(70)};
-//                        double[] lonBounds = new double[]{FastMath.toRadians(-180), FastMath.toRadians(180)};
-//                        double[] latBoundsUS = new double[]{FastMath.toRadians(25), FastMath.toRadians(50)};
-//                        double[] lonBoundsUS = new double[]{FastMath.toRadians(-125), FastMath.toRadians(-66)};
-//
-//                        List<Map<TopocentricFrame, TimeIntervalArray>> fieldOfViewEvents = new ArrayList<>();
-//
-//                        // For each fieldOfview-orbit combination
-//                        for(Orbit orb: this.orbitsUsed){
-//                            int fov = thefovs.get(params.getOrbitIndexes().get(orb.toString())).intValue(engine.getGlobalContext());
-//
-//                            if(fov <= 0){
-//                                continue;
-//                            }
-//
-//                            double fieldOfView = fov; // [deg]
-//                            double inclination = orb.getInclinationNum(); // [deg]
-//                            double altitude = orb.getAltitudeNum(); // [m]
-//                            String raanLabel = orb.getRaan();
-//
-//                            int numSats   = Integer.parseInt(orb.getNum_sats_per_plane());
-//                            int numPlanes = Integer.parseInt(orb.getNplanes());
-//
-//                            Map<TopocentricFrame, TimeIntervalArray> accesses = coverageAnalysis.getAccesses(fieldOfView, inclination, altitude, numSats, numPlanes, raanLabel);
-//                            fieldOfViewEvents.add(accesses);
-//                        }
-//
-//                        // Merge accesses to get the revisit time
-//                        System.out.println(fieldOfViewEvents);
-//                        System.out.println(this.orbitsUsed);
-//                        Map<TopocentricFrame, TimeIntervalArray> mergedEvents = new HashMap<>(fieldOfViewEvents.get(0));
-//
-//                        for(int i = 1; i < fieldOfViewEvents.size(); ++i) {
-//                            Map<TopocentricFrame, TimeIntervalArray> event = fieldOfViewEvents.get(i);
-//                            mergedEvents = EventIntervalMerger.merge(mergedEvents, event, false);
-//                        }
-//
-//                        therevtimesGlobal = coverageAnalysis.getRevisitTime(mergedEvents, latBounds, lonBounds)/3600;
-//                        therevtimesUS     = coverageAnalysis.getRevisitTime(mergedEvents, latBoundsUS, lonBoundsUS)/3600;
-//                        // therevtimesUS     = therevtimesGlobal;
-//
-//                    }
-//                    else{
-//                        System.out.println("---> no new evaluations");
-//
-//                        // Re-assign fovs based on the original orbit formulation, if the number of orbits is less than 5
-//                        if (thefovs.size() < 5) {
-//                            String[] new_fovs = new String[5];
-//                            for (int i = 0; i < 5; i++) {
-//                                new_fovs[i] = fovs[revTimePrecomputedIndex[i]];
-//                            }
-//                            fovs = new_fovs;
-//                        }
-//                        String key = "1" + " x " + MatlabFunctions.stringArraytoStringWith(fovs, "  ");
-//                        therevtimesUS = params.revtimes.get(key).get("US"); //key: 'Global' or 'US', value Double
-//                        therevtimesGlobal = params.revtimes.get(key).get("Global");
-//                    }
-
-                    HashMap<String, Double> revisit_times = this.get_revisit_time_metrics(thefovs);
-                    Double therevtimesGlobal = revisit_times.get("global");
-                    Double therevtimesUS     = revisit_times.get("us");
-
-                    System.out.println("\n-------- REVISIT TIMES");
-                    System.out.println("-- GLOBAL: " + therevtimesGlobal);
-                    System.out.println("------ US: " + therevtimesUS);
-
-                    String call = "(assert (ASSIMILATION2::UPDATE-REV-TIME (parameter " +  param + ") "
-                            + "(avg-revisit-time-global# " + therevtimesGlobal + ") "
-                            + "(avg-revisit-time-US# " + therevtimesUS + ")"
-                            + "(factHistory J" + javaAssertedFactID + ")))";
-
-                    System.out.println("---> final rev time for measurement" + call);
-                    javaAssertedFactID++;
-                    engine.eval(call);
-                }
-            }
-        }
-        catch (JessException e){
-            e.printStackTrace();
-        }
-
-    }
-
-
-
-
-    // thefovs: array containing all the fovs for a measurement, each fov corresponds to a satellite
-    private HashMap<String, Double> get_revisit_time_metrics(ValueVector thefovs){
-
-        Double therevtimesGlobal;
-        Double therevtimesUS;
-
-        int coverageGranularity = 20;
-
-        //Revisit times
-        CoverageAnalysis coverageAnalysis = new CoverageAnalysis(1, coverageGranularity, true, true, this.problem.orekitResourcesPath);
-        double[] latBounds = new double[]{FastMath.toRadians(-70), FastMath.toRadians(70)};
-        double[] lonBounds = new double[]{FastMath.toRadians(-180), FastMath.toRadians(180)};
-        double[] latBoundsUS = new double[]{FastMath.toRadians(25), FastMath.toRadians(50)};
-        double[] lonBoundsUS = new double[]{FastMath.toRadians(-125), FastMath.toRadians(-66)};
-
-        List<Map<TopocentricFrame, TimeIntervalArray>> fieldOfViewEvents = new ArrayList<>();
-
-        // For each fieldOfview-orbit combination
-        for(Orbit orb: this.orbitsUsed){
-            int fov = -1;
-            try{
-                fov = thefovs.get(this.problem.getOrbitIndexes().get(orb.toString())).intValue(engine.getGlobalContext());
-            }
-            catch (Exception e){
-                e.printStackTrace();
-            }
-
-            if(fov <= 0){
-                continue;
-            }
-
-            double fieldOfView = fov; // [deg]
-            double inclination = orb.getInclinationNum(); // [deg]
-            double altitude = orb.getAltitudeNum(); // [m]
-            String raanLabel = orb.getRaan();
-
-            int numSats   = Integer.parseInt(orb.getNum_sats_per_plane());
-            int numPlanes = Integer.parseInt(orb.getNplanes());
-
-            Map<TopocentricFrame, TimeIntervalArray> accesses = coverageAnalysis.getAccesses(fieldOfView, inclination, altitude, numSats, numPlanes, raanLabel);
-            fieldOfViewEvents.add(accesses);
-        }
-
-        // Merge accesses to get the revisit time
-        System.out.println(fieldOfViewEvents);
-        System.out.println(this.orbitsUsed);
-        Map<TopocentricFrame, TimeIntervalArray> mergedEvents = new HashMap<>(fieldOfViewEvents.get(0));
-
-        for(int i = 1; i < fieldOfViewEvents.size(); ++i) {
-            Map<TopocentricFrame, TimeIntervalArray> event = fieldOfViewEvents.get(i);
-            mergedEvents = EventIntervalMerger.merge(mergedEvents, event, false);
-        }
-
-        therevtimesGlobal = coverageAnalysis.getRevisitTime(mergedEvents, latBounds, lonBounds)/3600;
-        therevtimesUS     = coverageAnalysis.getRevisitTime(mergedEvents, latBoundsUS, lonBoundsUS)/3600;
-
-
-        HashMap<String, Double> results = new HashMap<>();
-        results.put("global", therevtimesGlobal);
-        results.put("us", therevtimesUS);
-
-        return results;
-    }
-
-
-
-
-
-
-
-
 
     private Result aggregate_performance_score_facts(){
         QueryBuilder qb = this.resource.getQueryBuilder();
@@ -823,6 +627,10 @@ public class ADDEvaluator implements Callable<Result> {
         System.out.println("aggregating performance score");
 
 
+
+        long startTime = System.nanoTime();
+
+
         JsonArray all_subobjectives = new JsonArray();
         aggregated_info.add("subobjectives", all_subobjectives);
 
@@ -860,6 +668,8 @@ public class ADDEvaluator implements Callable<Result> {
             }
             subobj_scores.add(subobj_scores_p);
         }
+        System.out.println("---> SUBOBJECTIVE TIME: " + (System.nanoTime() - startTime));
+
 
         //Objective scores
         for (int p = 0; p < this.problem.numPanels; p++) {
@@ -879,6 +689,7 @@ public class ADDEvaluator implements Callable<Result> {
             }
             obj_scores.add(obj_scores_p);
         }
+        System.out.println("---> OBJECTIVE TIME: " + (System.nanoTime() - startTime));
 
         //Stakeholder and final score
         for (int p = 0; p < this.problem.numPanels; p++) {
@@ -889,6 +700,7 @@ public class ADDEvaluator implements Callable<Result> {
                 System.out.println(e.getMessage());
             }
         }
+        System.out.println("---> STAKEHOLDER TIME: " + (System.nanoTime() - startTime));
 
         try {
             science = Result.sumProduct(this.problem.panelWeights, panel_scores);
@@ -897,12 +709,231 @@ public class ADDEvaluator implements Callable<Result> {
             System.out.println(e.getMessage());
         }
 
+        // The final science score must be multiplied by the science score multiplier
+        try{
+            Value val = this.engine.eval("?*science-multiplier*");
+            // Double science_multiplier = Double.parseDouble(val.toString());
+            // science *= science_multiplier;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+
+
         Result theResult = new Result(arch, science, cost, subobj_scores, obj_scores, panel_scores,null);
         theResult.setSubobjectiveInfo(aggregated_info);
         theResult.setExplanations(explanations);
         theResult.setCapabilityList(capabilities);
         theResult.setCapabilities(this.q_builder.makeQuery("REQUIREMENTS::Measurement"));
+
+        System.out.println("---> RETURN: " + (System.nanoTime() - startTime));
         return theResult;
+    }
+
+
+
+//  _____
+// / ____|
+//| |      ___ __   __ ___  _ __  __ _   __ _   ___
+//| |     / _ \\ \ / // _ \| '__|/ _` | / _` | / _ \
+//| |____| (_) |\ V /|  __/| |  | (_| || (_| ||  __/
+// \_____|\___/  \_/  \___||_|   \__,_| \__, | \___|
+//                                       __/ |
+//                                      |___/
+
+    private void evaluateCoverage(){
+
+        try{
+            int javaAssertedFactID = 1;
+
+
+            // 1. ITERATE OVER MEASUREMENTS
+            for (String measurement: this.problem.measurementsToInstruments.keySet()){
+
+                // 2. GET MEASUREMENT FOVS
+                HashMap<String, ArrayList<Integer>> measurement_fovs = this.getMeasurementFOVs(measurement);
+
+                // If this measurement is taken by the architecture
+                if(!measurement_fovs.isEmpty()){
+
+                    HashMap<String, Double> revisit_times = this.get_revisit_time_metrics(measurement_fovs);
+
+                    Double therevtimesGlobal = revisit_times.get("global");
+                    Double therevtimesUS     = revisit_times.get("us");
+
+                    System.out.println("\n-------- REVISIT TIMES: " + measurement);
+                    System.out.println("-- GLOBAL: " + therevtimesGlobal);
+                    System.out.println("------ US: " + therevtimesUS);
+                    System.out.println("---- FOVS: " + measurement_fovs);
+                    System.out.println("-------------------\n");
+                    // EvaluatorApp.sleep(5);
+
+                    String call = "(assert (ASSIMILATION2::UPDATE-REV-TIME (parameter " +  measurement + ") "
+                            + "(avg-revisit-time-global# " + therevtimesGlobal + ") "
+                            + "(avg-revisit-time-US# " + therevtimesUS + ")"
+                            + "(factHistory J" + javaAssertedFactID + ")))";
+
+                    javaAssertedFactID++;
+                    engine.eval(call);
+                }
+            }
+
+        }
+        catch (JessException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    private HashMap<String, ArrayList<Integer>> getMeasurementFOVs(String measurement){
+        ArrayList<ArrayList<String>> satellites = this.arch.get_array_info();
+
+
+        // key: orbit
+        // value: list of fovs
+        HashMap<String, ArrayList<Integer>> orb_fov_map  = new HashMap<>();
+        HashMap<String, ArrayList<String>>  orb_inst_map = new HashMap<>();
+
+
+        // FACTS
+        try{
+            ArrayList<Fact>    measurement_facts = this.q_builder.getMeasurementFacts(measurement);
+            if(measurement_facts.isEmpty()){
+                return (new HashMap<String, ArrayList<Integer>>());
+            }
+
+            ArrayList<Integer> sat_idx_used      = new ArrayList<>();
+            for(Fact fact: measurement_facts){
+
+                int    fov        = fact.getSlotValue("Field-of-view#").intValue(this.engine.getGlobalContext());
+                String orbit      = fact.getSlotValue("orbit-string").stringValue(this.engine.getGlobalContext());
+                String instrument = fact.getSlotValue("Instrument").stringValue(this.engine.getGlobalContext());
+
+                // orb_inst_map
+                if(!orb_inst_map.containsKey(orbit)){
+                    orb_inst_map.put(orbit, new ArrayList<>());
+                }
+                if(!orb_inst_map.get(orbit).contains(instrument)){
+                    orb_inst_map.get(orbit).add(instrument);
+                }
+
+                // orb_fov_map
+                if(!orb_fov_map.containsKey(orbit)){
+                    orb_fov_map.put(orbit, new ArrayList<>());
+                }
+                orb_fov_map.get(orbit).add(fov);
+
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+        // DETERMINE THE NUMBER OF SATELLITES PER-ORBIT
+        HashMap<String, Integer> orb_num_sat_map = new HashMap<>();
+        for(String orbit: orb_inst_map.keySet()){
+            ArrayList<Integer> used_missions_idx = new ArrayList<>();
+            ArrayList<String>  instruments       = orb_inst_map.get(orbit);
+            for(String instrument: instruments){
+                int idx = this.getSatelliteIndexForInstrument(satellites, instrument);
+                if(!used_missions_idx.contains(idx)){
+                    used_missions_idx.add(idx);
+                }
+            }
+            orb_num_sat_map.put(orbit, used_missions_idx.size());
+        }
+
+        // DETERMINE THE FOVS FOR EACH ORBIT
+        HashMap<String, Integer> orb_fov_map_final = new HashMap<>();
+        for(String orbit: orb_fov_map.keySet()){
+            ArrayList<Integer> fovs = orb_fov_map.get(orbit);
+            orb_fov_map_final.put(orbit, Collections.max(fovs));
+        }
+
+        System.out.println("--> ORBIT TO NUM SATELLITES " + orb_num_sat_map);
+        System.out.println("--> ORBIT TO FOVS " + orb_fov_map_final);
+
+        // AGGREGATE RESULTS
+        HashMap<String, ArrayList<Integer>> results  = new HashMap<>();
+        for(String orbit: orb_fov_map_final.keySet()){
+            Integer num_sats = orb_num_sat_map.get(orbit);
+            Integer fov      = orb_fov_map_final.get(orbit);
+            ArrayList<Integer> orbit_data = new ArrayList<>();
+            orbit_data.add(num_sats);
+            orbit_data.add(fov);
+            results.put(orbit, orbit_data);
+        }
+
+        return results;
+    }
+
+    private int getSatelliteIndexForInstrument(ArrayList<ArrayList<String>> satellites, String instrument){
+
+        int idx = -1;
+        for(ArrayList<String> sat: satellites){
+            idx++;
+            if(sat.contains(instrument)){
+                return idx;
+            }
+        }
+        return idx;
+    }
+
+    private HashMap<String, Double> get_revisit_time_metrics(HashMap<String, ArrayList<Integer>> orbit_fov_map){
+
+
+        // COVERAGE GRANULARITY
+        int coverageGranularity = 20;
+
+        // ANALYSIS
+        CoverageAnalysis coverageAnalysis = new CoverageAnalysis(1, coverageGranularity, true, true, this.problem.orekitResourcesPath);
+
+        // EVENTS
+        List<Map<TopocentricFrame, TimeIntervalArray>> all_access_events = new ArrayList<>();
+
+        // AREAS OF INTEREST
+        double[] latBounds = new double[]{FastMath.toRadians(-70), FastMath.toRadians(70)};
+        double[] lonBounds = new double[]{FastMath.toRadians(-180), FastMath.toRadians(180)};
+        double[] latBoundsUS = new double[]{FastMath.toRadians(25), FastMath.toRadians(50)};
+        double[] lonBoundsUS = new double[]{FastMath.toRadians(-125), FastMath.toRadians(-66)};
+
+        for(String orbit_str: orbit_fov_map.keySet()){
+            ArrayList<Integer> orbit_data = orbit_fov_map.get(orbit_str);
+            Integer num_sats = orbit_data.get(0);
+            Integer fov      = orbit_data.get(1);
+            Orbit orbit = new Orbit(orbit_str, 1, num_sats);
+
+            // COVERAGE PARAMETERS
+            double fieldOfView = fov;         // CHOOSE FIRST FOV TO USE
+            double inclination = orbit.getInclinationNum(); // [deg]
+            double altitude    = orbit.getAltitudeNum();    // [m]
+            String raanLabel   = orbit.getRaan();
+            int numSats        = Integer.parseInt(orbit.getNum_sats_per_plane());
+            int numPlanes      = Integer.parseInt(orbit.getNplanes());
+
+            // ACCESSES EVENTS
+            Map<TopocentricFrame, TimeIntervalArray> access_events = coverageAnalysis.getAccesses(fieldOfView, inclination, altitude, numSats, numPlanes, raanLabel);
+            all_access_events.add(access_events);
+        }
+
+        // INSTIANTIATE MERGED EVENTS
+        Map<TopocentricFrame, TimeIntervalArray> mergedEvents = new HashMap<>(all_access_events.get(0));
+
+        // MERGE EVENTS
+        for(int i = 1; i < all_access_events.size(); ++i) {
+            Map<TopocentricFrame, TimeIntervalArray> event = all_access_events.get(i);
+            mergedEvents = EventIntervalMerger.merge(mergedEvents, event, false);
+        }
+
+        Double therevtimesGlobal = coverageAnalysis.getRevisitTime(mergedEvents, latBounds, lonBounds)/3600;
+        Double therevtimesUS     = coverageAnalysis.getRevisitTime(mergedEvents, latBoundsUS, lonBoundsUS)/3600;
+
+        HashMap<String, Double> results = new HashMap<>();
+        results.put("global", therevtimesGlobal);
+        results.put("us", therevtimesUS);
+
+        return results;
     }
 
 
@@ -917,13 +948,15 @@ public class ADDEvaluator implements Callable<Result> {
 //                                               |___/
 
 
-    private void evaluateSeheduling(Result result){
+    private void evaluateScheduling(Result result){
 
         this.evaluateDataContinuityScore(result);
         this.evaluateFairnessScore(result);
     }
 
     private void evaluateDataContinuityScore(Result result){
+
+        this.q_builder.saveQuery("data-continuity/1-INITIAL-MEASUREMENTS", "REQUIREMENTS::Measurement");
 
         // SCORE
         int score = 0;
@@ -949,11 +982,9 @@ public class ADDEvaluator implements Callable<Result> {
         for(Fact mission_fact: missions){
             try{
                 // 1. Get measurements associated with mission: measurements
-                ArrayList<String> measurements = this.get_mission_fact_measurements(mission_fact);
+                HashMap<String, Integer> measurements = this.get_mission_fact_measurements(mission_fact);
                 measurements = this.transform_measurement_names(measurements);
 
-                System.out.println("---> MISSION "+counter+" MEASUREMENTS");
-                System.out.println(measurements);
 
 
                 // 2. Calculate mission start / end with via cost
@@ -972,7 +1003,9 @@ public class ADDEvaluator implements Callable<Result> {
 
                 // 3. Iterate over mission measurements
                 // EvaluatorApp.sleep(6);
-                for(String mission_meas: measurements){
+                for(String mission_meas: measurements.keySet()){
+                    int meas_multiplier = measurements.get(mission_meas);
+                    meas_multiplier = 1;
 
                     // 4. Iterate over historical missions
                     for(HashMap<String, ArrayList<Date>> historical_mission: historical_missions){
@@ -1004,13 +1037,13 @@ public class ADDEvaluator implements Callable<Result> {
                                     score = score;
                                 }
                                 else if(start_year > measurement_start_yr && end_year < measurement_end_yr){
-                                    score = score + end_year - start_year;
+                                    score = score + ((end_year - start_year) * meas_multiplier);
                                 }
                                 else if(start_year > measurement_start_yr && end_year > measurement_end_yr){
-                                    score = score + measurement_end_yr - start_year;
+                                    score = score + ((measurement_end_yr - start_year) * meas_multiplier);
                                 }
                                 else if(start_year < measurement_start_yr && end_year < measurement_end_yr){
-                                    score = score + end_year - measurement_start_yr;
+                                    score = score + ((end_year - measurement_start_yr) * meas_multiplier);
                                 }
                                 else{
                                     score = score;
@@ -1026,57 +1059,98 @@ public class ADDEvaluator implements Callable<Result> {
             counter++;
         }
         System.out.println("--> DATA SCORES: " + score + " | " + overlap_counter);
-        // EvaluatorApp.sleep(3);
 
-//        Random rand = new Random();
-//        score = rand.nextInt(5000);
         result.setDataContinuityScore(score);
     }
 
-    private ArrayList<String> get_mission_fact_measurements(Fact mission){
-        ArrayList<String> measurements = new ArrayList<>();
+    private HashMap<String, Integer> get_mission_fact_measurements(Fact mission){
+
+        // Maps measurement name to the number of occurrences for this missions
+        HashMap<String, Integer> measurement_map = new HashMap<>();
 
         try{
-            String insts_string = mission.getSlotValue("instruments").listValue(this.engine.getGlobalContext()).toString();
-            String[] insts = insts_string.split("\\s+");
+            // 1. Get all measurement facts for the specific mission
+            String mission_name = mission.getSlotValue("Name").stringValue(this.engine.getGlobalContext());
+            for(Fact measurement_fact: this.arch_measurements){
+                String meas_mission = measurement_fact.getSlotValue("flies-in").stringValue(this.engine.getGlobalContext());
+                String measurement_name = measurement_fact.getSlotValue("Parameter").stringValue(this.engine.getGlobalContext());
 
-            ArrayList<String> instruments = new ArrayList<>();
-            for(String inst: insts){
-                instruments.add(inst.trim());
-            }
-            instruments.remove("");
-
-
-            for(String inst: instruments){
-                ArrayList<String> inst_measurements = this.resource.dbClient.getInstrumentMeasurements(inst, false); // TRIM FOR SMAP
-                for(String meas: inst_measurements){
-                    if(!measurements.contains(meas)){
-                        measurements.add(meas);
+                if(mission_name.equals(meas_mission)){
+                    if(!measurement_map.containsKey(measurement_name)){
+                        measurement_map.put(measurement_name, 0);
                     }
+                    Integer occurances = measurement_map.get(measurement_name) + 1;
+                    measurement_map.put(measurement_name, occurances);
                 }
             }
-
         }
-        catch (JessException e){
+        catch (Exception e){
             e.printStackTrace();
         }
 
-        return measurements;
+        for(String meas: measurement_map.keySet()){
+            System.out.println("--> " + meas + ": " + measurement_map.get(meas));
+        }
+        // EvaluatorApp.sleep(10);
+
+
+
+//        ArrayList<String> measurements = new ArrayList<>();
+//
+//        try{
+//            String insts_string = mission.getSlotValue("instruments").listValue(this.engine.getGlobalContext()).toString();
+//            String[] insts = insts_string.split("\\s+");
+//
+//            ArrayList<String> instruments = new ArrayList<>();
+//            for(String inst: insts){
+//                instruments.add(inst.trim());
+//            }
+//            instruments.remove("");
+//
+//
+//            for(String inst: instruments){
+//
+//                // This won't work, because not all instrument measurements will always be able to be taken
+//                ArrayList<String> inst_measurements = this.resource.dbClient.getInstrumentMeasurements(inst, false); // TRIM FOR SMAP
+//                for(String meas: inst_measurements){
+//
+//                    // This is wrong because if a missions takes 2 of the same measurement, the data continuity score should reflect both measurements !!!
+//                    if(!measurements.contains(meas)){
+//                        measurements.add(meas);
+//                    }
+//                }
+//            }
+//
+//        }
+//        catch (JessException e){
+//            e.printStackTrace();
+//        }
+
+        return measurement_map;
     }
 
-    private ArrayList<String> transform_measurement_names(ArrayList<String> measurements){
+    private HashMap<String, Integer> transform_measurement_names(HashMap<String, Integer> measurements_orig){
+        ConcurrentHashMap<String, Integer> measurements = new ConcurrentHashMap<>(measurements_orig);
+
         System.out.println("---> MEASUREMENT NAMES " + measurements);
         HashMap<String, String> transform = new HashMap<>();
+        transform.put("1.6.2 cloud ice particle size distribution", "Cloud ice (column/profile)");
+        transform.put("1.7.2 Cloud droplet size", "Cloud drop effective radius");
+        transform.put("1.1.4 aerosol extinction profiles/vertical concentration", "Aerosol Extinction / Backscatter (column/profile)");
+        transform.put("1.8.5 CO", "CO2 Mole Fraction");
+        transform.put("1.8.4 CH4", "CH4 Mole Fraction");
+        transform.put("1.2.1 Atmospheric temperature fields", "Atmospheric temperature (column/profile)");
+        transform.put("1.5.4 cloud mask", "Cloud mask");
 
-        for(int x = 0; x < measurements.size(); x++){
-            String meas = measurements.get(x);
+        for(String meas: measurements.keySet()){
             if(transform.containsKey(meas)){
-                measurements.set(x, transform.get(meas));
+                Integer num = measurements.remove(meas);
+                measurements.put(transform.get(meas), num);
             }
         }
 
-        System.out.println("---> MEASUREMENT FIXED " + measurements);
-        return measurements;
+        // System.out.println("---> MEASUREMENT FIXED " + measurements);
+        return (new HashMap<>(measurements));
     }
 
     private String transform_historical_measurement_name(String measurement){
@@ -1088,6 +1162,16 @@ public class ADDEvaluator implements Callable<Result> {
         }
         else if(measurement.equals("Wind vector over sea surface (horizontal)") || measurement.equals("Wind speed over sea surface (horizontal)")) {
             return "Ocean surface wind speed";
+        }
+        // Decadal 2007 Transformations
+        else if(measurement.equals("Aerosol optical depth (column/profile)")) {
+            return "aerosol height/optical depth";
+        }
+        else if(measurement.equals("Aerosol absorption optical depth (column/profile)")) {
+            return "aerosol absorption optical thickness and profiles";
+        }
+        else if(measurement.equals("Ocean imagery and water leaving spectral radiance")) {
+            return "Spectrally resolved SW radiance";
         }
         return measurement;
     }
@@ -1150,7 +1234,9 @@ public class ADDEvaluator implements Callable<Result> {
 //  \_____\___/|___/\__|
 
 
-    public void evaluateCost(Result res){
+    public void evaluateCostDecadal2007(Result res){
+
+
 
         Problem params = this.resource.getProblem();
 
@@ -1162,6 +1248,62 @@ public class ADDEvaluator implements Callable<Result> {
             this.selectMissionOrbits();
         }
 
+        // NOT NEEDED IN COST CALCULATION
+//        if(this.synergyDeclaration){
+//            this.declareMissionSynergies();
+//        }
+
+        // 3. Run Modules
+        try{
+            this.engine.setFocus("LV-SELECTION");
+            this.engine.run();
+
+            if(true){
+                this.engine.setFocus("BUS-SELECTION");
+                this.engine.run();
+            }
+
+            this.engine.setFocus("EPS-DESIGN");
+            this.engine.run();
+
+            this.engine.setFocus("MASS-BUDGET");
+            this.engine.run();
+
+            // Clean LV selection from mission facts
+            this.engine.setFocus("CLEAN");
+            this.engine.run();
+
+            this.engine.setFocus("LV-SELECTION");
+            this.engine.run();
+
+            this.engine.setFocus("COST-ESTIMATION");
+            this.engine.run();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+        // Now get costs from MANIFEST::Mission facts
+
+
+
+    }
+
+
+
+    public void evaluateCost(Result res){
+
+        System.out.println("---> EVALUATING COST");
+
+        Problem params = this.resource.getProblem();
+
+        // 1. Initialize Engine
+        Rete engine = this.initializeEngine(true);
+
+        // 2. Select mission orbits if needed
+        if(this.orbitSelection){
+            this.selectMissionOrbits();
+        }
 
         if(this.synergyDeclaration){
             this.declareMissionSynergies();
@@ -1173,6 +1315,7 @@ public class ADDEvaluator implements Callable<Result> {
 
             this.engine.eval("(focus MANIFEST)");
             this.engine.eval("(run)");
+
 
 
             designSpacecraft(this.engine, arch, this.q_builder);
@@ -1199,6 +1342,9 @@ public class ADDEvaluator implements Callable<Result> {
             this.engine.eval("(run)");
             this.engine.eval("(focus LV-SELECTION3)");
             this.engine.eval("(run)");
+
+            this.q_builder.saveQuery("cost/END-COST", "MANIFEST::Mission");
+
 
 
             if ((params.getRequestMode().equalsIgnoreCase("FUZZY-CASES")) || (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES"))) {
@@ -1236,8 +1382,16 @@ public class ADDEvaluator implements Callable<Result> {
     protected void designSpacecraft(Rete r, AbstractArchitecture arch, QueryBuilder qb) {
         try {
 
+            this.q_builder.saveQuery("spacecraft-design/1-INITIAL-MISSION-FACTS", "MANIFEST::Mission");
+
+
             r.eval("(focus PRELIM-MASS-BUDGET)");
             r.eval("(run)");
+
+            this.q_builder.saveQuery("spacecraft-design/2-MISSION-FACTS-POST-PRELIM-MASS-BUDGET", "MANIFEST::Mission");
+
+
+
 
             ArrayList<Fact> missions = qb.makeQuery("MANIFEST::Mission");
             Double[] oldmasses = new Double[missions.size()];
@@ -1278,6 +1432,9 @@ public class ADDEvaluator implements Callable<Result> {
             System.out.println("EXC in evaluateCost: " + e.getClass() + " " + e.getMessage());
             e.printStackTrace();
         }
+
+
+        this.q_builder.saveQuery("spacecraft-design/3-FINAL-MISSION-SPACECRAFT", "MANIFEST::Mission");
     }
 
 

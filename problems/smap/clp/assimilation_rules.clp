@@ -58,15 +58,16 @@
 	(modify ?meas (Temporal-resolution# ?tr) (avg-revisit-time-global# ?new-time) (avg-revisit-time-US# (adapt-GEO-revisit ?new-time-us))(factHistory (str-cat "{R" (?*rulesMap* get ASSIMILATION2::modify-temporal-resolution) " " ?fh " S" (call ?sub getFactId) "}"))) 
 )
 
-;(defrule ASSIMILATION::compute-temporal-resolution#-from-revisit-times
-;    ?meas <- (REQUIREMENTS::Measurement (Coverage ?region) (Temporal-resolution nil) (Temporal-resolution# nil)
-;         (avg-revisit-time-global# ?revtime-global&~nil) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH)
-;         (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US))
-;    =>
-;    (bind ?tr (revisit-time-to-temporal-resolution ?region (create$ ?revtime-global ?revtime-tropics ?revtime-NH ?revtime-SH ?revtime-cold ?revtime-US)))
-;    ;(printout t "tr = "?tr crlf)
-;    (modify ?meas (Temporal-resolution# ?tr))
-;    )
+;;; COMPUTING TEMPORAL RESOLUTION FOR DECADAL 2007
+(defrule ASSIMILATION::compute-temporal-resolution#-from-revisit-times
+    ?meas <- (REQUIREMENTS::Measurement (Coverage-of-region-of-interest ?region) (Temporal-resolution nil) (Temporal-resolution# nil)
+         (avg-revisit-time-global# ?revtime-global&~nil) (avg-revisit-time-tropics# ?revtime-tropics) (avg-revisit-time-northern-hemisphere# ?revtime-NH)
+         (avg-revisit-time-southern-hemisphere# ?revtime-SH) (avg-revisit-time-cold-regions# ?revtime-cold) (avg-revisit-time-US# ?revtime-US))
+    =>
+    (bind ?tr (revisit-time-to-temporal-resolution ?region (create$ ?revtime-global ?revtime-tropics ?revtime-NH ?revtime-SH ?revtime-cold ?revtime-US)))
+    (printout t "---> COMPUTING TEMPORAL RESOLUTION FROM REVITIS TIMES "  crlf)
+    (modify ?meas (Temporal-resolution# ?tr))
+    )
 
 (defrule CAPABILITIES::global-or-regional-coverage
 	?meas <- (REQUIREMENTS::Measurement (Coverage nil) (orbit-type ?orb &~nil) (factHistory ?fh))

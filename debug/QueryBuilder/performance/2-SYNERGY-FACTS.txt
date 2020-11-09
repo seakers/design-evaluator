@@ -1,36 +1,6 @@
 
 --------------- SYNERGIES::cross-registered-instruments - 1 ---------------
-(instruments EARTHCARE-ATLID EARTHCARE-CPR)
+(instruments SWOT_GPS)
 (degree-of-cross-registration spacecraft)
 (platform SSO-800-SSO-AM)
-(factHistory F0)
-
---------------- SYNERGIES::cross-registered-instruments - 2 ---------------
-(instruments CALIPSO-IIR)
-(degree-of-cross-registration spacecraft)
-(platform SSO-800-SSO-AM)
-(factHistory F0)
-
---------------- SYNERGIES::cross-registered-instruments - 3 ---------------
-(instruments EARTHCARE-MSI ACE-POL)
-(degree-of-cross-registration spacecraft)
-(platform SSO-800-SSO-DD)
-(factHistory F0)
-
---------------- SYNERGIES::cross-registered-instruments - 4 ---------------
-(instruments CALIPSO-CALIOP)
-(degree-of-cross-registration spacecraft)
-(platform SSO-800-SSO-AM)
-(factHistory F0)
-
---------------- SYNERGIES::cross-registered-instruments - 5 ---------------
-(instruments DIAL ACE-OCI)
-(degree-of-cross-registration spacecraft)
-(platform SSO-800-SSO-AM)
-(factHistory F0)
-
---------------- SYNERGIES::cross-registered-instruments - 6 ---------------
-(instruments ACE-LID)
-(degree-of-cross-registration spacecraft)
-(platform SSO-600-SSO-DD)
 (factHistory F0)

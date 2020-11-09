@@ -12,6 +12,7 @@ package vassar;
 
 import com.evaluator.type.*;
 import evaluator.EvaluatorApp;
+import evaluator.Files;
 import jess.Fact;
 import jess.JessException;
 import jess.Rete;
@@ -154,7 +155,7 @@ public class VassarClient {
             result.setDesignString(
                     arch.toString(result)
             );
-            this.add_result_store.put(arch.get_array_info(), result);
+            // this.add_result_store.put(arch.get_array_info(), result);
             return result;
         }
     }
@@ -589,9 +590,9 @@ public class VassarClient {
         // String rootPath = "/Users/gabeapaza/repositories/seakers/design_evaluator";
         String rootPath = ""; // DOCKER
 
-        String jessGlobalTempPath = rootPath + "/app/src/main/java/vassar/database/template/defs";
-        String jessGlobalFuncPath = rootPath + "/app/src/main/java/vassar/jess/utils/clp";
-        String jessAppPath        = rootPath + "/app/problems/smap/clp";
+        String jessGlobalTempPath = Files.root_directory + "/src/main/java/vassar/database/template/defs";
+        String jessGlobalFuncPath = Files.root_directory + "/src/main/java/vassar/jess/utils/clp";
+        String jessAppPath        = Files.root_directory + "/problems/smap/clp";
         String requestMode        = "CRISP-ATTRIBUTES";
         Requests newRequests = new Requests.Builder()
                                            .setGlobalTemplatePath(jessGlobalTempPath)

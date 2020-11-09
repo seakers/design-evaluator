@@ -1,1 +1,1 @@
-/app/problems/smap/clp/templates.clp
+/home/gabe/repos/seakers/design-evaluator/problems/smap/clp/templates.clp

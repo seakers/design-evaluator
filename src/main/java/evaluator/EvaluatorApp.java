@@ -31,7 +31,6 @@ import java.net.URI;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
 public class EvaluatorApp {
 
     public static void main(String[] args) {
@@ -65,8 +64,8 @@ public class EvaluatorApp {
 // |_____|_| \_|_____|  |_|
 //
 
-        String coverage_database = "/app/src/main/java/vassar/evaluator/coverage/orekit/CoverageDatabase";
-        String orekit_init       = "/app/src/main/java/vassar/evaluator/coverage/orekit";
+        String coverage_database = Files.root_directory + "/src/main/java/vassar/evaluator/coverage/orekit/CoverageDatabase";
+        String orekit_init       = Files.root_directory + "/src/main/java/vassar/evaluator/coverage/orekit";
 
         System.setProperty("orekit.coveragedatabase", coverage_database);
         OrekitConfig.init(1, orekit_init);
@@ -78,18 +77,24 @@ public class EvaluatorApp {
         String rootPath = ""; // DOCKER
 
 
-        String outputFilePath     = rootPath + "/app/debug/dbOutput.json";
-        String outputPath         = rootPath + "/app/debug";
-        String apollo_url         = System.getenv("APOLLO_URL");
-        String localstackEndpoint = System.getenv("AWS_STACK_ENDPOINT");
-        String queue_url          = System.getenv("EVAL_QUEUE_URL");
-        String private_queue_name = System.getenv("PRIVATE_QUEUE_NAME");
-        String apollo_ws_url      = System.getenv("APOLLO_URL_WS");
+        String outputFilePath     = Files.root_directory + "/debug/dbOutput.json";
+        String outputPath         = Files.root_directory + "/debug";
+//        String apollo_url         = System.getenv("APOLLO_URL");
+//        String localstackEndpoint = System.getenv("AWS_STACK_ENDPOINT");
+//        String queue_url          = System.getenv("EVAL_QUEUE_URL");
+//        String private_queue_name = System.getenv("PRIVATE_QUEUE_NAME");
+//        String apollo_ws_url      = System.getenv("APOLLO_URL_WS");
+        String apollo_url         = Files.apollo_url;
+        String localstackEndpoint = Files.localstackEndpoint;
+        String queue_url          = Files.queue_url;
+        String private_queue_name = Files.private_queue_name;
+        String apollo_ws_url      = Files.apollo_ws_url;
         boolean debug             = true;
 
-        int group_id   = Integer.parseInt(System.getenv("GROUP_ID"));
-        int problem_id = Integer.parseInt(System.getenv("PROBLEM_ID"));
-        problem_id = 6; // HARDCODE
+        int group_id;   //    = Integer.parseInt(System.getenv("GROUP_ID"));
+        int problem_id; // = Integer.parseInt(System.getenv("PROBLEM_ID"));
+        problem_id = 1; // HARDCODE
+        group_id = 1;   // HARDCODE
 
 
 
@@ -101,9 +106,9 @@ public class EvaluatorApp {
 
 
         // -----> JESS REQUESTS
-        String jessGlobalTempPath = rootPath + "/app/src/main/java/vassar/database/template/defs";
-        String jessGlobalFuncPath = rootPath + "/app/src/main/java/vassar/jess/utils/clp";
-        String jessAppPath        = rootPath + "/app/problems/smap/clp";
+        String jessGlobalTempPath = Files.root_directory + "/src/main/java/vassar/database/template/defs";
+        String jessGlobalFuncPath = Files.root_directory + "/src/main/java/vassar/jess/utils/clp";
+        String jessAppPath        = Files.root_directory + "/problems/smap/clp";
         String requestMode        = System.getenv("REQUEST_MODE");
         requestMode = "CRISP-CASES"; // HARDCODE
 
