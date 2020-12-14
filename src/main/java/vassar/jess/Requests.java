@@ -227,16 +227,16 @@ public class Requests {
             );
 
             // ---------- ATTRIBUTE INHERITANCE RULES
-//            build.requests.add(
-//                    new BatchFileTemplateRequest.Builder()
-//                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules_not_scuffed.clp")
-//                            .build()
-//            );
             build.requests.add(
                     new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules.clp")
+                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules_not_scuffed.clp")
                             .build()
             );
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/attribute_inheritance_rules.clp")
+//                            .build()
+//            );
             build.requests.add(
                     new AttributeInheritanceTemplateRequest.Builder()
                             .applyExtension(new JessExtension())
@@ -257,11 +257,11 @@ public class Requests {
             );
 
             // ----------- MATLAB
-            build.requests.add(
-                    new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/matlab_rules.clp")
-                            .build()
-            );
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/matlab_rules.clp")
+//                            .build()
+//            );
 
             // ---------- MASS BUDGET RULES
             build.requests.add(
@@ -420,16 +420,16 @@ public class Requests {
                             .templateFilePath(this.globalTemplatePath + "/AdHocRuleTemplate.clp")
                             .build()
             );
-//            build.requests.add(
-//                    new BatchFileTemplateRequest.Builder()
-//                            .templateFilePath(this.jessAppPath + "/smap_rules_test.clp")
-//                            .build()
-//            );
             build.requests.add(
                     new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/Decadal_specific_rules.clp")
+                            .templateFilePath(this.jessAppPath + "/smap_rules_test.clp")
                             .build()
             );
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/Decadal_specific_rules.clp")
+//                            .build()
+//            );
 
             // 19 ---------- DOWN SELECTION RULES
 //            build.requests.add(

@@ -22,8 +22,8 @@ public class Files {
     public static String ndsm2_Dacadal = Files.output_dir + "DSM-Decadal2-2020-10-13-22-54-47" + ".dat";
 
 
-    public static String root_directory = "/home/gabe/repos/seakers/design-evaluator";
-    // public static String root_directory = "/app";
+    // public static String root_directory = "/home/gabe/repos/seakers/design-evaluator";
+    public static String root_directory = "/app";
 
 
 
