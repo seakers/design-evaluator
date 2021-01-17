@@ -1,0 +1,27 @@
+{
+  "family": "evaluator",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2 vCPU",
+  "memory": "16 GB",
+  "containerDefinitions": [
+    {
+      "name": "vassar",
+      "image": "apazagab/vassar",
+      "privileged": true,
+      "interactive": true,
+      "logConfiguration": {
+        "logDriver": "awslogs"
+      },
+      "environment": [
+        { "name": "PROBLEM_ID", "value": "1" },
+        { "name": "GROUP_ID", "value": "1" },
+        { "name": "REQUEST_MODE", "value": "CRISP-ATTRIBUTES" },
+        { "name": "PRIVATE_QUEUE_NAME", "value": "RANDOM" },
+        { "name": "EVAL_QUEUE_URL", "value": "URL" },
+        { "name": "APOLLO_URL_WS", "value": "URL" },
+        { "name": "APOLLO_URL", "value": "URL" }
+      ]
+    }
+  ]
+}
