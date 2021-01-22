@@ -128,6 +128,7 @@ public class EvaluatorApp {
 
         // PRIVATE QUEUE
         String private_queue_url = EvaluatorApp.createPrivateQueue(sqsClient, private_queue_name, problem_id);
+        EvaluatorApp.addAwsShutdownHook(private_queue_url);
         Consumer.purgeQueue(sqsClient, private_queue_url);
 
 
@@ -209,5 +210,11 @@ public class EvaluatorApp {
     public static void sleep(int seconds){
         try                            { TimeUnit.SECONDS.sleep(seconds); }
         catch (InterruptedException e) { e.printStackTrace(); }
+    }
+
+
+
+    public static void addAwsShutdownHook(String private_queue_url){
+        Runtime.getRuntime().addShutdownHook(new ShutDown(private_queue_url));
     }
 }
