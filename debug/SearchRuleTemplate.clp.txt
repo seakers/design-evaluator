@@ -1,1 +1,0 @@
-/app/src/main/java/vassar/database/template/defs/SearchRuleTemplate.clp

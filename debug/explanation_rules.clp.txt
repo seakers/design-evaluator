@@ -1,1 +1,0 @@
-/home/gabe/repos/seakers/design-evaluator/problems/smap/clp/explanation_rules.clp

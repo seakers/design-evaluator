@@ -1,6 +1,0 @@
-
---------------- SYNERGIES::cross-registered - 1 ---------------
-(measurements SWOT_GPS0 SWOT_GPS1 SWOT_GPS2 SWOT_GPS3 SWOT_GPS4)
-(degree-of-cross-registration instrument)
-(platform nil)
-(factHistory "{Rnil A672 A685}")

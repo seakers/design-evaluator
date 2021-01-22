@@ -1,6 +1,0 @@
-
---------------- SYNERGIES::cross-registered-instruments - 1 ---------------
-(instruments SWOT_GPS)
-(degree-of-cross-registration spacecraft)
-(platform SSO-800-SSO-AM)
-(factHistory F0)

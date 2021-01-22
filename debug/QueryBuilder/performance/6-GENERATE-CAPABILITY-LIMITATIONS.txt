@@ -1,8 +1,0 @@
-
---------------- CAPABILITIES::resource-limitations - 1 ---------------
-(mission nil)
-(instruments )
-(data-rate-duty-cycle# 1.0)
-(power-duty-cycle# 1.0)
-(reason nil)
-(factHistory "{Rnil A672 A685}")
