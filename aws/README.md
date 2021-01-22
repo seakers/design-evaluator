@@ -1,6 +1,6 @@
 # AWS Fargate Implementation
 
-
+ - The proper aws fargate implementation is on branch: `deployment`
 
 ### Build Task Image
 

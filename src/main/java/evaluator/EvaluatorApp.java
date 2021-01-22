@@ -36,25 +36,6 @@ public class EvaluatorApp {
     public static void main(String[] args) {
 
 
-//        Combinatorics.readNDSM_File("/app/output/DSM-2-2020-10-10-17-11-54.dat", 30);
-//        Combinatorics.readNDSM_File("/app/output/DSM-3-2020-10-10-17-16-40.dat", 30);
-//        Combinatorics.combineNDSM_File("DSM-2-2020-10-10-17-11-54", "SDSM");
-//        Combinatorics.combineNDSM_File("DSM-3-2020-10-10-17-16-40", "SDSM");
-//        Combinatorics.combineNDSM_File("DSM-5-2020-10-10-17-17-33", "SDSM");
-
-//        ArrayList<String> insts = new ArrayList<>();
-//        insts.add("SMAP_RAD");
-//        insts.add("SMAP_MWR");
-//        insts.add("VIIRS");
-//        insts.add("CMIS");
-//        insts.add("BIOMASS");
-//
-//        HashMap<Integer, ArrayList<String>> partition = Optimization.partitionInstruments(insts);
-//        System.out.println("-----> FINAL PARTITION");
-//        for(Integer key: partition.keySet()){
-//            System.out.println("--> " + key + " " + partition.get(key));
-//        }
-//        System.exit(0);
 
 //  _____ _   _ _____ _______
 // |_   _| \ | |_   _|__   __|
@@ -73,30 +54,19 @@ public class EvaluatorApp {
         GlobalScope.measurementsToSubobjectives = new HashMap<>();
         GlobalScope.subobjectivesToMeasurements = new HashMap<>();
 
-        // String rootPath = "/Users/gabeapaza/repositories/seakers/design_evaluator";
         String rootPath = ""; // DOCKER
-
 
         String outputFilePath     = Files.root_directory + "/debug/dbOutput.json";
         String outputPath         = Files.root_directory + "/debug";
 
         String apollo_url         = System.getenv("APOLLO_URL");
-        String localstackEndpoint = System.getenv("AWS_STACK_ENDPOINT");
         String queue_url          = System.getenv("EVAL_QUEUE_URL");
         String private_queue_name = System.getenv("PRIVATE_QUEUE_NAME");
         String apollo_ws_url      = System.getenv("APOLLO_URL_WS");
-//        String apollo_url         = Files.apollo_url;
-//        String localstackEndpoint = Files.localstackEndpoint;
-//        String queue_url          = Files.queue_url;
-//        String private_queue_name = Files.private_queue_name;
-//        String apollo_ws_url      = Files.apollo_ws_url;
 
-        boolean debug             = true;
-
-        int group_id;   // = Integer.parseInt(System.getenv("GROUP_ID"));
-        int problem_id; // = Integer.parseInt(System.getenv("PROBLEM_ID"));
-        problem_id = 5; // HARDCODE
-        group_id = 1;   // HARDCODE
+        int group_id   = Integer.parseInt(System.getenv("GROUP_ID"));
+        int problem_id = Integer.parseInt(System.getenv("PROBLEM_ID"));
+        boolean debug  = true;
 
 
 
@@ -112,7 +82,6 @@ public class EvaluatorApp {
         String jessGlobalFuncPath = Files.root_directory + "/src/main/java/vassar/jess/utils/clp";
         String jessAppPath        = Files.root_directory + "/problems/smap/clp";
         String requestMode        = System.getenv("REQUEST_MODE");
-        requestMode = "CRISP-ATTRIBUTES"; // HARDCODE
 
 
         Requests requests = new Requests.Builder()
@@ -131,7 +100,6 @@ public class EvaluatorApp {
 
         System.out.println("\n------------------ VASSAR INIT ------------------");
         System.out.println("----------> APOLLO URL: " + apollo_url);
-        System.out.println("----> AWS ENDPOINT URL: " + localstackEndpoint);
         System.out.println("-----> INPUT QUEUE URL: " + queue_url);
         System.out.println("--> PRIVATE QUEUE NAME: " + private_queue_name);
         System.out.println("---------------> GROUP: " + group_id);
@@ -155,7 +123,6 @@ public class EvaluatorApp {
         // --> SQS
         final SqsClient sqsClient = SqsClient.builder()
                                        .region(Region.US_EAST_2)
-                                       .endpointOverride(URI.create(localstackEndpoint))
                                        .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
                                        .build();
 
