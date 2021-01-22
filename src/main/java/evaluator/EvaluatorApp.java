@@ -59,9 +59,10 @@ public class EvaluatorApp {
         String outputFilePath     = Files.root_directory + "/debug/dbOutput.json";
         String outputPath         = Files.root_directory + "/debug";
 
-        String apollo_url         = System.getenv("APOLLO_URL");
         String queue_url          = System.getenv("EVAL_QUEUE_URL");
         String private_queue_name = System.getenv("PRIVATE_QUEUE_NAME");
+
+        String apollo_url         = System.getenv("APOLLO_URL");
         String apollo_ws_url      = System.getenv("APOLLO_URL_WS");
 
         int group_id   = Integer.parseInt(System.getenv("GROUP_ID"));

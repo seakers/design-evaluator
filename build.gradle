@@ -19,8 +19,6 @@ repositories {
     mavenLocal()
 }
 
-
-
 dependencies {
 
     implementation 'org.apache.commons:commons-lang3:3.6'
@@ -73,4 +71,13 @@ dependencies {
 
 application {
     mainClassName = 'evaluator.EvaluatorApp'
+}
+
+apollo {
+
+    service("design-evaluator"){
+        introspection {
+            endpointUrl = "http://graphql:8080/v1/graphql"
+        }
+    }
 }

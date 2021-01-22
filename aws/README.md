@@ -4,7 +4,8 @@
 
 ### Build Task Image
 
-- note, this command should be ran from the root of the project
+- Note, these command should be ran from the root of the project
 
-`docker build -f ./aws/Dockerfile -t apazagab/design-evaluator .`
+1. `docker build -f ./aws/Dockerfile -t apazagab/design-evaluator .`
+2. `docker push apazagab/design-evaluator`
 
