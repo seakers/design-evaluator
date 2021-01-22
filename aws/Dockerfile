@@ -42,14 +42,15 @@ COPY /. /app/.
 # -- DEPS --
 WORKDIR /installs
 
-RUN yum update -y && \
-    yum upgrade -y && \
-    yum install git wget unzip tar -y
+RUN yum install git wget unzip tar -y
 
 # -- GRADLE --
 RUN wget https://services.gradle.org/distributions/gradle-6.0-bin.zip && \
     unzip gradle-6.0-bin.zip && \
-    rm gradle-6.0-bin.zip
+    rm gradle-6.0-bin.zip && \
+    yum remove git wget unzip tar -y
+    
+
 ENV PATH="/installs/gradle-6.0/bin:${PATH}"
 
 # -- GRAPHQL SCHEMA --
