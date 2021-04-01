@@ -10,24 +10,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
-public class Consumer implements Runnable{
+public class Consumer implements Runnable {
 
-    private boolean      debug;
-    private boolean      running;
-    private VassarClient client;
-    private SqsClient    sqsClient;
-    private String       queueUrl;
-    private String       privateQueueUrl;
+    private boolean                               debug;
+    private boolean                               running;
+    private VassarClient                          client;
+    private SqsClient                             sqsClient;
+    private String                                queueUrl;
+    private SynchronousQueue<Map<String, String>> privateQueue;
 
     public static class Builder {
 
-        private boolean        debug;
-        private VassarClient   client;
-        private SqsClient      sqsClient;
-        private String         queueUrl;
-        private String         privateQueueUrl;
+        private boolean                               debug;
+        private VassarClient                          client;
+        private SqsClient                             sqsClient;
+        private String                                queueUrl;
+        private SynchronousQueue<Map<String, String>> privateQueue;
 
         public Builder(SqsClient sqsClient){
             this.sqsClient = sqsClient;
@@ -43,8 +44,8 @@ public class Consumer implements Runnable{
             return this;
         }
 
-        public Builder setPrivateQueueUrl(String privateQueueUrl) {
-            this.privateQueueUrl = privateQueueUrl;
+        public Builder setPrivateQueue(SynchronousQueue<Map<String, String>> privateQueue) {
+            this.privateQueue = privateQueue;
             return this;
         }
 
@@ -54,24 +55,22 @@ public class Consumer implements Runnable{
         }
 
         public Consumer build(){
-            Consumer build        = new Consumer();
-            build.sqsClient       = this.sqsClient;
-            build.debug           = this.debug;
-            build.client          = this.client;
-            build.queueUrl        = this.queueUrl;
-            build.privateQueueUrl = this.privateQueueUrl;
-            build.running         = true;
+            Consumer build     = new Consumer();
+            build.sqsClient    = this.sqsClient;
+            build.debug        = this.debug;
+            build.client       = this.client;
+            build.queueUrl     = this.queueUrl;
+            build.privateQueue = this.privateQueue;
+            build.running      = true;
             return build;
         }
 
     }
 
 
-
     // ----- MESSAGE TYPES -----
     // 1. Evaluate architecture message
     // 2. Reload rete object from database
-
 
 
     public void run() {
@@ -82,75 +81,77 @@ public class Consumer implements Runnable{
 
         while(this.running){
             System.out.println("-----> Loop iteration: " + counter);
-            // this.consumerSleep(1);
             List<Message> messages = new ArrayList<>();
+            List<Map<String, String>> messages_contents = new ArrayList<>();
             boolean privateMsg = true;
 
             // CHECK PRIVATE QUEUE FIRST - IF PRIVATE QUEUE EMPTY, CHECK EVAL QUEUE
-            // messages = this.getMessages(this.privateQueueUrl, 1, 1);
-            if(messages.isEmpty()){
-                messages   = this.getMessages(this.queueUrl, 3, 5);
+            if (!this.privateQueue.isEmpty()) {
+                while (!this.privateQueue.isEmpty()) {
+                    messages_contents.add(this.privateQueue.poll());
+                }
+            }
+            else {
+                messages = this.getMessages(this.queueUrl, 3, 5);
+                for (Message msg: messages) {
+                    HashMap<String, String> msg_contents = this.processMessage(msg);
+                    messages_contents.add(msg_contents);
+                }
                 privateMsg = false;
             }
 
-            for (Message msg: messages){
-                HashMap<String, String> msg_contents = this.processMessage(msg);
+            for (Map<String, String> msg_contents: messages_contents){
                 System.out.println(msg_contents);
 
-                if(msg_contents.containsKey("msgType")){
+                if(msg_contents.containsKey("msgType")) {
                     String msgType = msg_contents.get("msgType");
-                    if(msgType.equals("evaluate")){
+                    if (msgType.equals("evaluate")) {
                         this.msgTypeEvaluate(msg_contents);
                     }
-                    else if(msgType.equals("add")){
+                    else if (msgType.equals("add")) {
                         this.msgTypeADD(msg_contents);
                     }
-                    else if(msgType.equals("Instrument Selection")){
+                    else if (msgType.equals("Instrument Selection")) {
                         this.msgTypeSELECTING(msg_contents);
                     }
-                    else if(msgType.equals("Instrument Partitioning")){
+                    else if (msgType.equals("Instrument Partitioning")) {
                         this.msgTypePARTITIONING(msg_contents);
                     }
-                    else if(msgType.equals("TEST-EVAL")){
+                    else if (msgType.equals("TEST-EVAL")) {
                         this.msgTypeTEST_EVAL(msg_contents);
                     }
-                    else if(msgType.equals("NDSM")){
+                    else if (msgType.equals("NDSM")) {
                         this.msgTypeNDSM(msg_contents);
                     }
-                    else if(msgType.equals("ContinuityMatrix")){
+                    else if (msgType.equals("ContinuityMatrix")) {
                         this.msgTypeContinuityMatrix(msg_contents);
                     }
-                    else if(msgType.equals("build")){
+                    else if (msgType.equals("build")) {
                         this.msgTypeBuild(msg_contents);
                     }
-                    else if(msgType.equals("exit")){
+                    else if (msgType.equals("exit")) {
                         System.out.println("----> Exiting gracefully");
                         this.running = false;
                     }
                 }
-                else{
+                else {
                     System.out.println("-----> INCOMING MESSAGE DIDN'T HAVE ATTRIBUTE: msgType");
                     // this.consumerSleep(10);
                 }
             }
 
-            if(privateMsg){
-                this.deleteMessages(messages, this.privateQueueUrl);
-            }
-            else{
+            if (!privateMsg) {
                 this.deleteMessages(messages, this.queueUrl);
             }
 
             counter++;
         }
-
-
     }
 
 
 
     // ---> MESSAGE TYPES
-    public void msgTypeEvaluate(HashMap<String, String> msg_contents){
+    public void msgTypeEvaluate(Map<String, String> msg_contents){
 
         String  input       = msg_contents.get("input");
         boolean ga_arch     = false;
@@ -189,7 +190,7 @@ public class Consumer implements Runnable{
         // this.consumerSleep(3);
     }
 
-    public void msgTypeADD(HashMap<String, String> msg_contents){
+    public void msgTypeADD(Map<String, String> msg_contents){
 
         String input  = msg_contents.get("input");
         String rQueue = msg_contents.get("rQueue");
@@ -217,7 +218,7 @@ public class Consumer implements Runnable{
     }
 
 
-    public void msgTypeSELECTING(HashMap<String, String> msg_contents){
+    public void msgTypeSELECTING(Map<String, String> msg_contents){
 
         String input  = msg_contents.get("input");
         String rQueue = msg_contents.get("rQueue");
@@ -245,7 +246,7 @@ public class Consumer implements Runnable{
         // EvaluatorApp.sleep(5);
     }
 
-    public void msgTypePARTITIONING(HashMap<String, String> msg_contents){
+    public void msgTypePARTITIONING(Map<String, String> msg_contents){
 
         String input  = msg_contents.get("input");
         String rQueue = msg_contents.get("rQueue");
@@ -271,7 +272,7 @@ public class Consumer implements Runnable{
         // EvaluatorApp.sleep(5);
     }
 
-    public void msgTypeTEST_EVAL(HashMap<String, String> msg_contents){
+    public void msgTypeTEST_EVAL(Map<String, String> msg_contents){
 
         System.out.println("\n-------------------- TEST EVALUATION --------------------");
 
@@ -287,7 +288,7 @@ public class Consumer implements Runnable{
     }
 
 
-    public void msgTypeBuild(HashMap<String, String> msg_contents){
+    public void msgTypeBuild(Map<String, String> msg_contents){
         int group_id   = Integer.parseInt(msg_contents.get("group_id"));
         int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
 
@@ -300,14 +301,14 @@ public class Consumer implements Runnable{
         // this.consumerSleep(5);
     }
 
-    public void msgTypeNDSM(HashMap<String, String> msg_contents){
+    public void msgTypeNDSM(Map<String, String> msg_contents){
 
         System.out.println("---> COMPUTING NDSM");
         EvaluatorApp.sleep(1);
         this.client.computeNDSMs();
     }
 
-    public void msgTypeContinuityMatrix(HashMap<String, String> msg_contents){
+    public void msgTypeContinuityMatrix(Map<String, String> msg_contents){
 
 
         System.out.println("---> COMPUTING CONTINUITY MATRIX");
@@ -485,8 +486,7 @@ public class Consumer implements Runnable{
     // --> DELETE PRIVATE MESSAGES
     public void deletePrivMessages(){
         System.out.println("---> DELETING PRIVATE MESSAGES");
-        List<Message> messages = this.getMessages(this.privateQueueUrl, 10, 1);
-        this.deleteMessages(messages, this.privateQueueUrl);
+        this.privateQueue.clear();
     }
 
 

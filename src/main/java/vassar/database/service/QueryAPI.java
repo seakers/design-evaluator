@@ -25,50 +25,51 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 
 import java.util.*;
+import java.util.concurrent.SynchronousQueue;
 
 public class QueryAPI {
 
     private ApolloClient apollo;
     private OkHttpClient http;
-    private String       apollo_url;     // = "http://graphql:8080/v1/graphql";
-    public  int          group_id;
-    public  int          problem_id;
+    private String       apolloUrl;     // = "http://graphql:8080/v1/graphql";
+    public  int          groupId;
+    public  int          problemId;
 
-    private final String    private_queue_url;
+    private SynchronousQueue<Map<String, String>> privateQueue;
     private final SqsClient client;
 
-    public QueryAPI(String private_queue_url, SqsClient client) {
-        this.private_queue_url = private_queue_url;
+    public QueryAPI(SynchronousQueue<Map<String, String>> privateQueue, SqsClient client) {
+        this.privateQueue = privateQueue;
         this.client = client;
     }
 
     public static class Builder {
 
-        private ApolloClient apollo;
-        private OkHttpClient http;
-        private SqsClient    client;
-        private String       apollo_url;     // = "http://graphql:8080/v1/graphql";
-        private String       private_queue_url;
-        private int          group_id;
-        private int          problem_id;
+        private ApolloClient                          apollo;
+        private OkHttpClient                          http;
+        private SqsClient                             client;
+        private String                                apolloUrl;     // = "http://graphql:8080/v1/graphql";
+        private SynchronousQueue<Map<String, String>> privateQueue;
+        private int                                   groupId;
+        private int                                   problemId;
 
-        public Builder(String apollo_url, String apollo_ws_url){
-            this.apollo_url = apollo_url;
+        public Builder(String apolloUrl, String apolloWsUrl){
+            this.apolloUrl = apolloUrl;
             this.http       = new OkHttpClient.Builder().build();
             this.apollo     = ApolloClient.builder()
-                    .serverUrl(this.apollo_url)
-                    .subscriptionTransportFactory(new WebSocketSubscriptionTransport.Factory(apollo_ws_url, this.http)) // ws://graphql:8080/v1/graphql
+                    .serverUrl(this.apolloUrl)
+                    .subscriptionTransportFactory(new WebSocketSubscriptionTransport.Factory(apolloWsUrl, this.http)) // ws://graphql:8080/v1/graphql
                     .okHttpClient(this.http)
                     .build();
         }
 
-        public Builder groupID(int group_id){
-            this.group_id = group_id;
+        public Builder groupID(int groupId){
+            this.groupId = groupId;
             return this;
         }
 
-        public Builder privateQueue(String private_queue_url){
-            this.private_queue_url = private_queue_url;
+        public Builder privateQueue(SynchronousQueue<Map<String, String>> privateQueue){
+            this.privateQueue = privateQueue;
             return this;
         }
 
@@ -77,19 +78,19 @@ public class QueryAPI {
             return this;
         }
 
-        public Builder problemID(int problem_id){
-            this.problem_id = problem_id;
+        public Builder problemID(int problemId){
+            this.problemId = problemId;
             return this;
         }
 
         public QueryAPI build(){
-            QueryAPI client = new QueryAPI(this.private_queue_url, this.client);
+            QueryAPI client = new QueryAPI(this.privateQueue, this.client);
 
             client.apollo            = this.apollo;
             client.http              = this.http;       // = "http://graphql:8080/v1/graphql";
-            client.apollo_url        = this.apollo_url; // = "/app/logs/jessInitDB.json"; ???
-            client.group_id          = this.group_id;
-            client.problem_id        = this.problem_id;
+            client.apolloUrl         = this.apolloUrl;  // = "/app/logs/jessInitDB.json"; ???
+            client.groupId           = this.groupId;
+            client.problemId         = this.problemId;
 
             return client;
         }
@@ -110,7 +111,7 @@ public class QueryAPI {
     // ---> INSTRUMENTS
     public List<InstrumentQuery.Item> instrumentQuery(){
         InstrumentQuery iaQuery = InstrumentQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<InstrumentQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<InstrumentQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -119,7 +120,7 @@ public class QueryAPI {
 
     public List<GlobalInstrumentQuery.Item> globalInstrumentQuery(){
         GlobalInstrumentQuery iaQuery = GlobalInstrumentQuery.builder()
-                .group_id(this.group_id)
+                .group_id(this.groupId)
                 .build();
         ApolloCall<GlobalInstrumentQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<GlobalInstrumentQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -128,7 +129,7 @@ public class QueryAPI {
 
     public List<ProblemInstrumentsQuery.Item> problemInstrumentQuery(){
         ProblemInstrumentsQuery iaQuery = ProblemInstrumentsQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<ProblemInstrumentsQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<ProblemInstrumentsQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -137,7 +138,7 @@ public class QueryAPI {
 
     public List<EnabledInstrumentsQuery.Item> enabledInstrumentQuery(){
         EnabledInstrumentsQuery iaQuery = EnabledInstrumentsQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<EnabledInstrumentsQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<EnabledInstrumentsQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -147,7 +148,7 @@ public class QueryAPI {
 
     public List<MeasurementAttributeQuery.Item> measurementAttributeQuery(){
         MeasurementAttributeQuery maQuery = MeasurementAttributeQuery.builder()
-                .group_id(this.group_id)
+                .group_id(this.groupId)
                 .build();
         ApolloCall<MeasurementAttributeQuery.Data>           apolloCall  = this.apollo.query(maQuery);
         Observable<Response<MeasurementAttributeQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -156,7 +157,7 @@ public class QueryAPI {
 
     public List<InstrumentAttributeQuery.Item> instrumentAttributeQuery(){
         InstrumentAttributeQuery iaQuery = InstrumentAttributeQuery.builder()
-                .group_id(this.group_id)
+                .group_id(this.groupId)
                 .build();
         ApolloCall<InstrumentAttributeQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<InstrumentAttributeQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -165,7 +166,7 @@ public class QueryAPI {
 
     public List<InstrumentMeasurementsQuery.Item> instrumentMeasurementQuery(String instrument){
         InstrumentMeasurementsQuery iaQuery = InstrumentMeasurementsQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .instrument_name(instrument)
                 .build();
         ApolloCall<InstrumentMeasurementsQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
@@ -175,7 +176,7 @@ public class QueryAPI {
 
     public List<WalkerMissionAnalysisQuery.Item> walkerMissionAnalysisQuery(){
         WalkerMissionAnalysisQuery iaQuery = WalkerMissionAnalysisQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<WalkerMissionAnalysisQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<WalkerMissionAnalysisQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -187,7 +188,7 @@ public class QueryAPI {
     // ----> ORBIT
     public List<ProblemOrbitsQuery.Item> problemOrbitQuery(){
         ProblemOrbitsQuery orbitQuery = ProblemOrbitsQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<ProblemOrbitsQuery.Data>           apolloCall  = this.apollo.query(orbitQuery);
         Observable<Response<ProblemOrbitsQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -196,7 +197,7 @@ public class QueryAPI {
 
     public List<ProblemOrbitJoinQuery.Item> problemOrbitJoin(){
         ProblemOrbitJoinQuery orbitQuery = ProblemOrbitJoinQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<ProblemOrbitJoinQuery.Data>           apolloCall  = this.apollo.query(orbitQuery);
         Observable<Response<ProblemOrbitJoinQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -205,7 +206,7 @@ public class QueryAPI {
 
     public List<OrbitAttributeQuery.Item> orbitAttributeQuery(){
         OrbitAttributeQuery iaQuery = OrbitAttributeQuery.builder()
-                .group_id(this.group_id)
+                .group_id(this.groupId)
                 .build();
         ApolloCall<OrbitAttributeQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<OrbitAttributeQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -221,7 +222,7 @@ public class QueryAPI {
     // remove
     public List<ProblemLaunchVehicleQuery.Item> problemLaunchVehicleQuery(){
         ProblemLaunchVehicleQuery iaQuery = ProblemLaunchVehicleQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<ProblemLaunchVehicleQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<ProblemLaunchVehicleQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -230,7 +231,7 @@ public class QueryAPI {
 
     public List<LaunchVehicleAttributeQuery.Item> launchVehicleAttributeQuery(){
         LaunchVehicleAttributeQuery iaQuery = LaunchVehicleAttributeQuery.builder()
-                                                                        .group_id(this.group_id)
+                                                                        .group_id(this.groupId)
                                                                         .build();
         ApolloCall<LaunchVehicleAttributeQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<LaunchVehicleAttributeQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -244,7 +245,7 @@ public class QueryAPI {
     // ---> RULES
     public List<AggregationRuleQuery.Item> aggregationRuleQuery(){
         AggregationRuleQuery iaQuery = AggregationRuleQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<AggregationRuleQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<AggregationRuleQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -254,7 +255,7 @@ public class QueryAPI {
 
     public List<RequirementRuleCaseQuery.Item> requirementRuleCaseQuery(){
         RequirementRuleCaseQuery iaQuery = RequirementRuleCaseQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<RequirementRuleCaseQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<RequirementRuleCaseQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -263,7 +264,7 @@ public class QueryAPI {
 
     public List<RequirementRuleAttributeQuery.Item> requirementRuleAttributeQuery(){
         RequirementRuleAttributeQuery iaQuery = RequirementRuleAttributeQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<RequirementRuleAttributeQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<RequirementRuleAttributeQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -274,7 +275,7 @@ public class QueryAPI {
     public List<CapabilityRuleQuery.Item> capabilityRuleQuery(List<Integer> instList){
         CapabilityRuleQuery iaQuery = CapabilityRuleQuery.builder()
         //        .problem_id(this.problem_id)
-                .group_id(this.group_id)
+                .group_id(this.groupId)
                 .inst_ids(instList)
                 .build();
         ApolloCall<CapabilityRuleQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
@@ -285,7 +286,7 @@ public class QueryAPI {
 
     public List<SubobjectiveAttributeInformationQuery.Item> querySubobjectiveAttributeInformation(String name){
         SubobjectiveAttributeInformationQuery iaQuery = SubobjectiveAttributeInformationQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .name(name)
                 .build();
         ApolloCall<SubobjectiveAttributeInformationQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
@@ -301,7 +302,7 @@ public class QueryAPI {
     // ---> MISSION
     public List<MissionAttributeQuery.Item> missionAttributeQuery(){
         MissionAttributeQuery iaQuery = MissionAttributeQuery.builder()
-                                                            .problem_id(this.problem_id)
+                                                            .problem_id(this.problemId)
                                                             .build();
         ApolloCall<MissionAttributeQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<MissionAttributeQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -310,7 +311,7 @@ public class QueryAPI {
 
     public List<AttributeInheritanceQuery.Item> attributeInheritanceQuery(){
         AttributeInheritanceQuery iaQuery = AttributeInheritanceQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<AttributeInheritanceQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<AttributeInheritanceQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -319,7 +320,7 @@ public class QueryAPI {
 
     public List<FuzzyAttributeQuery.Item> fuzzyAttributeQuery(){
         FuzzyAttributeQuery iaQuery = FuzzyAttributeQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
         ApolloCall<FuzzyAttributeQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
         Observable<Response<FuzzyAttributeQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -328,7 +329,7 @@ public class QueryAPI {
 
     public List<CostMissionAttributeQuery.Item> costMissionAttributeQuery(ArrayList<String> attributes){
         CostMissionAttributeQuery iaQuery = CostMissionAttributeQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .attributes(attributes)
                 .build();
         ApolloCall<CostMissionAttributeQuery.Data>           apolloCall  = this.apollo.query(iaQuery);
@@ -340,7 +341,7 @@ public class QueryAPI {
     // ---> STAKEHOLDERS
     public int getPanelID(String panel){
         PanelIdQuery idQuery = PanelIdQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .name(panel)
                 .build();
         ApolloCall<PanelIdQuery.Data>           apolloCall  = this.apollo.query(idQuery);
@@ -351,7 +352,7 @@ public class QueryAPI {
 
     public int getObjectiveID(String objective){
         ObjectiveIdQuery idQuery = ObjectiveIdQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .name(objective)
                 .build();
         ApolloCall<ObjectiveIdQuery.Data>           apolloCall  = this.apollo.query(idQuery);
@@ -362,7 +363,7 @@ public class QueryAPI {
 
     public int getSubobjectiveID(String subobjective){
         SubobjectiveIdQuery idQuery = SubobjectiveIdQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .name(subobjective)
                 .build();
         ApolloCall<SubobjectiveIdQuery.Data>           apolloCall  = this.apollo.query(idQuery);
@@ -386,7 +387,7 @@ public class QueryAPI {
     // ---> ARCHITECTURE
     public int updateArchitecture(String input, double science, double cost, boolean ga){
         UpdateArchitectureMutation archMutation = UpdateArchitectureMutation.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .input(input)
                 .science(science)
                 .cost(cost)
@@ -400,7 +401,7 @@ public class QueryAPI {
 
     public int insertArchitecture(String input, double science, double cost, boolean ga){
         InsertArchitectureMutation archMutation = InsertArchitectureMutation.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .input(input)
                 .science(science)
                 .cost(cost)
@@ -561,7 +562,7 @@ public class QueryAPI {
 
     public boolean doesArchitectureExist(String input){
         ArchitectureCountQuery countQuery = ArchitectureCountQuery.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .input(input)
                 .build();
         ApolloCall<ArchitectureCountQuery.Data>           apolloCall  = this.apollo.query(countQuery);
@@ -581,11 +582,11 @@ public class QueryAPI {
 
 
     // ---> SUBSCRIPTIONS
-    public ApolloSubscriptionCall subscribeToInstruments(){
+    public ApolloSubscriptionCall<InstrumentSubscription.Data> subscribeToInstruments(){
         System.out.println("-----> subscribeToInstruments");
 
         InstrumentSubscription sub = InstrumentSubscription.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
 
         ApolloSubscriptionCall<InstrumentSubscription.Data> subCall = this.apollo.subscribe(sub);
@@ -594,31 +595,11 @@ public class QueryAPI {
             @Override
             public void onResponse(@NotNull Response<InstrumentSubscription.Data> response) {
                 System.out.println("-----> INSTRUMENT CHANGE: REBUILD");
-                final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("build")
-                                .build()
-                );
-                messageAttributes.put("group_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                messageAttributes.put("problem_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                client.sendMessage(SendMessageRequest.builder()
-                        .queueUrl(private_queue_url)
-                        .messageBody("")
-                        .messageAttributes(messageAttributes)
-                        .delaySeconds(1)
-                        .build());
+                final Map<String, String> messageAttributes = new HashMap<>();
+                messageAttributes.put("msgType", "build");
+                messageAttributes.put("group_id", "-1");
+                messageAttributes.put("problem_id", "-1");
+                privateQueue.add(messageAttributes);
             }
 
             @Override
@@ -644,11 +625,11 @@ public class QueryAPI {
         return subCall;
     }
 
-    public ApolloSubscriptionCall subscribeToInstrumentCharacteristics(){
+    public ApolloSubscriptionCall<InstrumentCharacteristicSubscription.Data> subscribeToInstrumentCharacteristics(){
         System.out.println("-----> subscribeToInstrumentCharacteristics");
 
         InstrumentCharacteristicSubscription sub = InstrumentCharacteristicSubscription.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
 
         ApolloSubscriptionCall<InstrumentCharacteristicSubscription.Data> subCall = this.apollo.subscribe(sub);
@@ -657,31 +638,11 @@ public class QueryAPI {
             @Override
             public void onResponse(@NotNull Response<InstrumentCharacteristicSubscription.Data> response) {
                 System.out.println("-----> INSTRUMENT CHARACTERISTIC CHANGE: REBUILD");
-                final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("build")
-                                .build()
-                );
-                messageAttributes.put("group_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                messageAttributes.put("problem_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                client.sendMessage(SendMessageRequest.builder()
-                        .queueUrl(private_queue_url)
-                        .messageBody("")
-                        .messageAttributes(messageAttributes)
-                        .delaySeconds(1)
-                        .build());
+                final Map<String, String> messageAttributes = new HashMap<>();
+                messageAttributes.put("msgType", "build");
+                messageAttributes.put("group_id", "-1");
+                messageAttributes.put("problem_id", "-1");
+                privateQueue.add(messageAttributes);
             }
 
             @Override
@@ -707,11 +668,11 @@ public class QueryAPI {
         return subCall;
     }
 
-    public ApolloSubscriptionCall subscribeToOrbits(){
+    public ApolloSubscriptionCall<OrbitSubscription.Data> subscribeToOrbits(){
         System.out.println("-----> subscribeToOrbits");
 
         OrbitSubscription sub = OrbitSubscription.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
 
         ApolloSubscriptionCall<OrbitSubscription.Data> subCall = this.apollo.subscribe(sub);
@@ -720,31 +681,11 @@ public class QueryAPI {
             @Override
             public void onResponse(@NotNull Response<OrbitSubscription.Data> response) {
                 System.out.println("-----> ORBIT CHANGE: REBUILD");
-                final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("build")
-                                .build()
-                );
-                messageAttributes.put("group_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                messageAttributes.put("problem_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                client.sendMessage(SendMessageRequest.builder()
-                        .queueUrl(private_queue_url)
-                        .messageBody("")
-                        .messageAttributes(messageAttributes)
-                        .delaySeconds(1)
-                        .build());
+                final Map<String, String> messageAttributes = new HashMap<>();
+                messageAttributes.put("msgType", "build");
+                messageAttributes.put("group_id", "-1");
+                messageAttributes.put("problem_id", "-1");
+                privateQueue.add(messageAttributes);
             }
 
             @Override
@@ -770,11 +711,11 @@ public class QueryAPI {
         return subCall;
     }
 
-    public ApolloSubscriptionCall subscribeToStakeholders(){
+    public ApolloSubscriptionCall<AggregationRuleSubscription.Data> subscribeToStakeholders(){
         System.out.println("-----> subscribeToStakeholders");
 
         AggregationRuleSubscription sub = AggregationRuleSubscription.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
 
         ApolloSubscriptionCall<AggregationRuleSubscription.Data> subCall = this.apollo.subscribe(sub);
@@ -783,31 +724,11 @@ public class QueryAPI {
             @Override
             public void onResponse(@NotNull Response<AggregationRuleSubscription.Data> response) {
                 System.out.println("-----> STEAKHOLDER CHANGE: REBUILD");
-                final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("build")
-                                .build()
-                );
-                messageAttributes.put("group_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                messageAttributes.put("problem_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                client.sendMessage(SendMessageRequest.builder()
-                        .queueUrl(private_queue_url)
-                        .messageBody("")
-                        .messageAttributes(messageAttributes)
-                        .delaySeconds(1)
-                        .build());
+                final Map<String, String> messageAttributes = new HashMap<>();
+                messageAttributes.put("msgType", "build");
+                messageAttributes.put("group_id", "-1");
+                messageAttributes.put("problem_id", "-1");
+                privateQueue.add(messageAttributes);
             }
 
             @Override
@@ -833,11 +754,11 @@ public class QueryAPI {
         return subCall;
     }
 
-    public ApolloSubscriptionCall subscribeToLaunchVehicles(){
+    public ApolloSubscriptionCall<LaunchVehicleSubscription.Data> subscribeToLaunchVehicles(){
         System.out.println("-----> subscribeToLaunchVehicles");
 
         LaunchVehicleSubscription sub = LaunchVehicleSubscription.builder()
-                .problem_id(this.problem_id)
+                .problem_id(this.problemId)
                 .build();
 
         ApolloSubscriptionCall<LaunchVehicleSubscription.Data> subCall = this.apollo.subscribe(sub);
@@ -846,31 +767,11 @@ public class QueryAPI {
             @Override
             public void onResponse(@NotNull Response<LaunchVehicleSubscription.Data> response) {
                 System.out.println("-----> LAUNCH VEHICLE CHANGE: REBUILD");
-                final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("build")
-                                .build()
-                );
-                messageAttributes.put("group_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                messageAttributes.put("problem_id",
-                        MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("-1")
-                                .build()
-                );
-                client.sendMessage(SendMessageRequest.builder()
-                        .queueUrl(private_queue_url)
-                        .messageBody("")
-                        .messageAttributes(messageAttributes)
-                        .delaySeconds(1)
-                        .build());
+                final Map<String, String> messageAttributes = new HashMap<>();
+                messageAttributes.put("msgType", "build");
+                messageAttributes.put("group_id", "-1");
+                messageAttributes.put("problem_id", "-1");
+                privateQueue.add(messageAttributes);
             }
 
             @Override

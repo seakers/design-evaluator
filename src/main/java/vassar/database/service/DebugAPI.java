@@ -3,15 +3,14 @@ package vassar.database.service;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import evaluator.Files;
 import org.json.simple.JSONObject;
+
+import evaluator.ResourcePaths;
 
 // I/O
 import java.io.File;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
-import java.io.PrintWriter;
-import java.util.List;
 
 
 public class DebugAPI {
@@ -133,7 +132,7 @@ public class DebugAPI {
 
     public void writeTemplateOutputFileName(String fileName, String content) {
 
-        if(Files.write_files){
+        if(ResourcePaths.writeFiles){
             fileName = "/" + fileName + ".txt";
             File outputFile = new File(this.outputPath + fileName);
             try{

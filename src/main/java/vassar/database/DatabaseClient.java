@@ -8,15 +8,12 @@ import com.evaluator.*;
 import com.evaluator.type.*;
 import com.google.gson.JsonObject;
 import evaluator.EvaluatorApp;
-import software.amazon.awssdk.utils.Pair;
 import vassar.database.service.DebugAPI;
 import vassar.database.service.QueryAPI;
 import vassar.database.template.TemplateRequest;
 import vassar.database.template.TemplateResponse;
 import vassar.problem.Problem;
 
-import javax.print.attribute.HashPrintJobAttributeSet;
-import java.lang.reflect.Array;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.temporal.ChronoUnit;
@@ -312,11 +309,11 @@ public class DatabaseClient {
 
 
     public void setProblemID(int id){
-        this.queryAPI.problem_id = id;
+        this.queryAPI.problemId = id;
     }
 
     public void setGroupID(int id){
-        this.queryAPI.group_id = id;
+        this.queryAPI.groupId = id;
     }
 
     public boolean doesArchitectureExist(String input){

@@ -12,7 +12,7 @@ package vassar;
 
 import com.evaluator.type.*;
 import evaluator.EvaluatorApp;
-import evaluator.Files;
+import evaluator.ResourcePaths;
 import jess.Fact;
 import jess.JessException;
 import jess.Rete;
@@ -590,9 +590,9 @@ public class VassarClient {
         // String rootPath = "/Users/gabeapaza/repositories/seakers/design_evaluator";
         String rootPath = ""; // DOCKER
 
-        String jessGlobalTempPath = Files.root_directory + "/src/main/java/vassar/database/template/defs";
-        String jessGlobalFuncPath = Files.root_directory + "/src/main/java/vassar/jess/utils/clp";
-        String jessAppPath        = Files.root_directory + "/problems/smap/clp";
+        String jessGlobalTempPath = ResourcePaths.resourcesRootDir + "/vassar/templates";
+        String jessGlobalFuncPath = ResourcePaths.resourcesRootDir + "/vassar/functions";
+        String jessAppPath        = ResourcePaths.resourcesRootDir + "/vassar/problems/SMAP/clp";
         String requestMode        = "CRISP-ATTRIBUTES";
         Requests newRequests = new Requests.Builder()
                                            .setGlobalTemplatePath(jessGlobalTempPath)

@@ -10,9 +10,6 @@ import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import vassar.GlobalScope;
 import vassar.VassarClient;
-import vassar.architecture.Optimization;
-import vassar.combinatorics.Combinatorics;
-import vassar.combinatorics.Nto1pair;
 import vassar.database.DatabaseClient;
 import vassar.database.service.DebugAPI;
 import vassar.database.service.QueryAPI;
@@ -29,13 +26,11 @@ import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsPro
 
 import java.net.URI;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 public class EvaluatorApp {
 
     public static void main(String[] args) {
-
-
 
 //  _____ _   _ _____ _______
 // |_   _| \ | |_   _|__   __|
@@ -45,31 +40,23 @@ public class EvaluatorApp {
 // |_____|_| \_|_____|  |_|
 //
 
-        String coverage_database = Files.root_directory + "/src/main/java/vassar/evaluator/coverage/orekit/CoverageDatabase";
-        String orekit_init       = Files.root_directory + "/src/main/java/vassar/evaluator/coverage/orekit";
+        String coverageDatabase = ResourcePaths.resourcesRootDir + "/orekit/CoverageDatabase";
+        String orekitInit       = ResourcePaths.resourcesRootDir + "/orekit";
 
-        System.setProperty("orekit.coveragedatabase", coverage_database);
-        OrekitConfig.init(1, orekit_init);
+        System.setProperty("orekit.coveragedatabase", coverageDatabase);
+        OrekitConfig.init(1, orekitInit);
 
         GlobalScope.measurementsToSubobjectives = new HashMap<>();
         GlobalScope.subobjectivesToMeasurements = new HashMap<>();
 
-        String rootPath = ""; // DOCKER
+        String outputFilePath     = ResourcePaths.rootDirectory + "/debug/dbOutput.json";
+        String outputPath         = ResourcePaths.rootDirectory + "/debug";
 
-        String outputFilePath     = Files.root_directory + "/debug/dbOutput.json";
-        String outputPath         = Files.root_directory + "/debug";
+        String queueUrl           = System.getenv("EVAL_QUEUE_URL");
+        String apolloUrl          = System.getenv("APOLLO_URL");
+        String apolloWsUrl        = System.getenv("APOLLO_URL_WS");
 
-        String queue_url          = System.getenv("EVAL_QUEUE_URL");
-        String private_queue_name = System.getenv("PRIVATE_QUEUE_NAME");
-
-        String apollo_url         = System.getenv("APOLLO_URL");
-        String apollo_ws_url      = System.getenv("APOLLO_URL_WS");
-
-        int group_id   = Integer.parseInt(System.getenv("GROUP_ID"));
-        int problem_id = Integer.parseInt(System.getenv("PROBLEM_ID"));
-        boolean debug  = true;
-
-
+        boolean debug = true;
 
         ArrayList<Userfunction> userFuncs = new ArrayList<>() {{
             add( new SameOrBetter() );
@@ -77,13 +64,11 @@ public class EvaluatorApp {
             add( new Worsen() );
         }};
 
-
         // -----> JESS REQUESTS
-        String jessGlobalTempPath = Files.root_directory + "/src/main/java/vassar/database/template/defs";
-        String jessGlobalFuncPath = Files.root_directory + "/src/main/java/vassar/jess/utils/clp";
-        String jessAppPath        = Files.root_directory + "/problems/smap/clp";
+        String jessGlobalTempPath = ResourcePaths.resourcesRootDir + "/vassar/templates";
+        String jessGlobalFuncPath = ResourcePaths.resourcesRootDir + "/vassar/functions";
+        String jessAppPath        = ResourcePaths.resourcesRootDir + "/vassar/problems/SMAP/clp";
         String requestMode        = System.getenv("REQUEST_MODE");
-
 
         Requests requests = new Requests.Builder()
                                         .setGlobalTemplatePath(jessGlobalTempPath)
@@ -95,21 +80,13 @@ public class EvaluatorApp {
 
 
         // -----> When scaling, private queue names will be random
-        if(private_queue_name.equals("RANDOM")){
-            private_queue_name = "vassar_private_" + EvaluatorApp.getSaltString(8);
-        }
+        SynchronousQueue<Map<String, String>> queue = new SynchronousQueue<>();
 
         System.out.println("\n------------------ VASSAR INIT ------------------");
-        System.out.println("----------> APOLLO URL: " + apollo_url);
-        System.out.println("-----> INPUT QUEUE URL: " + queue_url);
-        System.out.println("--> PRIVATE QUEUE NAME: " + private_queue_name);
-        System.out.println("---------------> GROUP: " + group_id);
-        System.out.println("-------------> PROBLEM: " + problem_id);
+        System.out.println("----------> APOLLO URL: " + apolloUrl);
+        System.out.println("-----> INPUT QUEUE URL: " + queueUrl);
         System.out.println("--------> REQUEST MODE: " + requestMode);
         System.out.println("-------------------------------------------------------\n");
-
-
-
 
 
 //  _           _ _     _
@@ -127,18 +104,9 @@ public class EvaluatorApp {
                                        .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
                                        .build();
 
-        // PRIVATE QUEUE
-        String private_queue_url = EvaluatorApp.createPrivateQueue(sqsClient, private_queue_name, problem_id);
-        EvaluatorApp.addAwsShutdownHook(private_queue_url);
-        Consumer.purgeQueue(sqsClient, private_queue_url);
 
-
-
-
-        QueryAPI queryAPI = new QueryAPI.Builder(apollo_url, apollo_ws_url)
-                                        .groupID(group_id)
-                                        .problemID(problem_id)
-                                        .privateQueue(private_queue_url)
+        QueryAPI queryAPI = new QueryAPI.Builder(apolloUrl, apolloWsUrl)
+                                        .privateQueue(queue)
                                         .sqsClient(sqsClient)
                                         .build();
 
@@ -164,47 +132,15 @@ public class EvaluatorApp {
                                         .setEngine(engine)
                                         .build();
 
-
-
         Consumer evaluator = new Consumer.Builder(sqsClient)
                                          .setVassarClient(vClient)
-                                         .setQueueUrl(queue_url)
-                                         .setPrivateQueueUrl(private_queue_url)
+                                         .setQueueUrl(queueUrl)
+                                         .setPrivateQueue(queue)
                                          .debug(debug)
                                          .build();
 
-
-
         // RUN CONSUMER
-        Thread cThread = new Thread(evaluator);
-        cThread.start();
-    }
-
-    public static String createPrivateQueue(SqsClient sqsClient, String private_queue_name, int problem_id){
-        Map<String, String> queueParams = new HashMap<>();
-        queueParams.put("problem_id", String.valueOf(problem_id));
-        queueParams.put("type", "vassar_eval_private");
-        CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
-                .queueName(private_queue_name)
-                .tags(queueParams)
-                .build();
-        sqsClient.createQueue(createQueueRequest);
-
-        GetQueueUrlResponse getQueueUrlResponse = sqsClient.getQueueUrl(GetQueueUrlRequest.builder().queueName(private_queue_name).build());
-        String private_url = getQueueUrlResponse.queueUrl();
-        return private_url;
-    }
-
-    public static String getSaltString(int length) {
-        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-        StringBuilder salt = new StringBuilder();
-        Random rnd = new Random();
-        while (salt.length() < length) { // length of the random string.
-            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
-            salt.append(SALTCHARS.charAt(index));
-        }
-        String saltStr = salt.toString();
-        return saltStr;
+        evaluator.run();
     }
 
     // ---> SLEEP
@@ -213,9 +149,4 @@ public class EvaluatorApp {
         catch (InterruptedException e) { e.printStackTrace(); }
     }
 
-
-
-    public static void addAwsShutdownHook(String private_queue_url){
-        Runtime.getRuntime().addShutdownHook(new ShutDown(private_queue_url));
-    }
 }

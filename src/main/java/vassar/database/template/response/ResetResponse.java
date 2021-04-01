@@ -3,8 +3,6 @@ package vassar.database.template.response;
 import jess.Rete;
 import vassar.database.template.TemplateResponse;
 
-import java.util.ArrayList;
-
 public class ResetResponse extends TemplateResponse {
 
     private String focus;

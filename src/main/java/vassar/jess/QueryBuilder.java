@@ -1,7 +1,7 @@
 package vassar.jess;
 
 import evaluator.EvaluatorApp;
-import evaluator.Files;
+import evaluator.ResourcePaths;
 import jess.*;
 import vassar.database.service.DebugAPI;
 import vassar.problem.Problem;
@@ -33,11 +33,11 @@ public class QueryBuilder {
             QueryBuilder build = new QueryBuilder();
             build.r = this.r;
             build.precomputedQueries = this.precomputedQueries;
-            build.debug_dir = Files.root_directory + "/debug/QueryBuilder";
+            build.debug_dir = ResourcePaths.rootDirectory + "/debug/QueryBuilder";
 
-            build.debugAPI = new DebugAPI.Builder(Files.root_directory + "/debug/QueryBuilder/output.json")
+            build.debugAPI = new DebugAPI.Builder(ResourcePaths.rootDirectory + "/debug/QueryBuilder/output.json")
                     .newFile()
-                    .setOutputPath(Files.root_directory + "/debug/QueryBuilder")
+                    .setOutputPath(ResourcePaths.rootDirectory + "/debug/QueryBuilder")
                     .build();
 
             return build;
@@ -197,7 +197,7 @@ public class QueryBuilder {
             System.out.println(e.getMessage());
         }
 
-        if(Files.write_files){
+        if(ResourcePaths.writeFiles){
             String debug = "empty query";
             if(!facts.isEmpty()){
                 debug = "";

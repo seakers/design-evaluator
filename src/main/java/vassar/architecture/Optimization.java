@@ -4,7 +4,7 @@ package vassar.architecture;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import evaluator.EvaluatorApp;
-import evaluator.Files;
+import evaluator.ResourcePaths;
 import org.checkerframework.checker.nullness.Opt;
 import org.checkerframework.checker.units.qual.A;
 import vassar.combinatorics.Combinatorics;
@@ -53,7 +53,7 @@ public class Optimization {
         }
 
         // LATERAL SYNERGIES
-        TreeMap<Nto1pair,Double> dimen_2 = Combinatorics.combineNDSM_File(Files.ndsm2_Dacadal, "SDSM");
+        TreeMap<Nto1pair,Double> dimen_2 = Combinatorics.combineNDSM_File(ResourcePaths.ndsm2_Decadal, "SDSM");
         // TreeMap<Nto1pair,Double> dimen_3 = Combinatorics.combineNDSM_File(Files.ndsm3, "SDSM");
         // TreeMap<Nto1pair,Double> dimen_N = Combinatorics.combineNDSM_File(Files.ndsmN, "SDSM");
 

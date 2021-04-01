@@ -1,6 +1,5 @@
 package vassar.evaluator;
 
-import evaluator.Files;
 import jess.*;
 
 
@@ -8,7 +7,7 @@ import org.hipparchus.util.FastMath;
 import org.orekit.errors.OrekitException;
 import org.orekit.frames.TopocentricFrame;
 
-
+import evaluator.ResourcePaths;
 import vassar.jess.QueryBuilder;
 import vassar.jess.Resource;
 import vassar.jess.func.RawSafety;
@@ -124,7 +123,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         // 1. Load initial performance critique facts
         try {
             r.eval("(bind ?*p* (new java.util.Vector))");
-            r.batch(Files.root_directory + "/problems/smap/clp/critique/critique_performance_initialize_facts.clp");
+            r.batch(ResourcePaths.resourcesRootDir + "/vassar/problems/SMAP/clp/critique/critique_performance_initialize_facts.clp");
             r.setFocus("CRITIQUE-PERFORMANCE-PRECALCULATION");
             r.run();
             r.setFocus("CRITIQUE-PERFORMANCE");
@@ -149,7 +148,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         // 1. Load initial cost critique facts
         try {
             r.eval("(bind ?*q* (new java.util.Vector))");
-            r.batch(Files.root_directory + "/problems/smap/clp/critique/critique_cost_initialize_facts.clp");
+            r.batch(ResourcePaths.resourcesRootDir + "/vassar/problems/SMAP/clp/critique/critique_cost_initialize_facts.clp");
             r.setFocus("CRITIQUE-COST-PRECALCULATION");
             r.run();
             r.setFocus("CRITIQUE-COST");

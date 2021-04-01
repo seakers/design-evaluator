@@ -4,7 +4,7 @@ import com.evaluator.*;
 import com.google.gson.JsonObject;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.extension.AbstractExtension;
-import evaluator.Files;
+import evaluator.ResourcePaths;
 import vassar.database.DatabaseClient;
 import vassar.database.template.TemplateRequest;
 import vassar.database.template.request.CapabilityRuleTemplateRequest;
@@ -279,14 +279,15 @@ public class Problem {
         }
 
         // orekitResourcesPath = "/Users/gabeapaza/repositories/seakers/design_evaluator/app/src/main/java/vassar/evaluator/coverage/orekit";
-        orekitResourcesPath = Files.root_directory + "/src/main/java/vassar/evaluator/coverage/orekit"; // DOCKER
+        orekitResourcesPath = ResourcePaths.resourcesRootDir + "/orekit/resources"; // DOCKER
 
 
         try {
             // FileInputStream fis = new FileInputStream("/Users/gabeapaza/repositories/seakers/design_evaluator/app/problems/smap/dat/revtimes.dat");
-            FileInputStream fis = new FileInputStream(Files.root_directory + "/problems/smap/dat/revtimes.dat"); // DOCKER
+            FileInputStream fis = new FileInputStream(ResourcePaths.resourcesRootDir + "/vassar/problems/SMAP/dat/revtimes.dat"); // DOCKER
             ObjectInputStream ois = new ObjectInputStream(fis);
             this.revtimes = (HashMap<String, HashMap<String, Double>>) ois.readObject();
+            ois.close();
         }
         catch (Exception e) {
             System.err.println(e.getMessage());

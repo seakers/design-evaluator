@@ -1,12 +1,10 @@
 package vassar.jess.modules.orbits;
 
 import evaluator.EvaluatorApp;
-import evaluator.Files;
+import evaluator.ResourcePaths;
 import jess.Defrule;
 import jess.Fact;
 import jess.Rete;
-import okhttp3.Handshake;
-import okhttp3.Request;
 import vassar.architecture.ADDArchitecture;
 import vassar.database.template.TemplateRequest;
 import vassar.database.template.TemplateResponse;
@@ -19,11 +17,7 @@ import java.util.*;
 
 public class Orbits {
 
-
-
     private Resource resource;
-
-
 
     // --> CONTAINS RULE CHROMOSOME STRUCTURE
     public static class Builder{
@@ -48,8 +42,6 @@ public class Orbits {
             return this;
         }
 
-
-
         public Orbits build(){
             Orbits   build          = new Orbits(this.resource);
             Requests orbit_requests = new Requests.Builder().buildOrbits();
@@ -62,11 +54,8 @@ public class Orbits {
                 this.chromosome_map.put(key, response);
             }
 
-
             return build;
         }
-
-
 
         // Rebuild the module with the new chromosome structure
         // Structure: ArrayList<Integer>
@@ -99,13 +88,8 @@ public class Orbits {
         this.resource  = resource;
         this.q_builder = resource.getQueryBuilder();
         this.engine    = resource.getEngine();
-        this.output_path = Files.root_directory + "/src/main/java/vassar/jess/modules/orbits/output/";
+        this.output_path = ResourcePaths.resourcesRootDir + "/vassar/modules/orbits/output/";
     }
-
-
-
-
-
 
     public HashSet<Orbit> evaluate(ADDArchitecture arch){
 
