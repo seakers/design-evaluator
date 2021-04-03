@@ -170,12 +170,12 @@ public class DatabaseClient {
 
 
     // ---> Index Architecture
-    public int indexArchitecture(String input, double science, double cost, boolean ga, boolean redo){
+    public int indexArchitecture(String input, Integer datasetId, double science, double cost, boolean ga, boolean redo){
         if(redo){
-            return this.queryAPI.updateArchitecture(input, science, cost, ga);
+            return this.queryAPI.updateArchitecture(input, datasetId, science, cost, ga);
         }
         else{
-            return this.queryAPI.insertArchitecture(input, science, cost, ga);
+            return this.queryAPI.insertArchitecture(input, datasetId, science, cost, ga);
         }
     }
     public void deleteArchitectureScoreExplanations(int archID){

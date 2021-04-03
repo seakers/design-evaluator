@@ -7,20 +7,30 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import vassar.result.Result;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
 public class Consumer implements Runnable {
 
+    private enum State {
+        WAITING_FOR_USER, WAITING_FOR_ACK, UNINITIALIZED, READY
+    }
     private boolean                               debug;
     private boolean                               running;
     private VassarClient                          client;
     private SqsClient                             sqsClient;
     private String                                queueUrl;
     private SynchronousQueue<Map<String, String>> privateQueue;
+    private State                                 currentState = State.WAITING_FOR_USER;
+    private String                                uuid = UUID.randomUUID().toString();
+    private String                                userQueueUrl = null;
+    private long                                  lastPingTime = System.currentTimeMillis();
+
 
     public static class Builder {
 
@@ -82,52 +92,70 @@ public class Consumer implements Runnable {
         while(this.running){
             System.out.println("-----> Loop iteration: " + counter);
             List<Message> messages = new ArrayList<>();
-            List<Map<String, String>> messages_contents = new ArrayList<>();
+            List<Map<String, String>> messagesContents = new ArrayList<>();
             boolean privateMsg = true;
+
+            // Check if timers are expired for different states
+            this.checkTimers();
 
             // CHECK PRIVATE QUEUE FIRST - IF PRIVATE QUEUE EMPTY, CHECK EVAL QUEUE
             if (!this.privateQueue.isEmpty()) {
                 while (!this.privateQueue.isEmpty()) {
-                    messages_contents.add(this.privateQueue.poll());
+                    messagesContents.add(this.privateQueue.poll());
                 }
             }
             else {
                 messages = this.getMessages(this.queueUrl, 3, 5);
+                messages = this.handleMessages(this.queueUrl, messages);
+                if (this.userQueueUrl != null) {
+                    List<Message> userMessages = this.getMessages(this.userQueueUrl, 3, 5);
+                    userMessages = this.handleMessages(this.userQueueUrl, userMessages);
+                    messages.addAll(userMessages);
+                }
                 for (Message msg: messages) {
-                    HashMap<String, String> msg_contents = this.processMessage(msg);
-                    messages_contents.add(msg_contents);
+                    HashMap<String, String> msgContents = this.processMessage(msg);
+                    messagesContents.add(msgContents);
                 }
                 privateMsg = false;
             }
 
-            for (Map<String, String> msg_contents: messages_contents){
-                System.out.println(msg_contents);
+            for (Map<String, String> msgContents: messagesContents){
+                System.out.println(msgContents);
 
-                if(msg_contents.containsKey("msgType")) {
-                    String msgType = msg_contents.get("msgType");
-                    if (msgType.equals("evaluate")) {
-                        this.msgTypeEvaluate(msg_contents);
+                if(msgContents.containsKey("msgType")) {
+                    String msgType = msgContents.get("msgType");
+                    if (msgType.equals("connectionRequest")) {
+                        this.msgTypeConnectionRequest(msgContents);
+                    }
+                    else if (msgType.equals("connectionAck")) {
+                        this.msgTypeConnectionAck(msgContents);
+                    }
+                    else if (msgType.equals("evaluate")) {
+                        this.msgTypeEvaluate(msgContents);
                     }
                     else if (msgType.equals("add")) {
-                        this.msgTypeADD(msg_contents);
+                        this.msgTypeADD(msgContents);
                     }
                     else if (msgType.equals("Instrument Selection")) {
-                        this.msgTypeSELECTING(msg_contents);
+                        this.msgTypeSELECTING(msgContents);
                     }
                     else if (msgType.equals("Instrument Partitioning")) {
-                        this.msgTypePARTITIONING(msg_contents);
+                        this.msgTypePARTITIONING(msgContents);
                     }
                     else if (msgType.equals("TEST-EVAL")) {
-                        this.msgTypeTEST_EVAL(msg_contents);
+                        this.msgTypeTEST_EVAL(msgContents);
                     }
                     else if (msgType.equals("NDSM")) {
-                        this.msgTypeNDSM(msg_contents);
+                        this.msgTypeNDSM(msgContents);
                     }
                     else if (msgType.equals("ContinuityMatrix")) {
-                        this.msgTypeContinuityMatrix(msg_contents);
+                        this.msgTypeContinuityMatrix(msgContents);
                     }
                     else if (msgType.equals("build")) {
-                        this.msgTypeBuild(msg_contents);
+                        this.msgTypeBuild(msgContents);
+                    }
+                    else if (msgType.equals("ping")) {
+                        this.msgTypePing(msgContents);
                     }
                     else if (msgType.equals("exit")) {
                         System.out.println("----> Exiting gracefully");
@@ -148,12 +176,126 @@ public class Consumer implements Runnable {
         }
     }
 
+    private void checkTimers() {
+        switch (this.currentState) {
+            case WAITING_FOR_ACK:
+                if (System.currentTimeMillis() - this.lastPingTime > 1*60*1000) {
+                    this.currentState = State.WAITING_FOR_USER;
+                }
+                break;
+            case UNINITIALIZED:
+                if (System.currentTimeMillis() - this.lastPingTime > 5*60*1000) {
+                    this.currentState = State.WAITING_FOR_USER;
+                }
+                break;
+            case READY:
+                if (System.currentTimeMillis() - this.lastPingTime > 5*60*1000) {
+                    this.currentState = State.WAITING_FOR_USER;
+                }
+                break;
+        }
+    }
+
+    private List<Message> handleMessages(String queueUrl, List<Message> messages) {
+        List<Message> processedMessages = new ArrayList<>();
+        for (Message msg: messages) {
+            HashMap<String, String> msgContents = this.processMessage(msg);
+            if (isMessageAllowed(msgContents)) {
+                processedMessages.add(msg);
+            }
+            else {
+                // Reject the message and send back to queue
+                ChangeMessageVisibilityRequest changeMessageVisibilityRequest = ChangeMessageVisibilityRequest.builder()
+                    .queueUrl(queueUrl)
+                    .receiptHandle(msg.receiptHandle())
+                    .visibilityTimeout(0)
+                    .build();
+                this.sqsClient.changeMessageVisibility(changeMessageVisibilityRequest);
+            }
+        }
+        return processedMessages;
+    }
+
+    // Filter valid messages based on the current state of the system
+    private boolean isMessageAllowed(HashMap<String, String> msgContents) {
+        String msgType = msgContents.get("msgType");
+        List<String> allowedTypes = new ArrayList<>();
+        switch (this.currentState) {
+            case WAITING_FOR_USER:
+                allowedTypes = Arrays.asList("connectionRequest");
+                break;
+            case WAITING_FOR_ACK:
+                allowedTypes = Arrays.asList("connectionAck");
+                break;
+            case UNINITIALIZED:
+                allowedTypes = Arrays.asList("build", "ping");
+                break;
+            case READY:
+                allowedTypes = Arrays.asList("build", "ping", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ContinuityMatrix", "exit");
+                break;
+        }
+        return allowedTypes.contains(msgType);
+    }
 
 
     // ---> MESSAGE TYPES
+    private void msgTypeConnectionRequest(Map<String, String> msgContents) {
+        String userId = msgContents.get("user_id");
+
+        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+        messageAttributes.put("msgType",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("isAvailable")
+                        .build()
+        );
+        messageAttributes.put("UUID",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(this.uuid)
+                        .build()
+        );
+        messageAttributes.put("type",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("evaluator")
+                        .build()
+        );
+        messageAttributes.put("user_id",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(userId)
+                        .build()
+        );
+
+        this.sqsClient.sendMessage(SendMessageRequest.builder()
+                .queueUrl(this.queueUrl)
+                .messageBody("")
+                .messageAttributes(messageAttributes)
+                .delaySeconds(0)
+                .build());
+        this.currentState = State.WAITING_FOR_ACK;
+        this.lastPingTime = System.currentTimeMillis();
+    }
+
+    private void msgTypeConnectionAck(Map<String, String> msgContents) {
+        String receivedUUID = msgContents.get("UUID");
+        String userQueueUrl = msgContents.get("queue_url");
+
+        if(receivedUUID.equals(this.uuid)) {
+            this.currentState = State.UNINITIALIZED;
+            this.userQueueUrl = userQueueUrl;
+        }
+    }
+
+    private void msgTypePing(Map<String, String> msgContents) {
+        this.lastPingTime = System.currentTimeMillis();
+    }
+    
     public void msgTypeEvaluate(Map<String, String> msg_contents){
 
         String  input       = msg_contents.get("input");
+        Integer datasetId   = Integer.getInteger(msg_contents.get("dataset_id"));
         boolean ga_arch     = false;
         boolean re_evaluate = false;
         boolean fast        = false;
@@ -180,7 +322,7 @@ public class Consumer implements Runnable {
             }
         }
 
-        Result result = this.client.evaluateArchitecture(input, ga_arch, re_evaluate, fast);
+        Result result = this.client.evaluateArchitecture(input, datasetId, ga_arch, re_evaluate, fast);
 
         System.out.println("\n-------------------- EVALUATE REQUEST OUTPUT --------------------");
         System.out.println("-----> INPUT: " + input);
@@ -293,6 +435,30 @@ public class Consumer implements Runnable {
         int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
 
         this.client.rebuildResource(group_id, problem_id);
+        if (this.currentState == State.UNINITIALIZED) {
+            this.currentState = State.READY;
+            
+            // Send message announcing it's ready to eval architectures
+            final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+            messageAttributes.put("msgType",
+                    MessageAttributeValue.builder()
+                            .dataType("String")
+                            .stringValue("isReady")
+                            .build()
+            );
+            messageAttributes.put("type",
+                    MessageAttributeValue.builder()
+                            .dataType("String")
+                            .stringValue("evaluator")
+                            .build()
+            );
+            this.sqsClient.sendMessage(SendMessageRequest.builder()
+                    .queueUrl(this.userQueueUrl)
+                    .messageBody("")
+                    .messageAttributes(messageAttributes)
+                    .delaySeconds(0)
+                    .build());
+        }
 
         System.out.println("\n-------------------- BUILD REQUEST --------------------");
         System.out.println("--------> GROUP ID: " + group_id);

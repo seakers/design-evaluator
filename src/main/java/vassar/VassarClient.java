@@ -79,7 +79,7 @@ public class VassarClient {
 // |______\_/ \__,_|_|\__,_|\__,_|\__\___| /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 //
 
-    public Result evaluateArchitecture(String bitString, boolean ga, boolean redo, boolean fast){
+    public Result evaluateArchitecture(String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast){
 
         AbstractArchitecture arch = new Architecture(bitString, 1, this.engine.getProblem());
 
@@ -106,7 +106,7 @@ public class VassarClient {
             System.exit(-1);
         }
 
-        this.indexArchitecture(result, bitString, ga, redo, fast);
+        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast);
 
         return result;
     }
@@ -371,12 +371,12 @@ public class VassarClient {
 
 
 
-    public void indexArchitecture(Result result, String bitString, boolean ga, boolean redo, boolean fast){
+    public void indexArchitecture(Result result, String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast){
 
         double cost    = result.getCost();
         double science = result.getScience();
 
-        int archID = this.engine.dbClient.indexArchitecture(bitString, science, cost, ga, redo);
+        int archID = this.engine.dbClient.indexArchitecture(bitString, datasetId, science, cost, ga, redo);
 
         if (redo){
             this.engine.dbClient.deleteArchitectureScoreExplanations(archID);

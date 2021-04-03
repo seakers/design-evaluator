@@ -5,9 +5,6 @@ package evaluator;
 
 import jess.Userfunction;
 import seakers.orekit.util.OrekitConfig;
-import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
-import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
-import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import vassar.GlobalScope;
 import vassar.VassarClient;
 import vassar.database.DatabaseClient;
@@ -24,7 +21,6 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 
 
-import java.net.URI;
 import java.util.*;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;

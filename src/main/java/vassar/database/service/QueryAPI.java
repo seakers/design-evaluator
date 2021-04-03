@@ -385,9 +385,10 @@ public class QueryAPI {
 
 
     // ---> ARCHITECTURE
-    public int updateArchitecture(String input, double science, double cost, boolean ga){
+    public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
         UpdateArchitectureMutation archMutation = UpdateArchitectureMutation.builder()
                 .problem_id(this.problemId)
+                .dataset_id(datasetId)
                 .input(input)
                 .science(science)
                 .cost(cost)
@@ -399,9 +400,10 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items().returning().get(0).id();
     }
 
-    public int insertArchitecture(String input, double science, double cost, boolean ga){
+    public int insertArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
         InsertArchitectureMutation archMutation = InsertArchitectureMutation.builder()
                 .problem_id(this.problemId)
+                .dataset_id(datasetId)
                 .input(input)
                 .science(science)
                 .cost(cost)
