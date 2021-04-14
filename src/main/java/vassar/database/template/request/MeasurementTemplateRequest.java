@@ -59,7 +59,7 @@ public class MeasurementTemplateRequest extends TemplateRequest {
                     .build();
         }
         catch (Exception e) {
-            System.out.println("Error processing orbit template request: " +e.getClass() + " : " + e.getMessage());
+            System.out.println("Error processing measurement template request: " +e.getClass() + " : " + e.getMessage());
             e.printStackTrace();
         }
         return null;

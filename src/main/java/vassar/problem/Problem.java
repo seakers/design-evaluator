@@ -279,7 +279,7 @@ public class Problem {
         }
 
         // orekitResourcesPath = "/Users/gabeapaza/repositories/seakers/design_evaluator/app/src/main/java/vassar/evaluator/coverage/orekit";
-        orekitResourcesPath = ResourcePaths.resourcesRootDir + "/orekit/resources"; // DOCKER
+        orekitResourcesPath = ResourcePaths.resourcesRootDir + "/orekit"; // DOCKER
 
 
         try {

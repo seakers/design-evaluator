@@ -172,14 +172,15 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         try {
 
             r.reset();
-            assertMissions(params, r, arch);
 
             r.eval("(bind ?*science-multiplier* 1.0)");
             r.eval("(defadvice before (create$ >= <= < >) (foreach ?xxx $?argv (if (eq ?xxx nil) then (return FALSE))))");
             r.eval("(defadvice before (create$ sqrt + * **) (foreach ?xxx $?argv (if (eq ?xxx nil) then (bind ?xxx 0))))");
 
-            r.eval("(watch rules)");
-            r.eval("(facts)");
+            assertMissions(params, r, arch);
+            
+            //r.eval("(watch rules)");
+            //r.eval("(facts)");
 
 
             qb.missionFactQuery("missionFactsNonADD");
@@ -439,7 +440,14 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
         catch (JessException e) {
             System.out.println(e.getMessage() + " " + e.getClass() + " ");
+            System.out.println(e.getProgramText());
+            System.out.println(e.getContext());
+            System.out.println(e.getData());
+            System.out.println(e.getDetail());
+            System.out.println(e.getErrorCode());
+            System.out.println(e.getLineNumber());
             e.printStackTrace();
+            System.exit(-1);
         }
         catch (OrekitException e) {
             e.printStackTrace();
@@ -653,7 +661,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         }
     }
 
-    protected abstract void assertMissions(Problem params, Rete r, AbstractArchitecture arch);
+    protected abstract void assertMissions(Problem params, Rete r, AbstractArchitecture arch) throws JessException;
 
     public void setDebug(boolean debug) {
         this.debug = debug;

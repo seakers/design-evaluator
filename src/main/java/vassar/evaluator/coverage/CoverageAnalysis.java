@@ -29,6 +29,8 @@ import org.hipparchus.stat.descriptive.DescriptiveStatistics;
 import org.hipparchus.util.FastMath;
 import org.orekit.bodies.GeodeticPoint;
 import org.orekit.frames.TopocentricFrame;
+import org.orekit.orbits.CircularOrbit;
+import org.orekit.orbits.EquinoctialOrbit;
 import org.orekit.orbits.KeplerianOrbit;
 import org.orekit.orbits.Orbit;
 import org.orekit.orbits.PositionAngle;
@@ -90,9 +92,9 @@ public class CoverageAnalysis {
         // Load default dataset saved in the project root directory
         StringBuffer pathBuffer = new StringBuffer();
 
-        final File currrentDir = new File(this.cwd);
-        if (currrentDir.exists() && (currrentDir.isDirectory() || currrentDir.getName().endsWith(".zip"))) {
-            pathBuffer.append(currrentDir.getAbsolutePath());
+        final File currentDir = new File(this.cwd);
+        if (currentDir.exists() && (currentDir.isDirectory() || currentDir.getName().endsWith(".zip"))) {
+            pathBuffer.append(currentDir.getAbsolutePath());
             pathBuffer.append(File.separator);
             pathBuffer.append("resources");
         }
@@ -402,9 +404,11 @@ public class CoverageAnalysis {
         }
 
         for(double raan = 0; raan < 360; raan += 0.1){
-
-            Orbit SSO = new KeplerianOrbit(Constants.WGS84_EARTH_EQUATORIAL_RADIUS + altitude, 0.0001, FastMath.toRadians(inclination),0.0,
-                    FastMath.toRadians(raan), 0.0, PositionAngle.MEAN, inertialFrame, tempStartDate, mu);
+            double i_rad = FastMath.toRadians(inclination);
+            double raan_rad = FastMath.toRadians(raan);
+            Orbit SSO = new EquinoctialOrbit(Constants.WGS84_EARTH_EQUATORIAL_RADIUS + altitude, 0, 0, 
+                                             FastMath.tan(i_rad/2)*FastMath.cos(raan_rad), FastMath.tan(i_rad/2)*FastMath.sin(raan_rad),
+                                             raan_rad, PositionAngle.MEAN, inertialFrame, tempStartDate, mu);
 
             GeodeticPoint p = new GeodeticPoint(0, 0, 0);
             CoveragePoint point=new CoveragePoint(earthShape, p, "");
@@ -432,8 +436,8 @@ public class CoverageAnalysis {
                     PropagatorFactory pf=new PropagatorFactory(PropagatorType.NUMERICAL,propertiesPropagator);
                     Propagator prop=pf.createPropagator(SSO, 0);
                     SpacecraftState s=prop.propagate(tempStartDate, tempEndDate);
-                    KeplerianOrbit orbit=(KeplerianOrbit)s.getOrbit();
-                    optRaan = orbit.getRightAscensionOfAscendingNode();
+                    EquinoctialOrbit orbit=(EquinoctialOrbit)s.getOrbit();
+                    optRaan = FastMath.atan2(orbit.getHy(), orbit.getHx());
                 }
             }
         }

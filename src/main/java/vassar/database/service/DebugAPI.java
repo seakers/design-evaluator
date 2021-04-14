@@ -10,6 +10,9 @@ import evaluator.ResourcePaths;
 // I/O
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.io.BufferedWriter;
 
 
@@ -36,12 +39,14 @@ public class DebugAPI {
             try {
                 this.outputFilePath = outputFilePath;
                 this.logFile        = new File(this.outputFilePath);
-                this.writer         = new BufferedWriter(new FileWriter(this.outputFilePath, true));
                 this.json           = new JSONObject();
-                this.jsonWriter     = new FileWriter(this.outputFilePath);
+                if (this.logFile.exists()) {
+                    this.writer         = new BufferedWriter(new FileWriter(this.outputFilePath, true));
+                    this.jsonWriter     = new FileWriter(this.outputFilePath);
+                }
             }
             catch (Exception e) {
-                System.out.println("EXC in DatabaseClient constructor " +e.getClass() + " : " + e.getMessage());
+                System.out.println("EXC in DebugAPI constructor " +e.getClass() + " : " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -53,11 +58,12 @@ public class DebugAPI {
                     this.logFile.createNewFile();
                     this.logFile.setWritable(true, false);
                     this.logFile.setExecutable(true, false);
+                    this.writer     = new BufferedWriter(new FileWriter(this.outputFilePath, true));
                     this.jsonWriter = new FileWriter(this.outputFilePath);
                 }
             }
             catch (Exception e) {
-                System.out.println("EXC in DatabaseClient constructor " +e.getClass() + " : " + e.getMessage());
+                System.out.println("EXC in DebugAPI constructor " + e.getClass() + " : " + e.getMessage());
                 e.printStackTrace();
             }
             return this;
@@ -65,6 +71,16 @@ public class DebugAPI {
 
         public Builder setOutputPath(String outputPath) {
             this.outputPath = outputPath;
+            // Ensure outputPath exists
+            try {
+                Path outputPathPath = Path.of(outputPath);
+                Files.createDirectories(outputPathPath);
+            }
+            catch (IOException e) {
+                System.out.println("EXC in DebugAPI constructor " + e.getClass() + " : " + e.getMessage());
+                e.printStackTrace();
+            }
+            
             return this;
         }
 

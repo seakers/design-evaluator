@@ -16,7 +16,7 @@ public class QueryBuilder {
 
     private Rete r;
     private HashMap<String, HashMap<String, Fact>> precomputedQueries;
-    private String   debug_dir;
+    private String   debugDir;
     private DebugAPI debugAPI;
 
     public static class Builder{
@@ -33,11 +33,11 @@ public class QueryBuilder {
             QueryBuilder build = new QueryBuilder();
             build.r = this.r;
             build.precomputedQueries = this.precomputedQueries;
-            build.debug_dir = ResourcePaths.rootDirectory + "/debug/QueryBuilder";
+            build.debugDir = ResourcePaths.rootDirectory + "/debug/QueryBuilder";
 
             build.debugAPI = new DebugAPI.Builder(ResourcePaths.rootDirectory + "/debug/QueryBuilder/output.json")
+                    .setOutputPath(ResourcePaths.rootDirectory + "/debug/QueryBuilder")        
                     .newFile()
-                    .setOutputPath(ResourcePaths.rootDirectory + "/debug/QueryBuilder")
                     .build();
 
             return build;

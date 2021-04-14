@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class Consumer implements Runnable {
@@ -20,16 +20,18 @@ public class Consumer implements Runnable {
     private enum State {
         WAITING_FOR_USER, WAITING_FOR_ACK, UNINITIALIZED, READY
     }
-    private boolean                               debug;
-    private boolean                               running;
-    private VassarClient                          client;
-    private SqsClient                             sqsClient;
-    private String                                queueUrl;
-    private SynchronousQueue<Map<String, String>> privateQueue;
-    private State                                 currentState = State.WAITING_FOR_USER;
-    private String                                uuid = UUID.randomUUID().toString();
-    private String                                userQueueUrl = null;
-    private long                                  lastPingTime = System.currentTimeMillis();
+    private boolean                                    debug;
+    private boolean                                    running;
+    private VassarClient                               client;
+    private SqsClient                                  sqsClient;
+    private String                                     requestQueueUrl;
+    private String                                     responseQueueUrl;
+    private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
+    private State                                      currentState = State.WAITING_FOR_USER;
+    private String                                     uuid = UUID.randomUUID().toString();
+    private String                                     userRequestQueueUrl = null;
+    private String                                     userResponseQueueUrl = null;
+    private long                                       lastPingTime = System.currentTimeMillis();
 
 
     public static class Builder {
@@ -37,8 +39,9 @@ public class Consumer implements Runnable {
         private boolean                               debug;
         private VassarClient                          client;
         private SqsClient                             sqsClient;
-        private String                                queueUrl;
-        private SynchronousQueue<Map<String, String>> privateQueue;
+        private String                                requestQueueUrl;
+        private String                                responseQueueUrl;
+        private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
 
         public Builder(SqsClient sqsClient){
             this.sqsClient = sqsClient;
@@ -49,12 +52,17 @@ public class Consumer implements Runnable {
             return this;
         }
 
-        public Builder setQueueUrl(String queueUrl) {
-            this.queueUrl = queueUrl;
+        public Builder setRequestQueueUrl(String queueUrl) {
+            this.requestQueueUrl = queueUrl;
             return this;
         }
 
-        public Builder setPrivateQueue(SynchronousQueue<Map<String, String>> privateQueue) {
+        public Builder setResponseQueueUrl(String queueUrl) {
+            this.responseQueueUrl = queueUrl;
+            return this;
+        }
+
+        public Builder setPrivateQueue(ConcurrentLinkedQueue<Map<String, String>> privateQueue) {
             this.privateQueue = privateQueue;
             return this;
         }
@@ -65,13 +73,14 @@ public class Consumer implements Runnable {
         }
 
         public Consumer build(){
-            Consumer build     = new Consumer();
-            build.sqsClient    = this.sqsClient;
-            build.debug        = this.debug;
-            build.client       = this.client;
-            build.queueUrl     = this.queueUrl;
-            build.privateQueue = this.privateQueue;
-            build.running      = true;
+            Consumer build         = new Consumer();
+            build.sqsClient        = this.sqsClient;
+            build.debug            = this.debug;
+            build.client           = this.client;
+            build.requestQueueUrl  = this.requestQueueUrl;
+            build.responseQueueUrl = this.responseQueueUrl;
+            build.privateQueue     = this.privateQueue;
+            build.running          = true;
             return build;
         }
 
@@ -91,36 +100,50 @@ public class Consumer implements Runnable {
 
         while(this.running){
             System.out.println("-----> Loop iteration: " + counter);
-            List<Message> messages = new ArrayList<>();
+            System.out.println("Current State: " + this.currentState);
+            
             List<Map<String, String>> messagesContents = new ArrayList<>();
-            boolean privateMsg = true;
 
             // Check if timers are expired for different states
             this.checkTimers();
 
             // CHECK PRIVATE QUEUE FIRST - IF PRIVATE QUEUE EMPTY, CHECK EVAL QUEUE
             if (!this.privateQueue.isEmpty()) {
+                ArrayList<Map<String,String>> returnMessages = new ArrayList<>();
                 while (!this.privateQueue.isEmpty()) {
-                    messagesContents.add(this.privateQueue.poll());
+                    Map<String, String> msgContents = this.privateQueue.poll();
+                    if (isMessageAllowed(msgContents)) {
+                        messagesContents.add(msgContents);
+                    }
+                    else {
+                        returnMessages.add(msgContents);
+                    }
                 }
+                this.privateQueue.addAll(returnMessages);
             }
-            else {
-                messages = this.getMessages(this.queueUrl, 3, 5);
-                messages = this.handleMessages(this.queueUrl, messages);
-                if (this.userQueueUrl != null) {
-                    List<Message> userMessages = this.getMessages(this.userQueueUrl, 3, 5);
-                    userMessages = this.handleMessages(this.userQueueUrl, userMessages);
-                    messages.addAll(userMessages);
-                }
-                for (Message msg: messages) {
-                    HashMap<String, String> msgContents = this.processMessage(msg);
-                    messagesContents.add(msgContents);
-                }
-                privateMsg = false;
+            
+            // CHECK CONNECTION QUEUE
+            List<Message> messages = new ArrayList<>();
+            List<Message> connectionMessages = new ArrayList<>();
+            connectionMessages = this.getMessages(this.requestQueueUrl, 3, 5);
+            connectionMessages = this.handleMessages(this.requestQueueUrl, connectionMessages);
+            messages.addAll(connectionMessages);
+
+            // CHECK USER QUEUE
+            List<Message> userMessages = new ArrayList<>();
+            if (this.userRequestQueueUrl != null) {
+                userMessages = this.getMessages(this.userRequestQueueUrl, 3, 5);
+                userMessages = this.handleMessages(this.userRequestQueueUrl, userMessages);
+                messages.addAll(userMessages);
+            }
+
+            // PROCESS ALL MESSAGES
+            for (Message msg: messages) {
+                HashMap<String, String> msgContents = this.processMessage(msg, true);
+                messagesContents.add(msgContents);
             }
 
             for (Map<String, String> msgContents: messagesContents){
-                System.out.println(msgContents);
 
                 if(msgContents.containsKey("msgType")) {
                     String msgType = msgContents.get("msgType");
@@ -129,6 +152,9 @@ public class Consumer implements Runnable {
                     }
                     else if (msgType.equals("connectionAck")) {
                         this.msgTypeConnectionAck(msgContents);
+                    }
+                    else if (msgType.equals("statusCheck")) {
+                        this.msgTypeStatusCheck(msgContents);
                     }
                     else if (msgType.equals("evaluate")) {
                         this.msgTypeEvaluate(msgContents);
@@ -168,8 +194,11 @@ public class Consumer implements Runnable {
                 }
             }
 
-            if (!privateMsg) {
-                this.deleteMessages(messages, this.queueUrl);
+            if (!connectionMessages.isEmpty()) {
+                this.deleteMessages(connectionMessages, this.requestQueueUrl);
+            }
+            if (!userMessages.isEmpty()) {
+                this.deleteMessages(userMessages, this.userRequestQueueUrl);
             }
 
             counter++;
@@ -181,17 +210,25 @@ public class Consumer implements Runnable {
             case WAITING_FOR_ACK:
                 if (System.currentTimeMillis() - this.lastPingTime > 1*60*1000) {
                     this.currentState = State.WAITING_FOR_USER;
+                    this.userRequestQueueUrl = null;
+                    this.userResponseQueueUrl = null;
                 }
                 break;
             case UNINITIALIZED:
                 if (System.currentTimeMillis() - this.lastPingTime > 5*60*1000) {
                     this.currentState = State.WAITING_FOR_USER;
+                    this.userRequestQueueUrl = null;
+                    this.userResponseQueueUrl = null;
                 }
                 break;
             case READY:
                 if (System.currentTimeMillis() - this.lastPingTime > 5*60*1000) {
                     this.currentState = State.WAITING_FOR_USER;
+                    this.userRequestQueueUrl = null;
+                    this.userResponseQueueUrl = null;
                 }
+                break;
+            default:
                 break;
         }
     }
@@ -199,7 +236,7 @@ public class Consumer implements Runnable {
     private List<Message> handleMessages(String queueUrl, List<Message> messages) {
         List<Message> processedMessages = new ArrayList<>();
         for (Message msg: messages) {
-            HashMap<String, String> msgContents = this.processMessage(msg);
+            HashMap<String, String> msgContents = this.processMessage(msg, false);
             if (isMessageAllowed(msgContents)) {
                 processedMessages.add(msg);
             }
@@ -208,7 +245,7 @@ public class Consumer implements Runnable {
                 ChangeMessageVisibilityRequest changeMessageVisibilityRequest = ChangeMessageVisibilityRequest.builder()
                     .queueUrl(queueUrl)
                     .receiptHandle(msg.receiptHandle())
-                    .visibilityTimeout(0)
+                    .visibilityTimeout(1)
                     .build();
                 this.sqsClient.changeMessageVisibility(changeMessageVisibilityRequest);
             }
@@ -217,21 +254,21 @@ public class Consumer implements Runnable {
     }
 
     // Filter valid messages based on the current state of the system
-    private boolean isMessageAllowed(HashMap<String, String> msgContents) {
+    private boolean isMessageAllowed(Map<String, String> msgContents) {
         String msgType = msgContents.get("msgType");
         List<String> allowedTypes = new ArrayList<>();
         switch (this.currentState) {
             case WAITING_FOR_USER:
-                allowedTypes = Arrays.asList("connectionRequest");
+                allowedTypes = Arrays.asList("connectionRequest", "statusCheck");
                 break;
             case WAITING_FOR_ACK:
-                allowedTypes = Arrays.asList("connectionAck");
+                allowedTypes = Arrays.asList("connectionAck", "statusCheck");
                 break;
             case UNINITIALIZED:
-                allowedTypes = Arrays.asList("build", "ping");
+                allowedTypes = Arrays.asList("build", "ping", "statusCheck");
                 break;
             case READY:
-                allowedTypes = Arrays.asList("build", "ping", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ContinuityMatrix", "exit");
+                allowedTypes = Arrays.asList("build", "ping", "statusCheck", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ContinuityMatrix", "exit");
                 break;
         }
         return allowedTypes.contains(msgType);
@@ -241,6 +278,9 @@ public class Consumer implements Runnable {
     // ---> MESSAGE TYPES
     private void msgTypeConnectionRequest(Map<String, String> msgContents) {
         String userId = msgContents.get("user_id");
+
+        // Create queues for private communication
+        QueueUrls queueUrls = createUserQueues(userId);
 
         final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
         messageAttributes.put("msgType",
@@ -267,25 +307,79 @@ public class Consumer implements Runnable {
                         .stringValue(userId)
                         .build()
         );
+        messageAttributes.put("request_queue_url",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(queueUrls.requestUrl)
+                        .build()
+        );
+        messageAttributes.put("response_queue_url",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(queueUrls.responseUrl)
+                        .build()
+        );
 
         this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.queueUrl)
+                .queueUrl(this.responseQueueUrl)
                 .messageBody("")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(0)
                 .build());
         this.currentState = State.WAITING_FOR_ACK;
+        this.userRequestQueueUrl = queueUrls.requestUrl;
+        this.userResponseQueueUrl = queueUrls.responseUrl;
         this.lastPingTime = System.currentTimeMillis();
     }
 
     private void msgTypeConnectionAck(Map<String, String> msgContents) {
         String receivedUUID = msgContents.get("UUID");
-        String userQueueUrl = msgContents.get("queue_url");
 
         if(receivedUUID.equals(this.uuid)) {
             this.currentState = State.UNINITIALIZED;
-            this.userQueueUrl = userQueueUrl;
         }
+        else {
+            System.out.println("UUID does not match!");
+        }
+    }
+
+    private void msgTypeStatusCheck(Map<String, String> msgContents) {
+        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+        messageAttributes.put("msgType",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("currentStatus")
+                        .build()
+        );
+        String currentStatus = "";
+        switch (this.currentState) {
+            case WAITING_FOR_USER:
+                currentStatus = "waiting_for_user";
+                break;
+            case WAITING_FOR_ACK:
+                currentStatus = "waiting_for_ack";
+                break;
+            case UNINITIALIZED:
+                currentStatus = "uninitialized";
+                break;
+            case READY:
+                currentStatus = "ready";
+                break;
+        }
+        messageAttributes.put("current_status",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(currentStatus)
+                        .build()
+        );
+
+        this.sqsClient.sendMessage(SendMessageRequest.builder()
+                .queueUrl(this.userResponseQueueUrl)
+                .messageBody("")
+                .messageAttributes(messageAttributes)
+                .delaySeconds(0)
+                .build());
+        this.lastPingTime = System.currentTimeMillis();
     }
 
     private void msgTypePing(Map<String, String> msgContents) {
@@ -295,7 +389,7 @@ public class Consumer implements Runnable {
     public void msgTypeEvaluate(Map<String, String> msg_contents){
 
         String  input       = msg_contents.get("input");
-        Integer datasetId   = Integer.getInteger(msg_contents.get("dataset_id"));
+        Integer datasetId   = Integer.parseInt(msg_contents.get("dataset_id"));
         boolean ga_arch     = false;
         boolean re_evaluate = false;
         boolean fast        = false;
@@ -453,7 +547,7 @@ public class Consumer implements Runnable {
                             .build()
             );
             this.sqsClient.sendMessage(SendMessageRequest.builder()
-                    .queueUrl(this.userQueueUrl)
+                    .queueUrl(this.userResponseQueueUrl)
                     .messageBody("")
                     .messageAttributes(messageAttributes)
                     .delaySeconds(0)
@@ -497,16 +591,20 @@ public class Consumer implements Runnable {
     }
 
     // 2.
-    public HashMap<String, String> processMessage(Message msg){
+    public HashMap<String, String> processMessage(Message msg, boolean printInfo){
         HashMap<String, String> contents = new HashMap<>();
         contents.put("body", msg.body());
-        System.out.println("\n--------------- SQS MESSAGE ---------------");
-        System.out.println("--------> BODY: " + msg.body());
         for(String key: msg.messageAttributes().keySet()){
             contents.put(key, msg.messageAttributes().get(key).stringValue());
-            System.out.println("---> ATTRIBUTE: " + key + " - " + msg.messageAttributes().get(key).stringValue());
         }
-        System.out.println("-------------------------------------------\n");
+        if (printInfo) {
+            System.out.println("\n--------------- SQS MESSAGE ---------------");
+            System.out.println("--------> BODY: " + msg.body());
+            for(String key: msg.messageAttributes().keySet()){
+                System.out.println("---> ATTRIBUTE: " + key + " - " + msg.messageAttributes().get(key).stringValue());
+            }
+            System.out.println("-------------------------------------------\n");
+        }
         // this.consumerSleep(5);
         return contents;
     }
@@ -632,7 +730,7 @@ public class Consumer implements Runnable {
 
     private void sendMessage(Map<String, MessageAttributeValue> messageAttributes, int delay){
         this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(queueUrl)
+                .queueUrl(this.requestQueueUrl)
                 .messageBody("")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(delay)
@@ -653,6 +751,37 @@ public class Consumer implements Runnable {
     public void deletePrivMessages(){
         System.out.println("---> DELETING PRIVATE MESSAGES");
         this.privateQueue.clear();
+    }
+
+    private class QueueUrls {
+        public String requestUrl;
+        public String responseUrl;
+    }
+
+    private QueueUrls createUserQueues(String userId) {
+        String requestQueueName = "user-queue-request-" + userId;
+        String responseQueueName = "user-queue-response-" + userId;
+        Map<String,String> tags = new HashMap<>();
+        tags.put("USER_ID", userId);
+        CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
+            .queueName(requestQueueName)
+            .tags(tags)
+            .build();
+        CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
+        String requestQueueUrl = response.queueUrl();
+
+        createQueueRequest = CreateQueueRequest.builder()
+            .queueName(responseQueueName)
+            .tags(tags)
+            .build();
+        response = sqsClient.createQueue(createQueueRequest);
+        String responseQueueUrl = response.queueUrl();
+
+        QueueUrls returnVal = new QueueUrls();
+        returnVal.requestUrl = requestQueueUrl;
+        returnVal.responseUrl = responseQueueUrl;
+
+        return returnVal;
     }
 
 

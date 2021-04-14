@@ -18,14 +18,12 @@ import com.apollographql.apollo.rx2.Rx2Apollo;
 import io.reactivex.Observable;
 import org.jetbrains.annotations.NotNull;
 import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 // QUERIES
 
 
 import java.util.*;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class QueryAPI {
 
@@ -35,23 +33,23 @@ public class QueryAPI {
     public  int          groupId;
     public  int          problemId;
 
-    private SynchronousQueue<Map<String, String>> privateQueue;
+    private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
     private final SqsClient client;
 
-    public QueryAPI(SynchronousQueue<Map<String, String>> privateQueue, SqsClient client) {
+    public QueryAPI(ConcurrentLinkedQueue<Map<String, String>> privateQueue, SqsClient client) {
         this.privateQueue = privateQueue;
         this.client = client;
     }
 
     public static class Builder {
 
-        private ApolloClient                          apollo;
-        private OkHttpClient                          http;
-        private SqsClient                             client;
-        private String                                apolloUrl;     // = "http://graphql:8080/v1/graphql";
-        private SynchronousQueue<Map<String, String>> privateQueue;
-        private int                                   groupId;
-        private int                                   problemId;
+        private ApolloClient                               apollo;
+        private OkHttpClient                               http;
+        private SqsClient                                  client;
+        private String                                     apolloUrl;     // = "http://graphql:8080/v1/graphql";
+        private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
+        private int                                        groupId;
+        private int                                        problemId;
 
         public Builder(String apolloUrl, String apolloWsUrl){
             this.apolloUrl = apolloUrl;
@@ -68,7 +66,7 @@ public class QueryAPI {
             return this;
         }
 
-        public Builder privateQueue(SynchronousQueue<Map<String, String>> privateQueue){
+        public Builder privateQueue(ConcurrentLinkedQueue<Map<String, String>> privateQueue){
             this.privateQueue = privateQueue;
             return this;
         }

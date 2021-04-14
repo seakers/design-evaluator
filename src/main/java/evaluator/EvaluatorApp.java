@@ -20,9 +20,9 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 
-
+import java.net.URI;
 import java.util.*;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 public class EvaluatorApp {
 
@@ -48,7 +48,8 @@ public class EvaluatorApp {
         String outputFilePath     = ResourcePaths.rootDirectory + "/debug/dbOutput.json";
         String outputPath         = ResourcePaths.rootDirectory + "/debug";
 
-        String queueUrl           = System.getenv("EVAL_QUEUE_URL");
+        String requestQueueUrl    = System.getenv("VASSAR_REQUEST_URL");
+        String responseQueueUrl   = System.getenv("VASSAR_RESPONSE_URL");
         String apolloUrl          = System.getenv("APOLLO_URL");
         String apolloWsUrl        = System.getenv("APOLLO_URL_WS");
 
@@ -76,11 +77,12 @@ public class EvaluatorApp {
 
 
         // -----> When scaling, private queue names will be random
-        SynchronousQueue<Map<String, String>> queue = new SynchronousQueue<>();
+        ConcurrentLinkedQueue<Map<String, String>> queue = new ConcurrentLinkedQueue<>();
 
         System.out.println("\n------------------ VASSAR INIT ------------------");
         System.out.println("----------> APOLLO URL: " + apolloUrl);
-        System.out.println("-----> INPUT QUEUE URL: " + queueUrl);
+        System.out.println("-----> INPUT QUEUE URL: " + requestQueueUrl);
+        System.out.println("-----> OUTPUT QUEUE URL: " + responseQueueUrl);
         System.out.println("--------> REQUEST MODE: " + requestMode);
         System.out.println("-------------------------------------------------------\n");
 
@@ -98,6 +100,7 @@ public class EvaluatorApp {
         final SqsClient sqsClient = SqsClient.builder()
                                        .region(Region.US_EAST_2)
                                        .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                                       .endpointOverride(URI.create(System.getenv("AWS_STACK_ENDPOINT")))
                                        .build();
 
 
@@ -106,9 +109,11 @@ public class EvaluatorApp {
                                         .sqsClient(sqsClient)
                                         .build();
 
+        // Ensure debug folder exists
+
         DebugAPI debugAPI = new DebugAPI.Builder(outputFilePath)
-                                        .newFile()
                                         .setOutputPath(outputPath)
+                                        .newFile()
                                         .build();
 
         DatabaseClient dbClient = new DatabaseClient.Builder()
@@ -130,7 +135,8 @@ public class EvaluatorApp {
 
         Consumer evaluator = new Consumer.Builder(sqsClient)
                                          .setVassarClient(vClient)
-                                         .setQueueUrl(queueUrl)
+                                         .setRequestQueueUrl(requestQueueUrl)
+                                         .setResponseQueueUrl(responseQueueUrl)
                                          .setPrivateQueue(queue)
                                          .debug(debug)
                                          .build();
