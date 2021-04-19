@@ -316,6 +316,10 @@ public class DatabaseClient {
         this.queryAPI.groupId = id;
     }
 
+    public void setUserID(int id){
+        this.queryAPI.userId = id;
+    }
+
     public boolean doesArchitectureExist(String input){
         return this.queryAPI.doesArchitectureExist(input);
     }

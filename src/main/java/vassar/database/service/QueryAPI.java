@@ -32,6 +32,7 @@ public class QueryAPI {
     private String       apolloUrl;     // = "http://graphql:8080/v1/graphql";
     public  int          groupId;
     public  int          problemId;
+    public  int          userId;
 
     private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
     private final SqsClient client;
@@ -385,6 +386,7 @@ public class QueryAPI {
     // ---> ARCHITECTURE
     public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
         UpdateArchitectureMutation archMutation = UpdateArchitectureMutation.builder()
+                .user_id(this.userId)
                 .problem_id(this.problemId)
                 .dataset_id(datasetId)
                 .input(input)
@@ -400,6 +402,7 @@ public class QueryAPI {
 
     public int insertArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
         InsertArchitectureMutation archMutation = InsertArchitectureMutation.builder()
+                .user_id(this.userId)
                 .problem_id(this.problemId)
                 .dataset_id(datasetId)
                 .input(input)

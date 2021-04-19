@@ -62,7 +62,9 @@ public class VassarClient {
 
     }
 
-
+    public void setUserID(int id) {
+        this.engine.dbClient.setUserID(id);
+    }
 
     public boolean doesArchitectureExist(String input){
         return this.engine.dbClient.doesArchitectureExist(input);

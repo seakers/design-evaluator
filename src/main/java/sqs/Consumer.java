@@ -32,6 +32,7 @@ public class Consumer implements Runnable {
     private String                                     userRequestQueueUrl = null;
     private String                                     userResponseQueueUrl = null;
     private long                                       lastPingTime = System.currentTimeMillis();
+    private int                                        userId;
 
 
     public static class Builder {
@@ -278,6 +279,7 @@ public class Consumer implements Runnable {
     // ---> MESSAGE TYPES
     private void msgTypeConnectionRequest(Map<String, String> msgContents) {
         String userId = msgContents.get("user_id");
+        this.userId = Integer.parseInt(userId);
 
         // Create queues for private communication
         QueueUrls queueUrls = createUserQueues(userId);
@@ -337,6 +339,7 @@ public class Consumer implements Runnable {
 
         if(receivedUUID.equals(this.uuid)) {
             this.currentState = State.UNINITIALIZED;
+            this.client.setUserID(this.userId);
         }
         else {
             System.out.println("UUID does not match!");
