@@ -21,6 +21,7 @@ dependencies {
     // AWS
     implementation platform('software.amazon.awssdk:bom:2.16.26')
     implementation 'software.amazon.awssdk:sqs'
+    implementation 'software.amazon.awssdk:ecs'
     implementation 'software.amazon.awssdk:regions'
     implementation 'software.amazon.awssdk:auth'
 
@@ -57,7 +58,6 @@ application {
 }
 
 apollo {
-
     service("design-evaluator"){
         introspection {
             endpointUrl = "http://graphql:8080/v1/graphql"

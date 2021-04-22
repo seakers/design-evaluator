@@ -4,16 +4,26 @@ import evaluator.EvaluatorApp;
 import software.amazon.awssdk.services.sqs.model.*;
 import vassar.VassarClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.ecs.EcsClient;
 import vassar.result.Result;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
 
 public class Consumer implements Runnable {
 
@@ -99,7 +109,10 @@ public class Consumer implements Runnable {
         // this.sendTestMessages();
         this.deletePrivMessages();
 
-        while(this.running){
+        // Ensure queues exist
+        this.createConnectionQueues();
+
+        while (this.running) {
             System.out.println("-----> Loop iteration: " + counter);
             System.out.println("Current State: " + this.currentState);
             
@@ -144,9 +157,9 @@ public class Consumer implements Runnable {
                 messagesContents.add(msgContents);
             }
 
-            for (Map<String, String> msgContents: messagesContents){
+            for (Map<String, String> msgContents: messagesContents) {
 
-                if(msgContents.containsKey("msgType")) {
+                if (msgContents.containsKey("msgType")) {
                     String msgType = msgContents.get("msgType");
                     if (msgType.equals("connectionRequest")) {
                         this.msgTypeConnectionRequest(msgContents);
@@ -201,13 +214,35 @@ public class Consumer implements Runnable {
             if (!userMessages.isEmpty()) {
                 this.deleteMessages(userMessages, this.userRequestQueueUrl);
             }
-
             counter++;
         }
     }
 
+    private void createConnectionQueues() {
+        String[] requestQueueUrls = this.requestQueueUrl.split("/");
+        String requestQueueName = requestQueueUrls[requestQueueUrls.length-1];
+        CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
+            .queueName(requestQueueName)
+            .build();
+        CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
+        String requestQueueUrl = response.queueUrl();
+
+        String[] responseQueueUrls = this.responseQueueUrl.split("/");
+        String responseQueueName = responseQueueUrls[responseQueueUrls.length-1];
+        createQueueRequest = CreateQueueRequest.builder()
+            .queueName(responseQueueName)
+            .build();
+        response = sqsClient.createQueue(createQueueRequest);
+        String responseQueueUrl = response.queueUrl();
+    }
+
     private void checkTimers() {
         switch (this.currentState) {
+            case WAITING_FOR_USER:
+                if (System.currentTimeMillis() - this.lastPingTime > 60*60*1000) {
+                    this.downsizeAwsService();
+                }
+                break;
             case WAITING_FOR_ACK:
                 if (System.currentTimeMillis() - this.lastPingTime > 1*60*1000) {
                     this.currentState = State.WAITING_FOR_USER;
@@ -272,7 +307,18 @@ public class Consumer implements Runnable {
                 allowedTypes = Arrays.asList("build", "ping", "statusCheck", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ContinuityMatrix", "exit");
                 break;
         }
-        return allowedTypes.contains(msgType);
+        // Check for both allowedTypes and UUID match
+        boolean isAllowed = false;
+        if (allowedTypes.contains(msgType)) {
+            isAllowed = true;
+            if (msgContents.containsKey("UUID")) {
+                String msgUUID = msgContents.get("UUID");
+                if (!msgUUID.equals(this.uuid)) {
+                    isAllowed = false;
+                }
+            }
+        }
+        return isAllowed;
     }
 
 
@@ -549,6 +595,12 @@ public class Consumer implements Runnable {
                             .stringValue("evaluator")
                             .build()
             );
+            messageAttributes.put("UUID",
+                    MessageAttributeValue.builder()
+                            .dataType("String")
+                            .stringValue(this.uuid)
+                            .build()
+            );
             this.sqsClient.sendMessage(SendMessageRequest.builder()
                     .queueUrl(this.userResponseQueueUrl)
                     .messageBody("")
@@ -787,6 +839,84 @@ public class Consumer implements Runnable {
         return returnVal;
     }
 
+    private void downsizeAwsService() {
+        // Only do this if in AWS
+        if (System.getenv("DEPLOYMENT_TYPE").equals("AWS")) {
+            // Check service for number of tasks
+            String clusterArn = System.getenv("CLUSTER_ARN");
+            String serviceArn = System.getenv("SERVICE_ARN");
+            final EcsClient ecsClient = EcsClient.builder()
+                                                 .region(Region.US_EAST_2)
+                                                 .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                                                 .build();
+            DescribeServicesRequest request = DescribeServicesRequest.builder()
+                                                                     .cluster(clusterArn)
+                                                                     .services(serviceArn);
+            DescribeServicesResponse response = ecsClient.describeServices(request);
+            if (response.hasServices()) {
+                Service service = response.services().get(0);
+                Integer desiredCount = service.desiredCount();
+                // Downscale tasks if more than 5
+                if (desiredCount > 5) {
+                    UpdateServiceRequest updateRequest = UpdateServiceRequest.builder()
+                                                                             .cluster(clusterArn)
+                                                                             .desiredCount(desiredCount-1)
+                                                                             .service(serviceArn);
+                    UpdateServiceResponse updateResponse = ecsClient.updateService(updateRequest);
+
+                    // Close myself as the extra task
+                    String taskArn = getTaskArn();
+                    StopTaskRequest stopRequest = StopTaskRequest.builder()
+                                                                 .cluster(clusterArn)
+                                                                 .task(taskArn);
+                    StopTaskResponse stopResponse = ecsClient.stopTask(stopRequest);
+                }
+            }
+        }
+    }
+
+    private String getTaskArn() {
+        String taskArn = "";
+        try {
+            String baseUrl = System.getenv("ECS_CONTAINER_METADATA_URI_V4");
+            URL url = new URL(baseUrl + "/task");
+
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.connect();
+
+            //Getting the response code
+            int responsecode = conn.getResponseCode();
+
+            if (responsecode != 200) {
+                throw new RuntimeException("HttpResponseCode: " + responsecode);
+            }
+            else {
+
+                String inline = "";
+                Scanner scanner = new Scanner(url.openStream());
+
+                //Write all the JSON data into a string using a scanner
+                while (scanner.hasNext()) {
+                    inline += scanner.nextLine();
+                }
+
+                //Close the scanner
+                scanner.close();
+
+                //Using the JSON simple library parse the string into a json object
+                JSONParser parse = new JSONParser();
+                JSONObject responseObj = (JSONObject) parse.parse(inline);
+
+                //Get the required object from the above created object
+                taskArn = (String)responseObj.get("TaskARN");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return taskArn;
+    }
 
     public static boolean purgeQueue(SqsClient sqsClient, String queue_url){
         System.out.println("---> PURGE QUEUE: " + queue_url);
