@@ -7,6 +7,13 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ecs.EcsClient;
+import software.amazon.awssdk.services.ecs.model.DescribeServicesRequest;
+import software.amazon.awssdk.services.ecs.model.DescribeServicesResponse;
+import software.amazon.awssdk.services.ecs.model.Service;
+import software.amazon.awssdk.services.ecs.model.StopTaskRequest;
+import software.amazon.awssdk.services.ecs.model.StopTaskResponse;
+import software.amazon.awssdk.services.ecs.model.UpdateServiceRequest;
+import software.amazon.awssdk.services.ecs.model.UpdateServiceResponse;
 import vassar.result.Result;
 
 import java.net.HttpURLConnection;
@@ -36,6 +43,7 @@ public class Consumer implements Runnable {
     private SqsClient                                  sqsClient;
     private String                                     requestQueueUrl;
     private String                                     responseQueueUrl;
+    private String                                     deadLetterQueueArn;
     private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
     private State                                      currentState = State.WAITING_FOR_USER;
     private String                                     uuid = UUID.randomUUID().toString();
@@ -221,19 +229,51 @@ public class Consumer implements Runnable {
     private void createConnectionQueues() {
         String[] requestQueueUrls = this.requestQueueUrl.split("/");
         String requestQueueName = requestQueueUrls[requestQueueUrls.length-1];
+
+        CreateQueueRequest deadQueueRequest = CreateQueueRequest.builder()
+            .queueName("dead-letter")
+            .build();
+        CreateQueueResponse response = sqsClient.createQueue(deadQueueRequest);
+        String deadQueueUrl = response.queueUrl();
+        ArrayList<QueueAttributeName> attrList = new ArrayList<>();
+        attrList.add(QueueAttributeName.QUEUE_ARN);
+        GetQueueAttributesRequest attrRequest = GetQueueAttributesRequest.builder()
+            .queueUrl(deadQueueUrl)
+            .attributeNames(attrList)
+            .build();
+        GetQueueAttributesResponse attrResponse = sqsClient.getQueueAttributes(attrRequest);
+        String deadQueueArn = attrResponse.attributes().get(QueueAttributeName.QUEUE_ARN);
+
+        Map<QueueAttributeName, String> queueAttrs = new HashMap<>();
+        queueAttrs.put(QueueAttributeName.MESSAGE_RETENTION_PERIOD, Integer.toString(5*60));
+        queueAttrs.put(QueueAttributeName.REDRIVE_POLICY, "{\"maxReceiveCount\":\"3\", \"deadLetterTargetArn\":\"" + deadQueueArn + "\"}");
         CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
             .queueName(requestQueueName)
+            .attributes(queueAttrs)
             .build();
-        CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
+        response = sqsClient.createQueue(createQueueRequest);
         String requestQueueUrl = response.queueUrl();
+        SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
+            .queueUrl(requestQueueUrl)
+            .attributes(queueAttrs)
+            .build();
+        sqsClient.setQueueAttributes(setAttrReq);
 
         String[] responseQueueUrls = this.responseQueueUrl.split("/");
         String responseQueueName = responseQueueUrls[responseQueueUrls.length-1];
         createQueueRequest = CreateQueueRequest.builder()
             .queueName(responseQueueName)
+            .attributes(queueAttrs)
             .build();
         response = sqsClient.createQueue(createQueueRequest);
         String responseQueueUrl = response.queueUrl();
+        setAttrReq = SetQueueAttributesRequest.builder()
+            .queueUrl(responseQueueUrl)
+            .attributes(queueAttrs)
+            .build();
+        sqsClient.setQueueAttributes(setAttrReq);
+
+        this.deadLetterQueueArn = deadQueueArn;
     }
 
     private void checkTimers() {
@@ -271,6 +311,7 @@ public class Consumer implements Runnable {
 
     private List<Message> handleMessages(String queueUrl, List<Message> messages) {
         List<Message> processedMessages = new ArrayList<>();
+        int rejectedCount = 0;
         for (Message msg: messages) {
             HashMap<String, String> msgContents = this.processMessage(msg, false);
             if (isMessageAllowed(msgContents)) {
@@ -284,8 +325,10 @@ public class Consumer implements Runnable {
                     .visibilityTimeout(1)
                     .build();
                 this.sqsClient.changeMessageVisibility(changeMessageVisibilityRequest);
+                rejectedCount += 1;
             }
         }
+        System.out.println("Rejected " + rejectedCount + " messages");
         return processedMessages;
     }
 
@@ -818,19 +861,36 @@ public class Consumer implements Runnable {
         String responseQueueName = "user-queue-response-" + userId;
         Map<String,String> tags = new HashMap<>();
         tags.put("USER_ID", userId);
+        Map<QueueAttributeName, String> queueAttrs = new HashMap<>();
+        queueAttrs.put(QueueAttributeName.MESSAGE_RETENTION_PERIOD, Integer.toString(5*60));
+        queueAttrs.put(QueueAttributeName.REDRIVE_POLICY, "{\"maxReceiveCount\":\"3\", \"deadLetterTargetArn\":\"" + this.deadLetterQueueArn + "\"}");
         CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
             .queueName(requestQueueName)
+            .attributes(queueAttrs)
             .tags(tags)
             .build();
         CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
         String requestQueueUrl = response.queueUrl();
 
+        SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
+            .queueUrl(requestQueueUrl)
+            .attributes(queueAttrs)
+            .build();
+        sqsClient.setQueueAttributes(setAttrReq);
+
         createQueueRequest = CreateQueueRequest.builder()
             .queueName(responseQueueName)
+            .attributes(queueAttrs)
             .tags(tags)
             .build();
         response = sqsClient.createQueue(createQueueRequest);
         String responseQueueUrl = response.queueUrl();
+
+        setAttrReq = SetQueueAttributesRequest.builder()
+            .queueUrl(responseQueueUrl)
+            .attributes(queueAttrs)
+            .build();
+        sqsClient.setQueueAttributes(setAttrReq);
 
         QueueUrls returnVal = new QueueUrls();
         returnVal.requestUrl = requestQueueUrl;
@@ -851,7 +911,8 @@ public class Consumer implements Runnable {
                                                  .build();
             DescribeServicesRequest request = DescribeServicesRequest.builder()
                                                                      .cluster(clusterArn)
-                                                                     .services(serviceArn);
+                                                                     .services(serviceArn)
+                                                                     .build();
             DescribeServicesResponse response = ecsClient.describeServices(request);
             if (response.hasServices()) {
                 Service service = response.services().get(0);
@@ -861,14 +922,16 @@ public class Consumer implements Runnable {
                     UpdateServiceRequest updateRequest = UpdateServiceRequest.builder()
                                                                              .cluster(clusterArn)
                                                                              .desiredCount(desiredCount-1)
-                                                                             .service(serviceArn);
+                                                                             .service(serviceArn)
+                                                                             .build();
                     UpdateServiceResponse updateResponse = ecsClient.updateService(updateRequest);
 
                     // Close myself as the extra task
                     String taskArn = getTaskArn();
                     StopTaskRequest stopRequest = StopTaskRequest.builder()
                                                                  .cluster(clusterArn)
-                                                                 .task(taskArn);
+                                                                 .task(taskArn)
+                                                                 .build();
                     StopTaskResponse stopResponse = ecsClient.stopTask(stopRequest);
                 }
             }

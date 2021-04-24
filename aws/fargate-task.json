@@ -25,3 +25,63 @@
     }
   ]
 }
+
+{
+  "family": "evaluator",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "evaluator",
+      "image": "923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest",
+      "repositoryCredentials": {
+        "credentialsParameter": "arn:aws:secretsmanager:region:aws_account_id:secret:secret_name"
+      },
+      "essential": true,
+      "environment": [
+        { "name": "PROBLEM_ID", "value": "1" },
+        { "name": "GROUP_ID", "value": "1" },
+        { "name": "REQUEST_MODE", "value": "CRISP-ATTRIBUTES" },
+        { "name": "PRIVATE_QUEUE_NAME", "value": "RANDOM" },
+        { "name": "EVAL_QUEUE_URL", "value": "URL" },
+        { "name": "APOLLO_URL_WS", "value": "URL" },
+        { "name": "APOLLO_URL", "value": "URL" }
+      ],
+      "mountPoints": [
+        {
+            "sourceVolume": "vassar_resources",
+            "containerPath": "/resources",
+            "readOnly": false
+        }
+      ],
+      "interactive": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "awslogs-evaluator",
+          "awslogs-region": "us-east-2",
+          "awslogs-stream-prefix": "daphne-evaluator"
+        },
+        "secretOptions": [
+          { "name": "", "valueFrom": "" }
+        ]
+      },
+    }
+  ],
+  "volumes": [
+    {
+      "name": "vassar_resources",
+      "efsVolumeConfiguration": {
+          "fileSystemId": "",
+          "rootDirectory": "",
+          "transitEncryption": "ENABLED",
+          "authorizationConfig": {
+              "accessPointId": "",
+              "iam": "ENABLED"
+          }
+      },
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "4096",
+}
