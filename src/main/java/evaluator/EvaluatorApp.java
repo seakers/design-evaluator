@@ -17,6 +17,7 @@ import vassar.jess.func.SameOrBetter;
 import vassar.jess.func.Worsen;
 import sqs.Consumer;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 
@@ -97,11 +98,12 @@ public class EvaluatorApp {
 
 
         // --> SQS
-        final SqsClient sqsClient = SqsClient.builder()
-                                       .region(Region.US_EAST_2)
-                                       .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
-                                       .endpointOverride(URI.create(System.getenv("AWS_STACK_ENDPOINT")))
-                                       .build();
+        SqsClientBuilder sqsClientBuilder = SqsClient.builder()
+                                                           .region(Region.US_EAST_2);
+        if (System.getenv("AWS_STACK_ENDPOINT") != null) {
+            sqsClientBuilder.endpointOverride(URI.create(System.getenv("AWS_STACK_ENDPOINT")));
+        }
+        final SqsClient sqsClient = sqsClientBuilder.build();
 
 
         QueryAPI queryAPI = new QueryAPI.Builder(apolloUrl, apolloWsUrl)
@@ -150,5 +152,4 @@ public class EvaluatorApp {
         try                            { TimeUnit.SECONDS.sleep(seconds); }
         catch (InterruptedException e) { e.printStackTrace(); }
     }
-
 }

@@ -1,50 +1,21 @@
 {
   "family": "evaluator",
   "networkMode": "awsvpc",
-  "requiresCompatibilities": ["FARGATE"],
-  "cpu": "2 vCPU",
-  "memory": "16 GB",
-  "containerDefinitions": [
-    {
-      "name": "vassar",
-      "image": "apazagab/design-evaluator",
-      "privileged": true,
-      "interactive": true,
-      "logConfiguration": {
-        "logDriver": "awslogs"
-      },
-      "environment": [
-        { "name": "PROBLEM_ID", "value": "1" },
-        { "name": "GROUP_ID", "value": "1" },
-        { "name": "REQUEST_MODE", "value": "CRISP-ATTRIBUTES" },
-        { "name": "PRIVATE_QUEUE_NAME", "value": "RANDOM" },
-        { "name": "EVAL_QUEUE_URL", "value": "URL" },
-        { "name": "APOLLO_URL_WS", "value": "URL" },
-        { "name": "APOLLO_URL", "value": "URL" }
-      ]
-    }
-  ]
-}
-
-{
-  "family": "evaluator",
-  "networkMode": "awsvpc",
   "containerDefinitions": [
     {
       "name": "evaluator",
       "image": "923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest",
-      "repositoryCredentials": {
-        "credentialsParameter": "arn:aws:secretsmanager:region:aws_account_id:secret:secret_name"
-      },
       "essential": true,
+      "command": ["/app/evaluator/bin/evaluator"],
       "environment": [
-        { "name": "PROBLEM_ID", "value": "1" },
-        { "name": "GROUP_ID", "value": "1" },
         { "name": "REQUEST_MODE", "value": "CRISP-ATTRIBUTES" },
-        { "name": "PRIVATE_QUEUE_NAME", "value": "RANDOM" },
-        { "name": "EVAL_QUEUE_URL", "value": "URL" },
-        { "name": "APOLLO_URL_WS", "value": "URL" },
-        { "name": "APOLLO_URL", "value": "URL" }
+        { "name": "APOLLO_URL", "value": "http://graphql.daphne.local:8080/v1/graphql" },
+        { "name": "APOLLO_URL_WS", "value": "ws://graphql.daphne.local:8080/v1/graphql" },
+        { "name": "VASSAR_REQUEST_URL", "value": "https://sqs.us-east-2.amazonaws.com/923405430231/vassar_request" },
+        { "name": "VASSAR_RESPONSE_URL", "value": "https://sqs.us-east-2.amazonaws.com/923405430231/vassar_response" },
+        { "name": "DEPLOYMENT_TYPE", "value": "AWS" },
+        { "name": "CLUSTER_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster" },
+        { "name": "SERVICE_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/evaluator-service" }
       ],
       "mountPoints": [
         {
@@ -57,31 +28,27 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "awslogs-evaluator",
+          "awslogs-create-group": true,
+          "awslogs-group": "daphne-evaluator",
           "awslogs-region": "us-east-2",
-          "awslogs-stream-prefix": "daphne-evaluator"
-        },
-        "secretOptions": [
-          { "name": "", "valueFrom": "" }
-        ]
-      },
+          "awslogs-stream-prefix": "daphne"
+        }
+      }
     }
   ],
   "volumes": [
     {
       "name": "vassar_resources",
       "efsVolumeConfiguration": {
-          "fileSystemId": "",
-          "rootDirectory": "",
-          "transitEncryption": "ENABLED",
-          "authorizationConfig": {
-              "accessPointId": "",
-              "iam": "ENABLED"
-          }
-      },
+          "fileSystemId": "fs-d3977da8",
+          "rootDirectory": "/VASSAR_resources",
+          "transitEncryption": "ENABLED"
+      }
     }
   ],
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "1024",
   "memory": "4096",
+  "taskRoleArn": "arn:aws:iam::923405430231:role/DaphneEvaluatorTaskRole",
+  "executionRoleArn": "arn:aws:iam::923405430231:role/ecsTaskExecutionRole"
 }

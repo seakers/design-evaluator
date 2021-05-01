@@ -907,7 +907,6 @@ public class Consumer implements Runnable {
             String serviceArn = System.getenv("SERVICE_ARN");
             final EcsClient ecsClient = EcsClient.builder()
                                                  .region(Region.US_EAST_2)
-                                                 .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
                                                  .build();
             DescribeServicesRequest request = DescribeServicesRequest.builder()
                                                                      .cluster(clusterArn)
