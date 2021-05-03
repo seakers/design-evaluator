@@ -19,13 +19,15 @@ dependencies {
     compile 'gov.sandia:jess:7.1p2'
 
     // AWS
-    implementation platform('software.amazon.awssdk:bom:2.16.26')
+    implementation platform('software.amazon.awssdk:bom:2.16.52')
     implementation 'software.amazon.awssdk:sqs'
     implementation 'software.amazon.awssdk:ecs'
     implementation 'software.amazon.awssdk:regions'
     implementation 'software.amazon.awssdk:auth'
 
     // GRAPHQL
+    implementation "com.squareup.okhttp3:okhttp:4.9.1"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.9.1"
     implementation 'com.apollographql.apollo:apollo-runtime:2.5.5'
     implementation 'com.apollographql.apollo:apollo-rx2-support:2.5.5'
     compileOnly("org.jetbrains:annotations:16.0.2")

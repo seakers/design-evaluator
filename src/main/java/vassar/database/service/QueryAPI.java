@@ -7,7 +7,7 @@ import com.apollographql.apollo.subscription.WebSocketSubscriptionTransport;
 import com.evaluator.*;
 import com.evaluator.type.*;
 import okhttp3.OkHttpClient;
-
+import okhttp3.logging.HttpLoggingInterceptor;
 
 // APOLLO
 import com.apollographql.apollo.ApolloCall;
@@ -54,7 +54,10 @@ public class QueryAPI {
 
         public Builder(String apolloUrl, String apolloWsUrl){
             this.apolloUrl = apolloUrl;
-            this.http       = new OkHttpClient.Builder().build();
+            HttpLoggingInterceptor log = new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
+            this.http       = new OkHttpClient.Builder()
+                .addInterceptor(log)
+                .build();
             this.apollo     = ApolloClient.builder()
                     .serverUrl(this.apolloUrl)
                     .subscriptionTransportFactory(new WebSocketSubscriptionTransport.Factory(apolloWsUrl, this.http)) // ws://graphql:8080/v1/graphql
@@ -86,8 +89,8 @@ public class QueryAPI {
             QueryAPI client = new QueryAPI(this.privateQueue, this.client);
 
             client.apollo            = this.apollo;
-            client.http              = this.http;       // = "http://graphql:8080/v1/graphql";
-            client.apolloUrl         = this.apolloUrl;  // = "/app/logs/jessInitDB.json"; ???
+            client.http              = this.http;       
+            client.apolloUrl         = this.apolloUrl;  // = "http://graphql:8080/v1/graphql";
             client.groupId           = this.groupId;
             client.problemId         = this.problemId;
 

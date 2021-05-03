@@ -4,6 +4,7 @@
 package evaluator;
 
 import jess.Userfunction;
+import okhttp3.OkHttpClient;
 import seakers.orekit.util.OrekitConfig;
 import vassar.GlobalScope;
 import vassar.VassarClient;
@@ -19,12 +20,15 @@ import sqs.Consumer;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class EvaluatorApp {
 
     public static void main(String[] args) {
@@ -36,7 +40,8 @@ public class EvaluatorApp {
 //  _| |_| |\  |_| |_   | |
 // |_____|_| \_|_____|  |_|
 //
-
+        Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
+        Logger.getLogger(OkHttpClient.class.getName()).addHandler(new ConsoleHandler());
         String coverageDatabase = ResourcePaths.resourcesRootDir + "/orekit/CoverageDatabase";
         String orekitInit       = ResourcePaths.resourcesRootDir + "/orekit";
 
@@ -145,6 +150,8 @@ public class EvaluatorApp {
 
         // RUN CONSUMER
         evaluator.run();
+
+        sqsClient.close();
     }
 
     // ---> SLEEP
