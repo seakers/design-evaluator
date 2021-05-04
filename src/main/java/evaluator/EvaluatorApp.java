@@ -17,6 +17,7 @@ import vassar.jess.func.Improve;
 import vassar.jess.func.SameOrBetter;
 import vassar.jess.func.Worsen;
 import sqs.Consumer;
+import software.amazon.awssdk.services.ecs.EcsClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.regions.Region;
@@ -110,6 +111,13 @@ public class EvaluatorApp {
         }
         final SqsClient sqsClient = sqsClientBuilder.build();
 
+        EcsClient ecsClient = null;
+        if (System.getenv("DEPLOYMENT_TYPE").equals("AWS")) {
+            ecsClient = EcsClient.builder()
+                            .region(Region.US_EAST_2)
+                            .build();
+        }
+
 
         QueryAPI queryAPI = new QueryAPI.Builder(apolloUrl, apolloWsUrl)
                                         .privateQueue(queue)
@@ -145,6 +153,7 @@ public class EvaluatorApp {
                                          .setRequestQueueUrl(requestQueueUrl)
                                          .setResponseQueueUrl(responseQueueUrl)
                                          .setPrivateQueue(queue)
+                                         .setECSClient(ecsClient)
                                          .debug(debug)
                                          .build();
 
@@ -152,6 +161,7 @@ public class EvaluatorApp {
         evaluator.run();
 
         sqsClient.close();
+        ecsClient.close();
     }
 
     // ---> SLEEP

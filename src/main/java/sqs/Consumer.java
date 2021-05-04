@@ -41,6 +41,7 @@ public class Consumer implements Runnable {
     private boolean                                    running;
     private VassarClient                               client;
     private SqsClient                                  sqsClient;
+    private EcsClient                                  ecsClient;
     private String                                     requestQueueUrl;
     private String                                     responseQueueUrl;
     private String                                     deadLetterQueueArn;
@@ -58,6 +59,7 @@ public class Consumer implements Runnable {
         private boolean                               debug;
         private VassarClient                          client;
         private SqsClient                             sqsClient;
+        private EcsClient                             ecsClient;
         private String                                requestQueueUrl;
         private String                                responseQueueUrl;
         private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
@@ -86,6 +88,11 @@ public class Consumer implements Runnable {
             return this;
         }
 
+        public Builder setECSClient(EcsClient ecsClient) {
+            this.ecsClient = ecsClient;
+            return this;
+        }
+
         public Builder debug(boolean debug) {
             this.debug = debug;
             return this;
@@ -94,6 +101,7 @@ public class Consumer implements Runnable {
         public Consumer build(){
             Consumer build         = new Consumer();
             build.sqsClient        = this.sqsClient;
+            build.ecsClient        = this.ecsClient;
             build.debug            = this.debug;
             build.client           = this.client;
             build.requestQueueUrl  = this.requestQueueUrl;
@@ -413,7 +421,7 @@ public class Consumer implements Runnable {
 
         this.sqsClient.sendMessage(SendMessageRequest.builder()
                 .queueUrl(this.responseQueueUrl)
-                .messageBody("")
+                .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(0)
                 .build());
@@ -467,7 +475,7 @@ public class Consumer implements Runnable {
 
         this.sqsClient.sendMessage(SendMessageRequest.builder()
                 .queueUrl(this.userResponseQueueUrl)
-                .messageBody("")
+                .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(0)
                 .build());
@@ -646,7 +654,7 @@ public class Consumer implements Runnable {
             );
             this.sqsClient.sendMessage(SendMessageRequest.builder()
                     .queueUrl(this.userResponseQueueUrl)
-                    .messageBody("")
+                    .messageBody("vassar_message")
                     .messageAttributes(messageAttributes)
                     .delaySeconds(0)
                     .build());
@@ -829,7 +837,7 @@ public class Consumer implements Runnable {
     private void sendMessage(Map<String, MessageAttributeValue> messageAttributes, int delay){
         this.sqsClient.sendMessage(SendMessageRequest.builder()
                 .queueUrl(this.requestQueueUrl)
-                .messageBody("")
+                .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(delay)
                 .build());
@@ -838,7 +846,7 @@ public class Consumer implements Runnable {
     private void sendDirectMessage(String url, Map<String, MessageAttributeValue> messageAttributes, int delay){
         this.sqsClient.sendMessage(SendMessageRequest.builder()
                 .queueUrl(url)
-                .messageBody("")
+                .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(delay)
                 .build());
@@ -905,14 +913,11 @@ public class Consumer implements Runnable {
             // Check service for number of tasks
             String clusterArn = System.getenv("CLUSTER_ARN");
             String serviceArn = System.getenv("SERVICE_ARN");
-            final EcsClient ecsClient = EcsClient.builder()
-                                                 .region(Region.US_EAST_2)
-                                                 .build();
             DescribeServicesRequest request = DescribeServicesRequest.builder()
                                                                      .cluster(clusterArn)
                                                                      .services(serviceArn)
                                                                      .build();
-            DescribeServicesResponse response = ecsClient.describeServices(request);
+            DescribeServicesResponse response = this.ecsClient.describeServices(request);
             if (response.hasServices()) {
                 Service service = response.services().get(0);
                 Integer desiredCount = service.desiredCount();
@@ -923,7 +928,7 @@ public class Consumer implements Runnable {
                                                                              .desiredCount(desiredCount-1)
                                                                              .service(serviceArn)
                                                                              .build();
-                    UpdateServiceResponse updateResponse = ecsClient.updateService(updateRequest);
+                    UpdateServiceResponse updateResponse = this.ecsClient.updateService(updateRequest);
 
                     // Close myself as the extra task
                     String taskArn = getTaskArn();
@@ -931,7 +936,7 @@ public class Consumer implements Runnable {
                                                                  .cluster(clusterArn)
                                                                  .task(taskArn)
                                                                  .build();
-                    StopTaskResponse stopResponse = ecsClient.stopTask(stopRequest);
+                    StopTaskResponse stopResponse = this.ecsClient.stopTask(stopRequest);
                 }
             }
         }
@@ -973,6 +978,8 @@ public class Consumer implements Runnable {
                 //Get the required object from the above created object
                 taskArn = (String)responseObj.get("TaskARN");
             }
+
+            conn.disconnect();
 
         } catch (Exception e) {
             e.printStackTrace();
