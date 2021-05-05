@@ -41,8 +41,6 @@ public class EvaluatorApp {
 //  _| |_| |\  |_| |_   | |
 // |_____|_| \_|_____|  |_|
 //
-        Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
-        Logger.getLogger(OkHttpClient.class.getName()).addHandler(new ConsoleHandler());
         String coverageDatabase = ResourcePaths.resourcesRootDir + "/orekit/CoverageDatabase";
         String orekitInit       = ResourcePaths.resourcesRootDir + "/orekit";
 

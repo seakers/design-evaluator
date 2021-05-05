@@ -7,5 +7,5 @@
 - Note, these command should be ran from the root of the project
 
 1. `docker build --no-cache -t 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator:latest -f aws/Dockerfile .`
-2. `docker push apazagab/design-evaluator`
+2. `docker push 923405430231.dkr.ecr.us-east-2.amazonaws.com/design-evaluator`
 
