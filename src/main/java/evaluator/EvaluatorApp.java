@@ -53,6 +53,7 @@ public class EvaluatorApp {
         String outputFilePath     = ResourcePaths.rootDirectory + "/debug/dbOutput.json";
         String outputPath         = ResourcePaths.rootDirectory + "/debug";
 
+        String region             = System.getenv("REGION");
         String requestQueueUrl    = System.getenv("VASSAR_REQUEST_URL");
         String responseQueueUrl   = System.getenv("VASSAR_RESPONSE_URL");
         String apolloUrl          = System.getenv("APOLLO_URL");
@@ -103,9 +104,10 @@ public class EvaluatorApp {
 
         // --> SQS
         SqsClientBuilder sqsClientBuilder = SqsClient.builder()
-                                                           .region(Region.US_EAST_2);
+                                                     .region(Region.US_EAST_2);
         if (System.getenv("AWS_STACK_ENDPOINT") != null) {
             sqsClientBuilder.endpointOverride(URI.create(System.getenv("AWS_STACK_ENDPOINT")));
+            sqsClientBuilder.region(Region.US_WEST_2);
         }
         final SqsClient sqsClient = sqsClientBuilder.build();
 
@@ -156,10 +158,20 @@ public class EvaluatorApp {
                                          .build();
 
         // RUN CONSUMER
-        evaluator.run();
-
-        sqsClient.close();
-        ecsClient.close();
+        try {
+            evaluator.run();
+        }
+        catch (Exception e) {
+            throw e;
+        }
+        finally {
+            sqsClient.close();
+            queryAPI.cancelAllSubscriptions();
+            if (ecsClient != null) {
+                ecsClient.close();
+            }
+            OrekitConfig.end();
+        }
     }
 
     // ---> SLEEP

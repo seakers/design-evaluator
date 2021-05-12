@@ -48,6 +48,7 @@ public class Consumer implements Runnable {
     private String                                     userRequestQueueUrl = null;
     private String                                     userResponseQueueUrl = null;
     private long                                       lastPingTime = System.currentTimeMillis();
+    private long                                       lastDownsizeRequestTime = System.currentTimeMillis();
     private int                                        userId;
 
 
@@ -231,49 +232,94 @@ public class Consumer implements Runnable {
         }
     }
 
+    private boolean queueExists(String queueUrl) {
+        ListQueuesResponse listResponse = this.sqsClient.listQueues();
+        for (String url: listResponse.queueUrls()) {
+            if (queueUrl.equals(url)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean queueExistsByName(String queueName) {
+        ListQueuesResponse listResponse = this.sqsClient.listQueues();
+        for (String url: listResponse.queueUrls()) {
+            String[] nameSplit = url.split("/");
+            String name = nameSplit[nameSplit.length-1];
+            if (queueName.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String getQueueArn(String queueUrl) {
+        ArrayList<QueueAttributeName> attrList = new ArrayList<>();
+        attrList.add(QueueAttributeName.QUEUE_ARN);
+        GetQueueAttributesRequest attrRequest = GetQueueAttributesRequest.builder()
+            .queueUrl(queueUrl)
+            .attributeNames(attrList)
+            .build();
+        GetQueueAttributesResponse attrResponse = sqsClient.getQueueAttributes(attrRequest);
+        String queueArn = attrResponse.attributes().get(QueueAttributeName.QUEUE_ARN);
+        return queueArn;
+    }
+
+    private String getQueueUrl(String queueName) {
+        GetQueueUrlRequest request = GetQueueUrlRequest.builder()
+            .queueName(queueName)
+            .build();
+        GetQueueUrlResponse response = this.sqsClient.getQueueUrl(request);
+        return response.queueUrl();
+    }
+
     private void createConnectionQueues() {
         String[] requestQueueUrls = this.requestQueueUrl.split("/");
         String requestQueueName = requestQueueUrls[requestQueueUrls.length-1];
 
-        CreateQueueRequest deadQueueRequest = CreateQueueRequest.builder()
-            .queueName("dead-letter")
-            .build();
-        CreateQueueResponse response = sqsClient.createQueue(deadQueueRequest);
-        String deadQueueUrl = response.queueUrl();
-        ArrayList<QueueAttributeName> attrList = new ArrayList<>();
-        attrList.add(QueueAttributeName.QUEUE_ARN);
-        GetQueueAttributesRequest attrRequest = GetQueueAttributesRequest.builder()
-            .queueUrl(deadQueueUrl)
-            .attributeNames(attrList)
-            .build();
-        GetQueueAttributesResponse attrResponse = sqsClient.getQueueAttributes(attrRequest);
-        String deadQueueArn = attrResponse.attributes().get(QueueAttributeName.QUEUE_ARN);
+        String deadQueueArn = "";
+        if (!this.queueExistsByName("dead-letter")) {
+            CreateQueueRequest deadQueueRequest = CreateQueueRequest.builder()
+                .queueName("dead-letter")
+                .build();
+            CreateQueueResponse response = sqsClient.createQueue(deadQueueRequest);
+            String deadQueueUrl = response.queueUrl();
+            deadQueueArn = this.getQueueArn(deadQueueUrl);
+        }
+        else {
+            String deadQueueUrl = this.getQueueUrl("dead-letter");
+            deadQueueArn = this.getQueueArn(deadQueueUrl);
+        }
 
         Map<QueueAttributeName, String> queueAttrs = new HashMap<>();
         queueAttrs.put(QueueAttributeName.MESSAGE_RETENTION_PERIOD, Integer.toString(5*60));
         queueAttrs.put(QueueAttributeName.REDRIVE_POLICY, "{\"maxReceiveCount\":\"3\", \"deadLetterTargetArn\":\"" + deadQueueArn + "\"}");
-        CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
-            .queueName(requestQueueName)
-            .attributes(queueAttrs)
-            .build();
-        response = sqsClient.createQueue(createQueueRequest);
-        String requestQueueUrl = response.queueUrl();
+        if (!this.queueExists(this.requestQueueUrl)) {
+            CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
+                .queueName(requestQueueName)
+                .attributes(queueAttrs)
+                .build();
+            CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
+        }
         SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
-            .queueUrl(requestQueueUrl)
+            .queueUrl(this.requestQueueUrl)
             .attributes(queueAttrs)
             .build();
         sqsClient.setQueueAttributes(setAttrReq);
+        
 
         String[] responseQueueUrls = this.responseQueueUrl.split("/");
         String responseQueueName = responseQueueUrls[responseQueueUrls.length-1];
-        createQueueRequest = CreateQueueRequest.builder()
-            .queueName(responseQueueName)
-            .attributes(queueAttrs)
-            .build();
-        response = sqsClient.createQueue(createQueueRequest);
-        String responseQueueUrl = response.queueUrl();
+        if (!this.queueExists(this.responseQueueUrl)) {
+            CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
+                .queueName(responseQueueName)
+                .attributes(queueAttrs)
+                .build();
+                CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
+        }
         setAttrReq = SetQueueAttributesRequest.builder()
-            .queueUrl(responseQueueUrl)
+            .queueUrl(this.responseQueueUrl)
             .attributes(queueAttrs)
             .build();
         sqsClient.setQueueAttributes(setAttrReq);
@@ -481,6 +527,26 @@ public class Consumer implements Runnable {
 
     private void msgTypePing(Map<String, String> msgContents) {
         this.lastPingTime = System.currentTimeMillis();
+        // Send ping ack back
+        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+        messageAttributes.put("msgType",
+                              MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("pingAck")
+                                .build()
+        );
+        messageAttributes.put("UUID",
+                              MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue(this.uuid)
+                                .build()
+        );
+        this.sqsClient.sendMessage(SendMessageRequest.builder()
+                                    .queueUrl(this.userResponseQueueUrl)
+                                    .messageBody("vassar_message")
+                                    .messageAttributes(messageAttributes)
+                                    .delaySeconds(0)
+                                    .build());
     }
     
     public void msgTypeEvaluate(Map<String, String> msg_contents){
@@ -869,44 +935,57 @@ public class Consumer implements Runnable {
         Map<QueueAttributeName, String> queueAttrs = new HashMap<>();
         queueAttrs.put(QueueAttributeName.MESSAGE_RETENTION_PERIOD, Integer.toString(5*60));
         queueAttrs.put(QueueAttributeName.REDRIVE_POLICY, "{\"maxReceiveCount\":\"3\", \"deadLetterTargetArn\":\"" + this.deadLetterQueueArn + "\"}");
-        CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
-            .queueName(requestQueueName)
-            .attributes(queueAttrs)
-            .tags(tags)
-            .build();
-        CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
-        String requestQueueUrl = response.queueUrl();
-
-        SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
-            .queueUrl(requestQueueUrl)
-            .attributes(queueAttrs)
-            .build();
-        sqsClient.setQueueAttributes(setAttrReq);
-
-        createQueueRequest = CreateQueueRequest.builder()
-            .queueName(responseQueueName)
-            .attributes(queueAttrs)
-            .tags(tags)
-            .build();
-        response = sqsClient.createQueue(createQueueRequest);
-        String responseQueueUrl = response.queueUrl();
-
-        setAttrReq = SetQueueAttributesRequest.builder()
-            .queueUrl(responseQueueUrl)
-            .attributes(queueAttrs)
-            .build();
-        sqsClient.setQueueAttributes(setAttrReq);
+        
+        String newUserRequestQueueUrl = "";
+        if (!this.queueExistsByName(requestQueueName)) {
+            CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
+                .queueName(requestQueueName)
+                .attributes(queueAttrs)
+                .tags(tags)
+                .build();
+            CreateQueueResponse response = this.sqsClient.createQueue(createQueueRequest);
+            newUserRequestQueueUrl = response.queueUrl();
+        }
+        else {
+            newUserRequestQueueUrl = this.getQueueUrl(requestQueueName);
+            SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
+                .queueUrl(newUserRequestQueueUrl)
+                .attributes(queueAttrs)
+                .build();
+            this.sqsClient.setQueueAttributes(setAttrReq);
+        }
+        
+        String newUserResponseQueueUrl = "";
+        if (!this.queueExistsByName(responseQueueName)) {
+            CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
+                .queueName(responseQueueName)
+                .attributes(queueAttrs)
+                .tags(tags)
+                .build();
+            CreateQueueResponse response = this.sqsClient.createQueue(createQueueRequest);
+            newUserResponseQueueUrl = response.queueUrl();
+        }
+        else {
+            newUserResponseQueueUrl = this.getQueueUrl(responseQueueName);
+            SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
+                .queueUrl(newUserResponseQueueUrl)
+                .attributes(queueAttrs)
+                .build();
+            this.sqsClient.setQueueAttributes(setAttrReq);
+        }
 
         QueueUrls returnVal = new QueueUrls();
-        returnVal.requestUrl = requestQueueUrl;
-        returnVal.responseUrl = responseQueueUrl;
+        returnVal.requestUrl = newUserRequestQueueUrl;
+        returnVal.responseUrl = newUserResponseQueueUrl;
 
         return returnVal;
     }
 
     private void downsizeAwsService() {
         // Only do this if in AWS
-        if (System.getenv("DEPLOYMENT_TYPE").equals("AWS")) {
+        long timeSinceLastRequest = System.currentTimeMillis() - this.lastDownsizeRequestTime;
+        if (System.getenv("DEPLOYMENT_TYPE").equals("AWS") && timeSinceLastRequest > 5*60*1000) {
+            this.lastDownsizeRequestTime = System.currentTimeMillis();
             // Check service for number of tasks
             String clusterArn = System.getenv("CLUSTER_ARN");
             String serviceArn = System.getenv("SERVICE_ARN");

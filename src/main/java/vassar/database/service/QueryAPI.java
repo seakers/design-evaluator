@@ -19,6 +19,8 @@ import io.reactivex.Observable;
 import org.jetbrains.annotations.NotNull;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
+import java.io.IOException;
+
 // QUERIES
 
 
@@ -800,5 +802,7 @@ public class QueryAPI {
         return subCall;
     }
 
-
+    public void cancelAllSubscriptions() {
+        this.apollo.disableSubscriptions();
+    }
 }
