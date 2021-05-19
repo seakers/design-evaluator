@@ -367,7 +367,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                             + "(avg-revisit-time-US# " + therevtimesUS + ")"
                             + "(factHistory J" + javaAssertedFactID + ")))";
 
-                    System.out.println("---> final rev time for measurement" + call);
+                    //System.out.println("---> final rev time for measurement" + call);
                     javaAssertedFactID++;
                     r.eval(call);
                 }
@@ -430,9 +430,9 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 ArrayList<Fact> partials = qb.makeQuery("REASONING::partially-satisfied");
                 ArrayList<Fact> fulls = qb.makeQuery("REASONING::fully-satisfied");
                 fulls.addAll(partials);
-                System.out.println("----- DEBUG");
-                System.out.println(partials);
-                System.out.println(fulls);
+                //System.out.println("----- DEBUG");
+                //System.out.println(partials);
+                //System.out.println(fulls);
                 //result.setExplanations(fulls);
             }
         }
@@ -472,8 +472,8 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             ArrayList<Fact> vals = qb.makeQuery("AGGREGATION::VALUE");
             Fact val = vals.get(0);
             System.out.println("-----------------> GETTING SCIENCE VALUE");
-            System.out.println(r.getGlobalContext());
-            System.out.println(val);
+            //System.out.println(r.getGlobalContext());
+            //System.out.println(val);
             science = val.getSlotValue("satisfaction").floatValue(r.getGlobalContext());
             if (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES") || params.getRequestMode().equalsIgnoreCase("FUZZY-CASES")) {
                 fuzzy_science = (FuzzyValue)val.getSlotValue("fuzzy-value").javaObjectValue(r.getGlobalContext());
@@ -496,10 +496,10 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             }
 
             //Subobjective scores
-            System.out.println("----- EVAL SUBOBJECTIVE");
-            System.out.println(params.numPanels);
-            System.out.println(params.numObjectivesPerPanel);
-            System.out.println(params.subobjectives);
+            //System.out.println("----- EVAL SUBOBJECTIVE");
+            //System.out.println(params.numPanels);
+            //System.out.println(params.numObjectivesPerPanel);
+            //System.out.println(params.subobjectives);
             for (int p = 0; p < params.numPanels; p++) {
                 int nob = params.numObjectivesPerPanel.get(p);
                 ArrayList<ArrayList<Double>> subobj_scores_p = new ArrayList<>(nob);
@@ -544,8 +544,8 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         Result theresult = new Result(arch, science, cost, fuzzy_science, fuzzy_cost, subobj_scores, obj_scores,
                 panel_scores, subobj_scores_map);
 
-        System.out.println("----- RESULT:");
-        System.out.println(subobj_scores);
+        //System.out.println("----- RESULT:");
+        //System.out.println(subobj_scores);
         if (this.debug) {
             theresult.setCapabilities(qb.makeQuery("REQUIREMENTS::Measurement"));
             theresult.setExplanations(explanations);

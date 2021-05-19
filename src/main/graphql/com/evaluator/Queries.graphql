@@ -479,7 +479,7 @@ mutation DeleteScoreExplanations($arch_id: Int!){
 
 # ---> Cost Information
 mutation InsertArchitectureCostInformation($architecture_id: Int!, $mission_name: String, $launch_vehicle: String, $cost: float8, $mass: float8, $power: float8, $others: float8){
-    items: insert_ArchitectureCostInformation_one(object: {architecture_id: $architecture_id, mission_name: "", launch_vehicle: $launch_vehicle, cost: $cost, mass: $mass, power: $power, others: $others}) {
+    items: insert_ArchitectureCostInformation_one(object: {architecture_id: $architecture_id, mission_name: $mission_name, launch_vehicle: $launch_vehicle, cost: $cost, mass: $mass, power: $power, others: $others}) {
         id
     }
 }

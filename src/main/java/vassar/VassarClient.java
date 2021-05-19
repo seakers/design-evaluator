@@ -441,8 +441,8 @@ public class VassarClient {
         this.engine.dbClient.insertObjectiveScoreExplanationBatch(objectiveExplanations);
     }
 
-    private void indexArchitectureCostInformation(Result result, int archID){
-        System.out.println("---> Indexing architecture cost information");
+    private void indexArchitectureCostInformation(Result result, int archID) {
+        //System.out.println("---> Indexing architecture cost information");
         ArrayList<String> attributes = new ArrayList<>();
         String[] powerBudgetSlots    = { "payload-peak-power#", "satellite-BOL-power#" };
         String[] costBudgetSlots     = { "payload-cost#", "bus-cost#", "launch-cost#", "program-cost#", "IAT-cost#", "operations-cost#" };
@@ -462,7 +462,7 @@ public class VassarClient {
                 Double mass           = costFact.getSlotValue("satellite-launch-mass").floatValue(null);     // ArchitectureCostInformation!!!
                 Double power          = 0.0;                                                                            // ArchitectureCostInformation!!!
                 Double others         = 0.0;                                                                            // ArchitectureCostInformation!!!
-
+                
                 // ArchitectureBudget: power
                 HashMap<Integer, Double> powerBudget = new HashMap<>();                                                  // ArchitectureBudget!!!
                 for (String powerSlot: powerBudgetSlots) {

@@ -153,14 +153,14 @@ public class CoverageAnalysis {
     }
 
     public Map<TopocentricFrame, TimeIntervalArray> getAccesses(double fieldOfView, double inclination, double altitude, int numSats, int numPlanes, String raanLabel) throws OrekitException {
-        System.out.println("\n----- GET ACCESSES -----");
-        System.out.println(fieldOfView);
-        System.out.println(inclination);
-        System.out.println(altitude);
-        System.out.println(numSats);
-        System.out.println(numPlanes);
-        System.out.println(raanLabel);
-        System.out.println("------------------------\n");
+        // System.out.println("\n----- GET ACCESSES -----");
+        // System.out.println(fieldOfView);
+        // System.out.println(inclination);
+        // System.out.println(altitude);
+        // System.out.println(numSats);
+        // System.out.println(numPlanes);
+        // System.out.println(raanLabel);
+        // System.out.println("------------------------\n");
         // EvaluatorApp.sleep(10);
 
         CoverageAnalysisIO.AccessDataDefinition definition = new CoverageAnalysisIO.AccessDataDefinition(fieldOfView, inclination, altitude, numSats, numPlanes, this.coverageGridGranularity, raanLabel);

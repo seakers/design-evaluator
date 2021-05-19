@@ -211,10 +211,10 @@ public class MatlabFunctions implements Userfunction {
         try {
             id = vv.get(2).stringValue(c);
             orb = vv.get(3).stringValue(c);
-            System.out.println("\n\n--------\n---> getLaunchVehiclePerformanceCoeffs: " + id + " " + orb);
-            System.out.println(lvDatabase);
+            //System.out.println("\n\n--------\n---> getLaunchVehiclePerformanceCoeffs: " + id + " " + orb);
+            //System.out.println(lvDatabase);
             LaunchVehicle lv = lvDatabase.get(id);
-            System.out.println("--> COEFS\n" + lv.getPayloadCoeffs());
+            //System.out.println("--> COEFS\n" + lv.getPayloadCoeffs());
             ValueVector coeffs = lv.getPayloadCoeffsOrbit(orb);
             return new Value( coeffs, RU.LIST );
         }

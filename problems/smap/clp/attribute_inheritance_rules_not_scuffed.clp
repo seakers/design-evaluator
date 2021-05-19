@@ -37,17 +37,17 @@
     )
 
 (deffunction get-instrument-mass (?instr)
-    (printout t "get-instrument-mass " ?instr crlf)
+    ;(printout t "get-instrument-mass " ?instr crlf)
     (bind ?result (run-query* search-instrument-by-name ?instr))
-    (printout t "get-instrument-mass-result " ?result crlf)
+    ;(printout t "get-instrument-mass-result " ?result crlf)
     (?result next)
-    (printout t "get-instrument-mass-result-next " ?result crlf)
+    ;(printout t "get-instrument-mass-result-next " ?result crlf)
     (return (?result getDouble m))
     )
 
 
 (deffunction get-instrument-peak-power (?instr)
-    (printout t "get-instrument-peak-power " ?instr crlf)
+    ;(printout t "get-instrument-peak-power " ?instr crlf)
     (bind ?result (run-query* search-instrument-by-name ?instr))
     (?result next)
     (return (?result getDouble ppp))
@@ -55,14 +55,14 @@
 
 
 (deffunction get-instrument-power (?instr)
-    (printout t "get-instrument-power: instrument query " ?instr crlf)
+    ;(printout t "get-instrument-power: instrument query " ?instr crlf)
     (bind ?result (run-query* search-instrument-by-name ?instr))
     (?result next)
     (return (?result getDouble ppp))
     )
 
 (deffunction get-instrument-datarate (?instr)
-    (printout t "get-instrument-datarate " ?instr (str-length ?instr) crlf)
+    ;(printout t "get-instrument-datarate " ?instr (str-length ?instr) crlf)
     (bind ?result (run-query* search-instrument-by-name ?instr))
     (?result next)
     (return (?result getDouble rb))
@@ -90,7 +90,7 @@
 
 (deffunction compute-payload-data-rate ($?payload)
     (bind ?rb 0)
-    (printout t "compute-payload-data-rate" $?payload crlf)
+    ;(printout t "compute-payload-data-rate" $?payload crlf)
     (foreach ?instr $?payload
         (bind ?rb (+ ?rb (get-instrument-datarate ?instr)))
         )
