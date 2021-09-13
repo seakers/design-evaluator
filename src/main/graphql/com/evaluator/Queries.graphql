@@ -445,6 +445,12 @@ mutation InsertObjectiveScoreExplanation($architecture_id: Int!, $subobjective_i
     }
 }
 
+mutation InsertSubobjectiveScoreExplanation($architecture_id: Int!, $subobjective_id: Int!, $measurement_attribute_values: jsonb!, $score: float8!, $taken_by: String!, $justifications: jsonb!) {
+    items: insert_SubobjectiveScoreExplanation_one(object: {architecture_id: $architecture_id, subobjective_id: $subobjective_id, measurement_attribute_values: $measurement_attribute_values, score: $score, taken_by: $taken_by, justifications: $justifications}) {
+        id
+    }
+}
+
 
 # ---> Batch Score Explanations
 mutation InsertArchitectureScoreExplanationBatch($objects: [ArchitectureScoreExplanation_insert_input!]!){
@@ -460,6 +466,30 @@ mutation InsertPanelScoreExplanationBatch($objects: [PanelScoreExplanation_inser
 mutation InsertObjectiveScoreExplanationBatch($objects: [ObjectiveScoreExplanation_insert_input!]!){
     items: insert_ObjectiveScoreExplanation(objects: $objects) {
         affected_rows
+    }
+}
+mutation InsertSubobjectiveScoreExplanationBatch($objects: [SubobjectiveScoreExplanation_insert_input!]!){
+    items: insert_SubobjectiveScoreExplanation(objects: $objects) {
+        affected_rows
+    }
+}
+
+
+# ---> Subobjective explanantions
+
+query RequirementRulesForSubobjective($problem_id: Int!, $subobjective_name: String!) {
+    items: Requirement_Rule_Attribute(where: {problem_id: {_eq: $problem_id}, Stakeholder_Needs_Subobjective: {name: {_eq: $subobjective_name}}}) {
+        type
+        measurement: Measurement {
+            name
+        }
+        measurement_attribute: Measurement_Attribute {
+            name
+        }
+        subobjective: Stakeholder_Needs_Subobjective {
+            id
+            name
+        }
     }
 }
 

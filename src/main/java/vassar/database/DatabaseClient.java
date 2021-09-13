@@ -214,6 +214,9 @@ public class DatabaseClient {
     public void insertObjectiveScoreExplanationBatch(ArrayList<ObjectiveScoreExplanation_insert_input> items){
         this.queryAPI.insertObjectiveScoreExplanationBatch(items);
     }
+    public void insertSubobjectiveScoreExplanationBatch(ArrayList<SubobjectiveScoreExplanation_insert_input> items){
+        this.queryAPI.insertSubobjectiveScoreExplanationBatch(items);
+    }
 
     // ---> Index Cost Information
     public HashMap<String, Integer> getMissionAttributeIDs(ArrayList<String> attributes){
@@ -303,6 +306,10 @@ public class DatabaseClient {
             this.subobjective_objects.put(name, subjective_info);
             return subjective_info;
         }
+    }
+
+    public List<RequirementRulesForSubobjectiveQuery.Item> getRequirementRulesForSubobjective(String subobjectiveName) {
+        return this.queryAPI.getRequirementRulesForSubobjective(subobjectiveName);
     }
 
 

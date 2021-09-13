@@ -544,11 +544,13 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         Result theresult = new Result(arch, science, cost, fuzzy_science, fuzzy_cost, subobj_scores, obj_scores,
                 panel_scores, subobj_scores_map);
 
+        // Get explanations on subobjective fulfillment
+        theresult.setCapabilities(qb.makeQuery("REQUIREMENTS::Measurement"));
+        theresult.setExplanations(explanations);
+
         //System.out.println("----- RESULT:");
         //System.out.println(subobj_scores);
         if (this.debug) {
-            theresult.setCapabilities(qb.makeQuery("REQUIREMENTS::Measurement"));
-            theresult.setExplanations(explanations);
             System.out.println("--- debug2");
             System.out.println(theresult.capabilities);
             System.out.println(theresult.explanations);

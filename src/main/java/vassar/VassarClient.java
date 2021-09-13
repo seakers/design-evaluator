@@ -2,6 +2,8 @@ package vassar;
 
 
 
+import com.evaluator.RequirementRulesForSubobjectiveQuery;
+
 // -  -  -   ____   ____                                     ______  __    _                  _
 // -  -  -  |_  _| |_  _|                                  .' ___  |[  |  (_)                / |_
 // -  -  -    \ \   / /,--.   .--.   .--.   ,--.   _ .--. / .'   \_| | |  __  .---.  _ .--. `| |-'
@@ -11,11 +13,16 @@ package vassar;
 // -  -  -  - Gabe: take it easy m8
 
 import com.evaluator.type.*;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import evaluator.EvaluatorApp;
 import evaluator.ResourcePaths;
 import jess.Fact;
 import jess.JessException;
 import jess.Rete;
+import jess.Value;
 import jess.ValueVector;
 import vassar.architecture.*;
 import vassar.combinatorics.Combinatorics;
@@ -28,6 +35,7 @@ import vassar.result.Result;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -394,44 +402,46 @@ public class VassarClient {
 
     private void indexArchitectureScoreExplanations(Result result, int archID){
         System.out.println("---> indexing architecture score explanations");
-        ArrayList<ArchitectureScoreExplanation_insert_input> archExplanations      = new ArrayList<>();
-        ArrayList<PanelScoreExplanation_insert_input>        panelExplanations     = new ArrayList<>();
-        ArrayList<ObjectiveScoreExplanation_insert_input>    objectiveExplanations = new ArrayList<>();
+        ArrayList<ArchitectureScoreExplanation_insert_input> archExplanations         = new ArrayList<>();
+        ArrayList<PanelScoreExplanation_insert_input>        panelExplanations        = new ArrayList<>();
+        ArrayList<ObjectiveScoreExplanation_insert_input>    objectiveExplanations    = new ArrayList<>();
+        ArrayList<SubobjectiveScoreExplanation_insert_input> subobjectiveExplanations = new ArrayList<>();
 
-        for (int i = 0; i < this.engine.problem.panelNames.size(); ++i) {
+        for (int panel_idx = 0; panel_idx < this.engine.problem.panelNames.size(); ++panel_idx) {
 
             // getArchitectureScoreExplanation
             archExplanations.add(
                     ArchitectureScoreExplanation_insert_input.builder()
                             .architecture_id(archID)
-                            .panel_id(this.engine.dbClient.getPanelID(this.engine.problem.panelNames.get(i)))
-                            .satisfaction(result.getPanelScores().get(i))
+                            .panel_id(this.engine.dbClient.getPanelID(this.engine.problem.panelNames.get(panel_idx)))
+                            .satisfaction(result.getPanelScores().get(panel_idx))
                             .build()
             );
 
-            for (int j = 0; j < this.engine.problem.objNames.get(i).size(); ++j) {
+            for (int obj_idx = 0; obj_idx < this.engine.problem.objNames.get(panel_idx).size(); ++obj_idx) {
 
                 // getPanelScoreExplanation
                 panelExplanations.add(
                         PanelScoreExplanation_insert_input.builder()
                                 .architecture_id(archID)
-                                .objective_id(this.engine.dbClient.getObjectiveID(this.engine.problem.objNames.get(i).get(j)))
-                                .satisfaction(result.getObjectiveScores().get(i).get(j))
+                                .objective_id(this.engine.dbClient.getObjectiveID(this.engine.problem.objNames.get(panel_idx).get(obj_idx)))
+                                .satisfaction(result.getObjectiveScores().get(panel_idx).get(obj_idx))
                                 .build()
                 );
 
 
-                for (int k = 0; k < this.engine.problem.subobjectives.get(i).get(j).size(); ++k) {
-
+                for (int subobj_idx = 0; subobj_idx < this.engine.problem.subobjectives.get(panel_idx).get(obj_idx).size(); ++subobj_idx) {
+                    String subobjectiveName = this.engine.problem.subobjectives.get(panel_idx).get(obj_idx).get(subobj_idx);
                     // getObjectiveScoreExplanation
                     objectiveExplanations.add(
                             ObjectiveScoreExplanation_insert_input.builder()
                                     .architecture_id(archID)
-                                    .subobjective_id(this.engine.dbClient.getSubobjectiveID(this.engine.problem.subobjectives.get(i).get(j).get(k)))
-                                    .satisfaction(result.getSubobjectiveScores().get(i).get(j).get(k))
+                                    .subobjective_id(this.engine.dbClient.getSubobjectiveID(subobjectiveName))
+                                    .satisfaction(result.getSubobjectiveScores().get(panel_idx).get(obj_idx).get(subobj_idx))
                                     .build()
                     );
 
+                    subobjectiveExplanations.addAll(getSubobjectiveExplanations(result, archID, subobjectiveName));
                 }
             }
         }
@@ -439,6 +449,97 @@ public class VassarClient {
         this.engine.dbClient.insertArchitectureScoreExplanationBatch(archExplanations);
         this.engine.dbClient.insertPanelScoreExplanationBatch(panelExplanations);
         this.engine.dbClient.insertObjectiveScoreExplanationBatch(objectiveExplanations);
+        this.engine.dbClient.insertSubobjectiveScoreExplanationBatch(subobjectiveExplanations);
+    }
+
+    private List<SubobjectiveScoreExplanation_insert_input> getSubobjectiveExplanations(Result result, int archID, String subobj) {
+        String measurement = this.engine.problem.subobjectivesToMeasurements.get(subobj);
+
+        // Obtain list of attributes for this measurement
+        ArrayList<String> attrNames = new ArrayList<>();
+        HashMap<String, String> attrTypes = new HashMap<>();
+        List<RequirementRulesForSubobjectiveQuery.Item> requirementRules = this.engine.dbClient.getRequirementRulesForSubobjective(subobj);
+        Integer subobjectiveId = requirementRules.get(0).subobjective().id();
+        requirementRules.forEach((reqRule) -> attrNames.add(reqRule.measurement_attribute().name()));
+        requirementRules.forEach((reqRule) -> attrTypes.put(reqRule.measurement_attribute().name(), reqRule.type()));
+        HashMap<String, Integer> numDecimals = new HashMap<>();
+        numDecimals.put("Horizontal-Spatial-Resolution#", 0);
+        numDecimals.put("Temporal-resolution#", 0);
+        numDecimals.put("Swath#", 0);
+
+        // Loop to get rows of details for each data product
+        ArrayList<SubobjectiveScoreExplanation_insert_input> subobjectiveExplanations = new ArrayList<>();
+        for (Fact explanation: result.getExplanations().get(subobj)) {
+            try {
+                // Try to find the requirement fact!
+                int measurementId = explanation.getSlotValue("requirement-id").intValue(null);
+                if (measurementId == -1) {
+                    continue;
+                }
+                Fact measurementFact = null;
+                for (Fact capability: result.getCapabilities()) {
+                    if (capability.getFactId() == measurementId) {
+                        measurementFact = capability;
+                        break;
+                    }
+                }
+                // Start by putting all attribute values into list
+                HashMap<String, String> attributes = new HashMap<>();
+                for (String attrName: attrNames) {
+                    String attrType = attrTypes.get(attrName);
+                    // Check type and convert to String if needed
+                    Value attrValue = measurementFact.getSlotValue(attrName);
+                    switch (attrType) {
+                        case "SIB":
+                        case "LIB": {
+                            Double value = attrValue.floatValue(null);
+                            double scale = 100;
+                            if (numDecimals.containsKey(attrName)) {
+                                scale = Math.pow(10, numDecimals.get(attrName));
+                            }
+                            value = Math.round(value * scale) / scale;
+                            attributes.put(attrName, value.toString());
+                            break;
+                        }
+                        default: {
+                            attributes.put(attrName, attrValue.toString());
+                            break;
+                        }
+                    }
+                }
+                JSONObject attributesJson = new JSONObject(attributes);
+
+                // Get information from explanation fact
+                Double score = explanation.getSlotValue("satisfaction").floatValue(null);
+                String satisfiedBy = explanation.getSlotValue("satisfied-by").stringValue(null);
+                ArrayList<String> rowJustifications = new ArrayList<>();
+                ValueVector reasons = explanation.getSlotValue("reasons").listValue(null);
+                for (int i = 0; i < reasons.size(); ++i) {
+                    String reason = reasons.get(i).stringValue(null);
+                    if (!reason.equals("N-A")) {
+                        rowJustifications.add(reason);
+                    }
+                }
+                JSONArray justificationsJson = new JSONArray();
+                justificationsJson.addAll(rowJustifications);
+
+                // Put everything in their respective object
+                SubobjectiveScoreExplanation_insert_input scoreExplanation = SubobjectiveScoreExplanation_insert_input.builder()
+                    .architecture_id(archID)
+                    .subobjective_id(subobjectiveId)
+                    .measurement_attribute_values(attributesJson)
+                    .score(score)
+                    .taken_by(satisfiedBy)
+                    .justifications(justificationsJson)
+                    .build();
+                subobjectiveExplanations.add(scoreExplanation);
+            }
+            catch (JessException e) {
+                System.err.println(e.toString());
+            }
+        }
+
+        return subobjectiveExplanations;
     }
 
     private void indexArchitectureCostInformation(Result result, int archID) {

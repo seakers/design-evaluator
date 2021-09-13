@@ -484,6 +484,26 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items().affected_rows();
     }
 
+    public int insertSubobjectiveScoreExplanationBatch(ArrayList<SubobjectiveScoreExplanation_insert_input> items){
+        InsertSubobjectiveScoreExplanationBatchMutation mutation = InsertSubobjectiveScoreExplanationBatchMutation.builder()
+                .objects(items)
+                .build();
+        ApolloCall<InsertSubobjectiveScoreExplanationBatchMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<InsertSubobjectiveScoreExplanationBatchMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+
+        return observable.blockingFirst().getData().items().affected_rows();
+    }
+
+    public List<RequirementRulesForSubobjectiveQuery.Item> getRequirementRulesForSubobjective(String subobjectiveName){
+        RequirementRulesForSubobjectiveQuery query = RequirementRulesForSubobjectiveQuery.builder()
+                .problem_id(this.problemId)
+                .subobjective_name(subobjectiveName)
+                .build();
+        ApolloCall<RequirementRulesForSubobjectiveQuery.Data>           apolloCall  = this.apollo.query(query);
+        Observable<Response<RequirementRulesForSubobjectiveQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items();
+    }
+
     public int insertArchitectureCostInformation(int architecture_id, String mission_name, String launch_vehicle, double mass, double power, double cost, double others){
         InsertArchitectureCostInformationMutation mutation = InsertArchitectureCostInformationMutation.builder()
                 .architecture_id(architecture_id)
