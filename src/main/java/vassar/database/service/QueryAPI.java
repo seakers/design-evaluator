@@ -395,6 +395,7 @@ public class QueryAPI {
                 .science(science)
                 .cost(cost)
                 .eval_status(true)
+                .improve_hv(false)
                 .build();
         ApolloCall<UpdateArchitectureMutation.Data>           apolloCall  = this.apollo.mutate(archMutation);
         Observable<Response<UpdateArchitectureMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -412,6 +413,7 @@ public class QueryAPI {
                 .cost(cost)
                 .eval_status(true)
                 .ga(ga)
+                .improve_hv(false)
                 .build();
         ApolloCall<InsertArchitectureMutation.Data>           apolloCall  = this.apollo.mutate(archMutation);
         Observable<Response<InsertArchitectureMutation.Data>> observable  = Rx2Apollo.from(apolloCall);

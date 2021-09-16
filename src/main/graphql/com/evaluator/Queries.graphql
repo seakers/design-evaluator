@@ -413,14 +413,14 @@ query ArchitectureCount($problem_id: Int!, $dataset_id: Int!, $input: String!) {
     }
 }
 
-mutation InsertArchitecture($problem_id: Int!, $dataset_id: Int!, $user_id: Int!, $input: String!, $science: float8, $cost: float8, $ga: Boolean!, $eval_status: Boolean){
-    items: insert_Architecture_one(object: {problem_id: $problem_id, dataset_id: $dataset_id, user_id: $user_id, input: $input, science: $science, cost: $cost, ga: $ga, eval_status: $eval_status}) {
+mutation InsertArchitecture($problem_id: Int!, $dataset_id: Int!, $user_id: Int!, $input: String!, $science: float8, $cost: float8, $ga: Boolean!, $eval_status: Boolean, $improve_hv: Boolean = false){
+    items: insert_Architecture_one(object: {problem_id: $problem_id, dataset_id: $dataset_id, user_id: $user_id, input: $input, science: $science, cost: $cost, ga: $ga, eval_status: $eval_status, improve_hv: $improve_hv}) {
         id
     }
 }
 
-mutation UpdateArchitecture($problem_id: Int!, $dataset_id: Int!, $user_id: Int!, $input: String!, $science: float8, $cost: float8, $eval_status: Boolean){
-    items: update_Architecture(where: {problem_id: {_eq: $problem_id}, dataset_id: {_eq: $dataset_id}, user_id: {_eq: $user_id}, input: {_eq: $input}}, _set: {science: $science, cost: $cost, eval_status: $eval_status}) {
+mutation UpdateArchitecture($problem_id: Int!, $dataset_id: Int!, $user_id: Int!, $input: String!, $science: float8, $cost: float8, $eval_status: Boolean, $improve_hv: Boolean = false){
+    items: update_Architecture(where: {problem_id: {_eq: $problem_id}, dataset_id: {_eq: $dataset_id}, user_id: {_eq: $user_id}, input: {_eq: $input}}, _set: {science: $science, cost: $cost, eval_status: $eval_status, improve_hv: $improve_hv}) {
         returning {
             id
         }
