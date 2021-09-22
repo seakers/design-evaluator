@@ -2,6 +2,8 @@ package vassar;
 
 
 
+import com.evaluator.InsertArchitectureCostInformationMutation;
+import com.evaluator.InsertArchitectureSlowMutation;
 import com.evaluator.RequirementRulesForSubobjectiveQuery;
 
 // -  -  -   ____   ____                                     ______  __    _                  _
@@ -386,21 +388,40 @@ public class VassarClient {
         double cost    = result.getCost();
         double science = result.getScience();
 
-        int archID = this.engine.dbClient.indexArchitecture(bitString, datasetId, science, cost, ga, redo);
-
-        if (redo){
+        if (redo) {
             this.engine.dbClient.deleteArchitectureScoreExplanations(archID);
             this.engine.dbClient.deleteArchitectureCostInformation(archID);
+            // TODO: Update Arch builder
+            this.engine.dbClient.indexArchitecture(bitString, datasetId, science, cost, ga, redo);
         }
-
-        if (!fast){
-            this.indexArchitectureScoreExplanations(result, archID);
-            this.indexArchitectureCostInformation(result, archID);
-            this.indexArchitectureCritique(result, archID);
+        else {
+            if (fast) {
+                // TODO: Build Fast Arch
+                this.engine.dbClient.indexArchitecture(bitString, datasetId, science, cost, ga, redo);
+            }
+            else {
+                InsertArchitectureSlowMutation.Builder archBuilder = InsertArchitectureSlowMutation.builder();
+                this.fillArchitectureInformation(archBuilder, datasetId, bitString, science, cost, ga);
+                this.fillArchitectureScoreExplanations(result, archBuilder);
+                this.fillArchitectureCostInformations(result, archBuilder);
+                this.indexArchitectureCritique(result, archID);
+                int archID = this.engine.dbClient.insertArchitectureSlow(archBuilder);
+            }
         }
     }
 
-    private void indexArchitectureScoreExplanations(Result result, int archID){
+    private void fillArchitectureInformation(InsertArchitectureSlowMutation.Builder builder, Integer datasetId, String input, double science, double cost, boolean ga) {
+        builder
+            .dataset_id(datasetId)
+            .input(input)
+            .science(science)
+            .cost(cost)
+            .eval_status(true)
+            .ga(ga)
+            .improve_hv(false);
+    }
+
+    private void fillArchitectureScoreExplanations(Result result, InsertArchitectureSlowMutation.Builder archBuilder){
         System.out.println("---> indexing architecture score explanations");
         ArrayList<ArchitectureScoreExplanation_insert_input> archExplanations         = new ArrayList<>();
         ArrayList<PanelScoreExplanation_insert_input>        panelExplanations        = new ArrayList<>();
@@ -542,7 +563,7 @@ public class VassarClient {
         return subobjectiveExplanations;
     }
 
-    private void indexArchitectureCostInformation(Result result, int archID) {
+    private void fillArchitectureCostInformations(Result result, InsertArchitectureSlowMutation.Builder archBuilder) {
         //System.out.println("---> Indexing architecture cost information");
         ArrayList<String> attributes = new ArrayList<>();
         String[] powerBudgetSlots    = { "payload-peak-power#", "satellite-BOL-power#" };
@@ -554,6 +575,7 @@ public class VassarClient {
         HashMap<String, Integer> attrKeys = this.engine.dbClient.getMissionAttributeIDs(attributes);
         HashMap<String, Integer> instKeys = this.engine.dbClient.getInstrumentIDs();
 
+        ArrayList<ArchitectureCostInformation_insert_input> costInserts = new ArrayList<>();
         for(Fact costFact: result.getCostFacts()){
             try {
                 // --> ArchitectureCostInformation
@@ -601,16 +623,14 @@ public class VassarClient {
                 }
 
                 // --> 1. Index ArchitectureCostInformation - get arch_cost_id
-                int arch_cost_id = this.engine.dbClient.insertArchitectureCostInformation(
-                        archID,
-                        mission_name,
-                        launch_vehicle,
-                        mass,
-                        power,
-                        cost,
-                        others
-                );
-
+                ArchitectureCostInformation_insert_input.Builder costInsertBuilder = ArchitectureCostInformation_insert_input.builder()
+                    .mission_name(mission_name)
+                    .launch_vehicle(launch_vehicle)
+                    .mass(mass)
+                    .power(power)
+                    .cost(cost)
+                    .others(others);
+                
                 // --> 2. Index ArchitectureBudget with arch_cost_id
                 ArrayList<ArchitectureBudget_insert_input> budget_inserts = new ArrayList<>();
                 // power
@@ -618,7 +638,6 @@ public class VassarClient {
                     budget_inserts.add(
                             ArchitectureBudget_insert_input.builder()
                                 .value(powerBudget.get(mission_attribute_id))
-                                .arch_cost_id(arch_cost_id)
                                 .mission_attribute_id(mission_attribute_id)
                                 .build()
                     );
@@ -628,7 +647,6 @@ public class VassarClient {
                     budget_inserts.add(
                             ArchitectureBudget_insert_input.builder()
                                     .value(costBudget.get(mission_attribute_id))
-                                    .arch_cost_id(arch_cost_id)
                                     .mission_attribute_id(mission_attribute_id)
                                     .build()
                     );
@@ -638,12 +656,12 @@ public class VassarClient {
                     budget_inserts.add(
                             ArchitectureBudget_insert_input.builder()
                                     .value(massBudget.get(mission_attribute_id))
-                                    .arch_cost_id(arch_cost_id)
                                     .mission_attribute_id(mission_attribute_id)
                                     .build()
                     );
                 }
-                this.engine.dbClient.insertArchitectureBudgetBatch(budget_inserts);
+                ArchitectureBudget_arr_rel_insert_input budgets_input = ArchitectureBudget_arr_rel_insert_input.builder().data(budget_inserts).build();
+                //this.engine.dbClient.insertArchitectureBudgetBatch(budget_inserts);
 
                 // --> 3. Index ArchitecturePayload with arch_cost_id
                 ArrayList<ArchitecturePayload_insert_input> payload_inserts = new ArrayList<>();
@@ -651,17 +669,25 @@ public class VassarClient {
                     payload_inserts.add(
                             ArchitecturePayload_insert_input.builder()
                                 .instrument_id(instrument_id)
-                                .arch_cost_id(arch_cost_id)
                                 .build()
                     );
                 }
-                this.engine.dbClient.insertArchitecturePayloadBatch(payload_inserts);
+                ArchitecturePayload_arr_rel_insert_input payloads_input = ArchitecturePayload_arr_rel_insert_input.builder().data(payload_inserts).build();
+
+                costInsertBuilder
+                    .architectureBudgets(budgets_input)
+                    .architecturePayloads(payloads_input);
+
+                costInserts.add(costInsertBuilder.build());
+
+                //this.engine.dbClient.insertArchitecturePayloadBatch(payload_inserts);
 
             }
             catch (JessException e) {
                 System.err.println(e.toString());
             }
         }
+        archBuilder.cost_informations(costInserts);
     }
 
     private void indexArchitectureCritique(Result result, int archID){

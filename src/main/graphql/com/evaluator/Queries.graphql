@@ -413,9 +413,54 @@ query ArchitectureCount($problem_id: Int!, $dataset_id: Int!, $input: String!) {
     }
 }
 
-mutation InsertArchitecture($problem_id: Int!, $dataset_id: Int!, $user_id: Int!, $input: String!, $science: float8, $cost: float8, $ga: Boolean!, $eval_status: Boolean, $improve_hv: Boolean = false){
-    items: insert_Architecture_one(object: {problem_id: $problem_id, dataset_id: $dataset_id, user_id: $user_id, input: $input, science: $science, cost: $cost, ga: $ga, eval_status: $eval_status, improve_hv: $improve_hv}) {
+mutation InsertArchitectureFast($problem_id: Int!, $dataset_id: Int!, $user_id: Int!, $input: String!, $science: float8, $cost: float8, $ga: Boolean!, $eval_status: Boolean, $improve_hv: Boolean = false){
+    architecture: insert_Architecture_one(object: {problem_id: $problem_id, dataset_id: $dataset_id, user_id: $user_id, input: $input, science: $science, cost: $cost, ga: $ga, eval_status: $eval_status, improve_hv: $improve_hv}) {
         id
+    }
+}
+
+mutation InsertArchitectureSlow($problem_id: Int!,
+                                $dataset_id: Int!,
+                                $user_id: Int!,
+                                $input: String!,
+                                $science: float8,
+                                $cost: float8,
+                                $ga: Boolean!,
+                                $eval_status: Boolean,
+                                $improve_hv: Boolean,
+                                $critique: String,
+                                $arch_scores: [ArchitectureScoreExplanation_insert_input!]!,
+                                $panel_scores: [PanelScoreExplanation_insert_input!]!,
+                                $objective_scores: [ObjectiveScoreExplanation_insert_input!]!,
+                                $subobjective_scores: [SubobjectiveScoreExplanation_insert_input!]!,
+                                $cost_informations: [ArchitectureCostInformation_insert_input!]!)
+                                
+{
+    architecture: insert_Architecture(objects: 
+    [
+        {
+            problem_id: $problem_id,
+            dataset_id: $dataset_id,
+            user_id: $user_id,
+            input: $input,
+            science: $science,
+            cost: $cost,
+            ga: $ga,
+            eval_status: $eval_status,
+            improve_hv: $improve_hv,
+            critique: $critique,
+            ArchitectureScoreExplanations: {data: $arch_scores},
+            PanelScoreExplanations: {data: $panel_scores},
+            ObjectiveScoreExplanations: {data: $objective_scores},
+            SubobjectiveScoreExplanations: {data: $subobjective_scores},
+            ArchitectureCostInformations: {data: $cost_informations}
+        }
+    ]) 
+    {
+        affected_rows
+        returning {
+            id
+        }
     }
 }
 

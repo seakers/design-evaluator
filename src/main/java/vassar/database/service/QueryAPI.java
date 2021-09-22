@@ -421,6 +421,17 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items().id();
     }
 
+    public int insertArchitectureSlow(InsertArchitectureSlowMutation.Builder archBuilder){
+        archBuilder
+                .user_id(this.userId)
+                .problem_id(this.problemId)
+                .build();
+        ApolloCall<InsertArchitectureSlowMutation.Data>           apolloCall  = this.apollo.mutate(archBuilder);
+        Observable<Response<InsertArchitectureSlowMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+
+        return observable.blockingFirst().getData().items().id();
+    }
+
     public int insertArchitectureScoreExplanation(int archID, int panelID, double satisfaction){
         InsertArchitectureScoreExplanationMutation mutation = InsertArchitectureScoreExplanationMutation.builder()
                 .architecture_id(archID)

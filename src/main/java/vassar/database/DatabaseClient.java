@@ -178,6 +178,9 @@ public class DatabaseClient {
             return this.queryAPI.insertArchitecture(input, datasetId, science, cost, ga);
         }
     }
+    public int insertArchitectureSlow(InsertArchitectureSlowMutation.Builder archBuilder){
+        return this.queryAPI.insertArchitectureSlow(archBuilder);
+    }
     public void deleteArchitectureScoreExplanations(int archID){
         this.queryAPI.deleteArchitectureScoreExplanations(archID);
     }
