@@ -39,6 +39,7 @@ import vassar.result.Result;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -382,6 +383,13 @@ public class VassarClient {
 //  _| |_| | | | (_| |  __/>  <   / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
 // |_____|_| |_|\__,_|\___/_/\_\ /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
+    public class ScoreExplanations {
+        ArrayList<ArchitectureScoreExplanation_insert_input> archExplanations;
+        ArrayList<PanelScoreExplanation_insert_input>        panelExplanations;
+        ArrayList<ObjectiveScoreExplanation_insert_input>    objectiveExplanations;
+        ArrayList<SubobjectiveScoreExplanation_insert_input> subobjectiveExplanations;
+    }
+
 
 
     public void indexArchitecture(Result result, String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast){
@@ -390,22 +398,50 @@ public class VassarClient {
         double science = result.getScience();
 
         if (redo) {
+            int archID = this.engine.dbClient.updateArchitecture(bitString, datasetId, science, cost, ga);
+
+            // Remove previous explanations
             this.engine.dbClient.deleteArchitectureScoreExplanations(archID);
             this.engine.dbClient.deleteArchitectureCostInformation(archID);
-            // TODO: Update Arch builder
-            this.engine.dbClient.indexArchitecture(bitString, datasetId, science, cost, ga, redo);
+
+            // Add new explanations
+            if (!fast) {
+                ScoreExplanations explanations = this.fillArchitectureScoreExplanations(result, Optional.of(archID));
+                this.engine.dbClient.insertArchitectureScoreExplanationBatch(explanations.archExplanations);
+                this.engine.dbClient.insertPanelScoreExplanationBatch(explanations.panelExplanations);
+                this.engine.dbClient.insertObjectiveScoreExplanationBatch(explanations.objectiveExplanations);
+                this.engine.dbClient.insertSubobjectiveScoreExplanationBatch(explanations.subobjectiveExplanations);
+
+                ArrayList<ArchitectureCostInformation_insert_input> costInserts = this.fillArchitectureCostInformations(result, Optional.of(archID));
+                this.engine.dbClient.insertArchitectureCostInformationBatch(costInserts);
+
+                String critique = this.fillArchitectureCritique(result);
+                this.engine.dbClient.updateArchitectureCritique(archID, critique);
+            }
         }
         else {
             if (fast) {
-                // TODO: Build Fast Arch
-                this.engine.dbClient.indexArchitecture(bitString, datasetId, science, cost, ga, redo);
+                this.engine.dbClient.insertArchitectureFast(bitString, datasetId, science, cost, ga);
             }
             else {
                 InsertArchitectureSlowMutation.Builder archBuilder = InsertArchitectureSlowMutation.builder();
                 this.fillArchitectureInformation(archBuilder, datasetId, bitString, science, cost, ga);
-                this.fillArchitectureScoreExplanations(result, archBuilder);
-                this.fillArchitectureCostInformations(result, archBuilder);
-                this.indexArchitectureCritique(result, archID);
+                
+                ScoreExplanations explanations = this.fillArchitectureScoreExplanations(result);
+                archBuilder
+                    .arch_scores(explanations.archExplanations)
+                    .panel_scores(explanations.panelExplanations)
+                    .objective_scores(explanations.objectiveExplanations)
+                    .subobjective_scores(explanations.subobjectiveExplanations);
+                
+                ArrayList<ArchitectureCostInformation_insert_input> costInserts = this.fillArchitectureCostInformations(result);
+                archBuilder
+                    .cost_informations(costInserts);
+                
+                String critique = this.fillArchitectureCritique(result);
+                archBuilder
+                    .critique(critique);
+                
                 int archID = this.engine.dbClient.insertArchitectureSlow(archBuilder);
             }
         }
@@ -422,7 +458,11 @@ public class VassarClient {
             .improve_hv(false);
     }
 
-    private void fillArchitectureScoreExplanations(Result result, InsertArchitectureSlowMutation.Builder archBuilder){
+    private ScoreExplanations fillArchitectureScoreExplanations(Result result) {
+        return this.fillArchitectureScoreExplanations(result, Optional.empty());
+    }
+
+    private ScoreExplanations fillArchitectureScoreExplanations(Result result, Optional<Integer> archID){
         System.out.println("---> indexing architecture score explanations");
         ArrayList<ArchitectureScoreExplanation_insert_input> archExplanations         = new ArrayList<>();
         ArrayList<PanelScoreExplanation_insert_input>        panelExplanations        = new ArrayList<>();
@@ -432,49 +472,55 @@ public class VassarClient {
         for (int panel_idx = 0; panel_idx < this.engine.problem.panelNames.size(); ++panel_idx) {
 
             // getArchitectureScoreExplanation
+            ArchitectureScoreExplanation_insert_input.Builder archExp = ArchitectureScoreExplanation_insert_input.builder();
+            if (archID.isPresent()) { archExp.architecture_id(archID.get()); }
             archExplanations.add(
-                    ArchitectureScoreExplanation_insert_input.builder()
-                            .architecture_id(archID)
-                            .panel_id(this.engine.dbClient.getPanelID(this.engine.problem.panelNames.get(panel_idx)))
-                            .satisfaction(result.getPanelScores().get(panel_idx))
-                            .build()
+                archExp
+                    .panel_id(this.engine.dbClient.getPanelID(this.engine.problem.panelNames.get(panel_idx)))
+                    .satisfaction(result.getPanelScores().get(panel_idx))
+                    .build()
             );
 
             for (int obj_idx = 0; obj_idx < this.engine.problem.objNames.get(panel_idx).size(); ++obj_idx) {
 
                 // getPanelScoreExplanation
+                PanelScoreExplanation_insert_input.Builder panelExp = PanelScoreExplanation_insert_input.builder();
+                if (archID.isPresent()) { panelExp.architecture_id(archID.get()); }
                 panelExplanations.add(
-                        PanelScoreExplanation_insert_input.builder()
-                                .architecture_id(archID)
-                                .objective_id(this.engine.dbClient.getObjectiveID(this.engine.problem.objNames.get(panel_idx).get(obj_idx)))
-                                .satisfaction(result.getObjectiveScores().get(panel_idx).get(obj_idx))
-                                .build()
+                    panelExp
+                        .objective_id(this.engine.dbClient.getObjectiveID(this.engine.problem.objNames.get(panel_idx).get(obj_idx)))
+                        .satisfaction(result.getObjectiveScores().get(panel_idx).get(obj_idx))
+                        .build()
                 );
 
 
                 for (int subobj_idx = 0; subobj_idx < this.engine.problem.subobjectives.get(panel_idx).get(obj_idx).size(); ++subobj_idx) {
                     String subobjectiveName = this.engine.problem.subobjectives.get(panel_idx).get(obj_idx).get(subobj_idx);
                     // getObjectiveScoreExplanation
+                    ObjectiveScoreExplanation_insert_input.Builder objExp = ObjectiveScoreExplanation_insert_input.builder();
+                    if (archID.isPresent()) { objExp.architecture_id(archID.get()); }
                     objectiveExplanations.add(
-                            ObjectiveScoreExplanation_insert_input.builder()
-                                    .architecture_id(archID)
-                                    .subobjective_id(this.engine.dbClient.getSubobjectiveID(subobjectiveName))
-                                    .satisfaction(result.getSubobjectiveScores().get(panel_idx).get(obj_idx).get(subobj_idx))
-                                    .build()
+                        objExp
+                            .subobjective_id(this.engine.dbClient.getSubobjectiveID(subobjectiveName))
+                            .satisfaction(result.getSubobjectiveScores().get(panel_idx).get(obj_idx).get(subobj_idx))
+                            .build()
                     );
 
-                    subobjectiveExplanations.addAll(getSubobjectiveExplanations(result, archID, subobjectiveName));
+                    subobjectiveExplanations.addAll(getSubobjectiveExplanations(result, subobjectiveName, archID));
                 }
             }
         }
 
-        this.engine.dbClient.insertArchitectureScoreExplanationBatch(archExplanations);
-        this.engine.dbClient.insertPanelScoreExplanationBatch(panelExplanations);
-        this.engine.dbClient.insertObjectiveScoreExplanationBatch(objectiveExplanations);
-        this.engine.dbClient.insertSubobjectiveScoreExplanationBatch(subobjectiveExplanations);
+        ScoreExplanations explanations = new ScoreExplanations();  
+        explanations.archExplanations = archExplanations;
+        explanations.panelExplanations = panelExplanations;
+        explanations.objectiveExplanations = objectiveExplanations;
+        explanations.subobjectiveExplanations = subobjectiveExplanations;
+
+        return explanations;
     }
 
-    private List<SubobjectiveScoreExplanation_insert_input> getSubobjectiveExplanations(Result result, int archID, String subobj) {
+    private List<SubobjectiveScoreExplanation_insert_input> getSubobjectiveExplanations(Result result, String subobj, Optional<Integer> archID) {
         String measurement = this.engine.problem.subobjectivesToMeasurements.get(subobj);
 
         // Obtain list of attributes for this measurement
@@ -546,8 +592,9 @@ public class VassarClient {
                 justificationsJson.addAll(rowJustifications);
 
                 // Put everything in their respective object
-                SubobjectiveScoreExplanation_insert_input scoreExplanation = SubobjectiveScoreExplanation_insert_input.builder()
-                    .architecture_id(archID)
+                SubobjectiveScoreExplanation_insert_input.Builder subobjExp = SubobjectiveScoreExplanation_insert_input.builder();
+                if (archID.isPresent()) { subobjExp.architecture_id(archID.get()); }
+                SubobjectiveScoreExplanation_insert_input scoreExplanation = subobjExp
                     .subobjective_id(subobjectiveId)
                     .measurement_attribute_values(attributesJson)
                     .score(score)
@@ -564,7 +611,11 @@ public class VassarClient {
         return subobjectiveExplanations;
     }
 
-    private void fillArchitectureCostInformations(Result result, InsertArchitectureSlowMutation.Builder archBuilder) {
+    private ArrayList<ArchitectureCostInformation_insert_input> fillArchitectureCostInformations(Result result) { 
+        return this.fillArchitectureCostInformations(result, Optional.empty());
+    }
+
+    private ArrayList<ArchitectureCostInformation_insert_input> fillArchitectureCostInformations(Result result, Optional<Integer> archID) {
         //System.out.println("---> Indexing architecture cost information");
         ArrayList<String> attributes = new ArrayList<>();
         String[] powerBudgetSlots    = { "payload-peak-power#", "satellite-BOL-power#" };
@@ -624,7 +675,9 @@ public class VassarClient {
                 }
 
                 // --> 1. Index ArchitectureCostInformation - get arch_cost_id
-                ArchitectureCostInformation_insert_input.Builder costInsertBuilder = ArchitectureCostInformation_insert_input.builder()
+                ArchitectureCostInformation_insert_input.Builder costInsertBuilder = ArchitectureCostInformation_insert_input.builder();
+                if (archID.isPresent()) { costInsertBuilder.architecture_id(archID.get()); }
+                costInsertBuilder
                     .mission_name(mission_name)
                     .launch_vehicle(launch_vehicle)
                     .mass(mass)
@@ -662,7 +715,6 @@ public class VassarClient {
                     );
                 }
                 ArchitectureBudget_arr_rel_insert_input budgets_input = ArchitectureBudget_arr_rel_insert_input.builder().data(budget_inserts).build();
-                //this.engine.dbClient.insertArchitectureBudgetBatch(budget_inserts);
 
                 // --> 3. Index ArchitecturePayload with arch_cost_id
                 ArrayList<ArchitecturePayload_insert_input> payload_inserts = new ArrayList<>();
@@ -680,18 +732,15 @@ public class VassarClient {
                     .architecturePayloads(payloads_input);
 
                 costInserts.add(costInsertBuilder.build());
-
-                //this.engine.dbClient.insertArchitecturePayloadBatch(payload_inserts);
-
             }
             catch (JessException e) {
                 System.err.println(e.toString());
             }
         }
-        archBuilder.cost_informations(costInserts);
+        return costInserts;
     }
 
-    private void indexArchitectureCritique(Result result, int archID){
+    private String fillArchitectureCritique(Result result){
         System.out.println("---> Indexing architecture critique");
         Vector<String> performanceCritique = result.getPerformanceCritique();
         Vector<String> costCritique = result.getCostCritique();
@@ -703,7 +752,7 @@ public class VassarClient {
             critique = critique + crit + " | ";
         }
         System.out.println(critique);
-        this.engine.dbClient.updateArchitectureCritique(archID, critique);
+        return critique;
     }
 
 

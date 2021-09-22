@@ -170,20 +170,22 @@ public class DatabaseClient {
 
 
     // ---> Index Architecture
-    public int indexArchitecture(String input, Integer datasetId, double science, double cost, boolean ga, boolean redo){
-        if(redo){
-            return this.queryAPI.updateArchitecture(input, datasetId, science, cost, ga);
-        }
-        else{
-            return this.queryAPI.insertArchitecture(input, datasetId, science, cost, ga);
-        }
+    public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
+        return this.queryAPI.updateArchitecture(input, datasetId, science, cost, ga);
     }
+
+    public int insertArchitectureFast(String input, Integer datasetId, double science, double cost, boolean ga){
+        return this.queryAPI.insertArchitecture(input, datasetId, science, cost, ga);
+    }
+
     public int insertArchitectureSlow(InsertArchitectureSlowMutation.Builder archBuilder){
         return this.queryAPI.insertArchitectureSlow(archBuilder);
     }
+
     public void deleteArchitectureScoreExplanations(int archID){
         this.queryAPI.deleteArchitectureScoreExplanations(archID);
     }
+
     public void deleteArchitectureCostInformation(int archID){
         List<ArchitectureCostInformationQuery.Item> items = this.queryAPI.queryArchitectureCostInformation(archID);
         for(ArchitectureCostInformationQuery.Item item: items){
@@ -240,6 +242,9 @@ public class DatabaseClient {
     }
     public int insertArchitectureCostInformation(int architecture_id, String mission_name, String launch_vehicle, double mass, double power, double cost, double others){
         return this.queryAPI.insertArchitectureCostInformation(architecture_id, mission_name, launch_vehicle, mass, power, cost, others);
+    }
+    public void insertArchitectureCostInformationBatch(ArrayList<ArchitectureCostInformation_insert_input> items){
+        this.queryAPI.insertArchitectureCostInformationBatch(items);
     }
     public void insertArchitecturePayloadBatch(ArrayList<ArchitecturePayload_insert_input> items){
         this.queryAPI.insertArchitecturePayloadBatch(items);

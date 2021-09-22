@@ -404,7 +404,7 @@ public class QueryAPI {
     }
 
     public int insertArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
-        InsertArchitectureMutation archMutation = InsertArchitectureMutation.builder()
+        InsertArchitectureFastMutation archMutation = InsertArchitectureFastMutation.builder()
                 .user_id(this.userId)
                 .problem_id(this.problemId)
                 .dataset_id(datasetId)
@@ -415,21 +415,21 @@ public class QueryAPI {
                 .ga(ga)
                 .improve_hv(false)
                 .build();
-        ApolloCall<InsertArchitectureMutation.Data>           apolloCall  = this.apollo.mutate(archMutation);
-        Observable<Response<InsertArchitectureMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        ApolloCall<InsertArchitectureFastMutation.Data>           apolloCall  = this.apollo.mutate(archMutation);
+        Observable<Response<InsertArchitectureFastMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
 
-        return observable.blockingFirst().getData().items().id();
+        return observable.blockingFirst().getData().architecture().id();
     }
 
     public int insertArchitectureSlow(InsertArchitectureSlowMutation.Builder archBuilder){
-        archBuilder
+        InsertArchitectureSlowMutation archMutation = archBuilder
                 .user_id(this.userId)
                 .problem_id(this.problemId)
                 .build();
-        ApolloCall<InsertArchitectureSlowMutation.Data>           apolloCall  = this.apollo.mutate(archBuilder);
+        ApolloCall<InsertArchitectureSlowMutation.Data>           apolloCall  = this.apollo.mutate(archMutation);
         Observable<Response<InsertArchitectureSlowMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
 
-        return observable.blockingFirst().getData().items().id();
+        return observable.blockingFirst().getData().architecture().returning().get(0).id();
     }
 
     public int insertArchitectureScoreExplanation(int archID, int panelID, double satisfaction){
@@ -530,6 +530,15 @@ public class QueryAPI {
         ApolloCall<InsertArchitectureCostInformationMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
         Observable<Response<InsertArchitectureCostInformationMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
         return observable.blockingFirst().getData().items().id();
+    }
+
+    public int insertArchitectureCostInformationBatch(ArrayList<ArchitectureCostInformation_insert_input> items){
+        InsertArchitectureCostInformationBatchMutation mutation = InsertArchitectureCostInformationBatchMutation.builder()
+                .objects(items)
+                .build();
+        ApolloCall<InsertArchitectureCostInformationBatchMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<InsertArchitectureCostInformationBatchMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items().affected_rows();
     }
 
     public int insertArchitecturePayloadBatch(ArrayList<ArchitecturePayload_insert_input> items){
