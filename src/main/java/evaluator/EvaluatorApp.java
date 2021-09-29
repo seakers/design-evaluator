@@ -51,7 +51,7 @@ public class EvaluatorApp {
         GlobalScope.subobjectivesToMeasurements = new HashMap<>();
 
         String outputFilePath     = ResourcePaths.rootDirectory + "/debug/dbOutput.json";
-        String outputPath         = ResourcePaths.rootDirectory + "/debug";
+        String outputPath         = ResourcePaths.rootDirectory + "/debug/build";
 
         String region             = System.getenv("REGION");
         String requestQueueUrl    = System.getenv("VASSAR_REQUEST_URL");
