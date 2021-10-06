@@ -29,6 +29,7 @@ public class ShutDown extends Thread{
 
         DeleteQueueRequest  request  = DeleteQueueRequest.builder().queueUrl(this.private_queue_url).build();
         DeleteQueueResponse response = this.sqs.deleteQueue(request);
+        this.sqs.close();
     }
 
 }

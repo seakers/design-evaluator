@@ -171,6 +171,7 @@ public class EvaluatorApp {
                 ecsClient.close();
             }
             OrekitConfig.end();
+            System.exit(0);
         }
     }
 
