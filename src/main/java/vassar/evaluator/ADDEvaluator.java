@@ -1093,39 +1093,6 @@ public class ADDEvaluator implements Callable<Result> {
         }
         // EvaluatorApp.sleep(10);
 
-
-
-//        ArrayList<String> measurements = new ArrayList<>();
-//
-//        try{
-//            String insts_string = mission.getSlotValue("instruments").listValue(this.engine.getGlobalContext()).toString();
-//            String[] insts = insts_string.split("\\s+");
-//
-//            ArrayList<String> instruments = new ArrayList<>();
-//            for(String inst: insts){
-//                instruments.add(inst.trim());
-//            }
-//            instruments.remove("");
-//
-//
-//            for(String inst: instruments){
-//
-//                // This won't work, because not all instrument measurements will always be able to be taken
-//                ArrayList<String> inst_measurements = this.resource.dbClient.getInstrumentMeasurements(inst, false); // TRIM FOR SMAP
-//                for(String meas: inst_measurements){
-//
-//                    // This is wrong because if a missions takes 2 of the same measurement, the data continuity score should reflect both measurements !!!
-//                    if(!measurements.contains(meas)){
-//                        measurements.add(meas);
-//                    }
-//                }
-//            }
-//
-//        }
-//        catch (JessException e){
-//            e.printStackTrace();
-//        }
-
         return measurement_map;
     }
 

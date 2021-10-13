@@ -23,6 +23,7 @@ public class Result implements Serializable {
     private double cost;
     private double dataContinuity;
     private double fairnessScore;
+    private double programmaticRisk;
     private ArrayList<ArrayList<ArrayList<Double>>> subobjectiveScores;
     private ArrayList<ArrayList<Double>> objectiveScores;
     private ArrayList<Double> panelScores;
@@ -115,7 +116,12 @@ public class Result implements Serializable {
     }
 
 
-
+    public void setProgrammaticRisk(double programmaticRisk){
+        this.programmaticRisk = programmaticRisk;
+    }
+    public double getProgrammaticRisk(){
+        return this.programmaticRisk;
+    }
 
     public void setSubobjectiveInfo(JsonObject subobjectiveInfo){
         this.subobjectiveInfo = subobjectiveInfo;

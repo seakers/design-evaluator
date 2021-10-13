@@ -26,6 +26,7 @@ import vassar.evaluator.spacecraft.Orbit;
 
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,6 +43,8 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
     protected Set<Orbit> orbitsUsed;
     protected Resource res;
 
+    private ArrayList<Fact> arch_measurements;
+
     public AbstractArchitectureEvaluator() {
         this.res = null;
         this.arch = null;
@@ -56,6 +59,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         this.type = type;
         this.debug = false;
         this.orbitsUsed = new HashSet<>();
+        this.arch_measurements = new ArrayList<>();
     }
 
     public abstract AbstractArchitectureEvaluator getNewInstance();
@@ -91,7 +95,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 result = evaluatePerformance(params, r, arch, qb);
 
                 // TODO: critique design on performance
-                result.setPerformanceCritique(this.critiquePerformance(r, result));
+                result.setPerformanceCritique(this.critiquePerformance(r, result, qb));
 
                 r.eval("(reset)");
                 assertMissions(params, r, arch);
@@ -100,6 +104,8 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 throw new Exception("Wrong type of task");
             }
             evaluateCost(params, r, arch, result, qb);
+
+            this.evaluate_data_continuity(result, qb, r);
 
             // TODO: critique design on cost
             result.setCostCritique(this.critiqueCost(r, result));
@@ -114,20 +120,208 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         return result;
     }
 
+    public void evaluate_data_continuity(Result result, QueryBuilder qb, Rete r){
+        qb.saveQuery("data-continuity/1-INITIAL-MEASUREMENTS", "REQUIREMENTS::Measurement");
+
+        // SCORE
+        int score = 0;
+        int overlap_counter = 0;
+
+        // HARDCODE
+        int    t_zero           = 2000; // 2010 for SMAP, 2000 for DECADAL
+        double yearly_budget    = 200;  // In Millions
+        int    mission_duration = 5; // 5 year default mission duration
+
+        ArrayList<Fact> missions  = qb.missionFactQuery("beforeScheduling");
+
+        // 2. Get historical missions
+        ArrayList<HashMap<String, ArrayList<Date>>> historical_missions = this.res.dbClient.getDataContinuityInformation();
+
+        int counter = 0;
+
+        for(Fact mission_fact: missions){
+            try{
+                // 1. Get measurements associated with mission: measurements
+                HashMap<String, Integer> measurements = this.get_mission_fact_measurements(mission_fact, r);
+                measurements = this.transform_measurement_names(measurements);
+
+                // 2. Calculate mission start / end with via cost
+                double lifecycle_cost   = Double.parseDouble(mission_fact.getSlotValue("lifecycle-cost#").stringValue(r.getGlobalContext()));         // millions
+                double operations_cost  = Double.parseDouble(mission_fact.getSlotValue("operations-cost#").stringValue(r.getGlobalContext())) / 1000; // millions
+                double development_cost = lifecycle_cost - operations_cost;
+
+                double mission_cost = Double.parseDouble(mission_fact.getSlotValue("mission-cost#").stringValue(r.getGlobalContext()));
+
+                t_zero += Math.ceil(development_cost / yearly_budget);
+//                System.out.println("---> TIME INBETWEEN MISSIONS: " + Math.ceil(development_cost / yearly_budget));
+//                System.out.println("---> PARAMETERS: " + t_zero + " " + lifecycle_cost + " " + operations_cost);
+                // EvaluatorApp.sleep(3);
+                int    start_year   = t_zero;
+                int    end_year     = start_year + mission_duration; // Each mission flies for 5 years
+
+                // 3. Iterate over mission measurements
+                // EvaluatorApp.sleep(6);
+                for(String mission_meas: measurements.keySet()){
+                    int meas_multiplier = measurements.get(mission_meas);
+                    meas_multiplier = 1;
+
+                    // 4. Iterate over historical missions
+                    for(HashMap<String, ArrayList<Date>> historical_mission: historical_missions){
+
+                        // 5. Iterate over historical mission measurements
+                        for(String measurement: historical_mission.keySet()){
+
+                            ArrayList<Date> measurement_timeline = historical_mission.get(measurement);
+                            Calendar calendar = new GregorianCalendar();
+
+                            // Measurement Start Year
+                            Date measurement_start   = measurement_timeline.get(0);
+                            calendar.setTime(measurement_start);
+                            int measurement_start_yr = calendar.get(Calendar.YEAR);
+
+                            // Measurement End Year
+                            Date measurement_end   = measurement_timeline.get(1);
+                            calendar.setTime(measurement_end);
+                            int measurement_end_yr = calendar.get(Calendar.YEAR);
+
+                            // Transformed Name
+                            String trans_name = this.transform_historical_measurement_name(measurement);
+
+                            // if(trans_name.equalsIgnoreCase(mission_meas)){
+//                            if(trans_name.toLowerCase().contains(mission_meas.toLowerCase())){
+                            if(ADDEvaluator.compareMeasurementNames(trans_name, mission_meas)){
+                                overlap_counter++;
+                                if(end_year < measurement_start_yr || start_year > measurement_end_yr){
+                                    score = score;
+                                }
+                                else if(start_year > measurement_start_yr && end_year < measurement_end_yr){
+                                    score = score + ((end_year - start_year) * meas_multiplier);
+                                }
+                                else if(start_year > measurement_start_yr && end_year > measurement_end_yr){
+                                    score = score + ((measurement_end_yr - start_year) * meas_multiplier);
+                                }
+                                else if(start_year < measurement_start_yr && end_year < measurement_end_yr){
+                                    score = score + ((end_year - measurement_start_yr) * meas_multiplier);
+                                }
+                                else{
+                                    score = score;
+                                }
+                            }
+                        }
+                    }
+                }
 
 
-    public Vector<String> critiquePerformance(Rete r, Result res){
+
+            }
+            catch(JessException e){
+                e.printStackTrace();
+            }
+            counter++;
+        }
+        System.out.println("--> DATA SCORES: " + score + " | " + overlap_counter);
+        result.setDataContinuityScore(score);
+    }
+
+    private String transform_historical_measurement_name(String measurement){
+        if(measurement.equals("Sea-ice cover")) {
+            return "Sea ice cover";
+        }
+        else if(measurement.equals("Soil moisture at the surface")) {
+            return "Soil moisture";
+        }
+        else if(measurement.equals("Wind vector over sea surface (horizontal)") || measurement.equals("Wind speed over sea surface (horizontal)")) {
+            return "Ocean surface wind speed";
+        }
+        // Decadal 2007 Transformations
+        else if(measurement.equals("Aerosol optical depth (column/profile)")) {
+            return "aerosol height/optical depth";
+        }
+        else if(measurement.equals("Aerosol absorption optical depth (column/profile)")) {
+            return "aerosol absorption optical thickness and profiles";
+        }
+        else if(measurement.equals("Ocean imagery and water leaving spectral radiance")) {
+            return "Spectrally resolved SW radiance";
+        }
+        return measurement;
+    }
+
+    private HashMap<String, Integer> transform_measurement_names(HashMap<String, Integer> measurements_orig){
+        ConcurrentHashMap<String, Integer> measurements = new ConcurrentHashMap<>(measurements_orig);
+
+        System.out.println("---> MEASUREMENT NAMES " + measurements);
+        HashMap<String, String> transform = new HashMap<>();
+        transform.put("1.6.2 cloud ice particle size distribution", "Cloud ice (column/profile)");
+        transform.put("1.7.2 Cloud droplet size", "Cloud drop effective radius");
+        transform.put("1.1.4 aerosol extinction profiles/vertical concentration", "Aerosol Extinction / Backscatter (column/profile)");
+        transform.put("1.8.5 CO", "CO2 Mole Fraction");
+        transform.put("1.8.4 CH4", "CH4 Mole Fraction");
+        transform.put("1.2.1 Atmospheric temperature fields", "Atmospheric temperature (column/profile)");
+        transform.put("1.5.4 cloud mask", "Cloud mask");
+
+        for(String meas: measurements.keySet()){
+            if(transform.containsKey(meas)){
+                Integer num = measurements.remove(meas);
+                measurements.put(transform.get(meas), num);
+            }
+        }
+
+        // System.out.println("---> MEASUREMENT FIXED " + measurements);
+        return (new HashMap<>(measurements));
+    }
+
+
+    private HashMap<String, Integer> get_mission_fact_measurements(Fact mission, Rete r){
+
+        // Maps measurement name to the number of occurrences for this missions
+        HashMap<String, Integer> measurement_map = new HashMap<>();
+
+        try{
+            // 1. Get all measurement facts for the specific mission
+            String mission_name = mission.getSlotValue("Name").stringValue(r.getGlobalContext());
+            for(Fact measurement_fact: this.arch_measurements){
+                String meas_mission = measurement_fact.getSlotValue("flies-in").stringValue(r.getGlobalContext());
+                String measurement_name = measurement_fact.getSlotValue("Parameter").stringValue(r.getGlobalContext());
+
+                if(mission_name.equals(meas_mission)){
+                    if(!measurement_map.containsKey(measurement_name)){
+                        measurement_map.put(measurement_name, 0);
+                    }
+                    Integer occurances = measurement_map.get(measurement_name) + 1;
+                    measurement_map.put(measurement_name, occurances);
+                }
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+        for(String meas: measurement_map.keySet()){
+            System.out.println("--> " + meas + ": " + measurement_map.get(meas));
+        }
+        // EvaluatorApp.sleep(10);
+
+        return measurement_map;
+    }
+
+
+
+    public Vector<String> critiquePerformance(Rete r, Result res, QueryBuilder qb){
         System.out.println("--> Critiquing Performance");
         Vector<String> critique = new Vector<>();
-
+        // AGGREGATION::STAKEHOLDER
         // 1. Load initial performance critique facts
         try {
             r.eval("(bind ?*p* (new java.util.Vector))");
             r.batch(ResourcePaths.resourcesRootDir + "/vassar/problems/SMAP/clp/critique/critique_performance_initialize_facts.clp");
+            qb.saveQuery("performance/fairness", "CRITIQUE-PERFORMANCE-PARAM::fairness");
+            qb.saveQuery("performance/stakeholder", "AGGREGATION::STAKEHOLDER");
             r.setFocus("CRITIQUE-PERFORMANCE-PRECALCULATION");
             r.run();
+            qb.saveQuery("performance/fairness2", "CRITIQUE-PERFORMANCE-PARAM::fairness");
             r.setFocus("CRITIQUE-PERFORMANCE");
             r.run();
+            res.setFairnessScore(qb.getFairnessScore());
             critique = RawSafety.castVector(r.getGlobalContext().getVariable("*p*").javaObjectValue(null));
             for(String crit: critique){
                 System.out.println(crit);
@@ -183,23 +377,56 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             //r.eval("(facts)");
 
 
-            qb.missionFactQuery("missionFactsNonADD");
+            // ----------- MANIFEST0 -----------
+            qb.saveQuery("performance/1_MANIFEST0/input/MANIFEST::Mission", "MANIFEST::Mission");
 
             r.setFocus("MANIFEST0");
             r.run();
-            qb.saveQuery("manifestedInstrument", "CAPABILITIES::Manifested-instrument");
+
+            qb.saveQuery("performance/1_MANIFEST0/output/SYNERGIES::cross-registered-instruments", "SYNERGIES::cross-registered-instruments");
+            qb.saveQuery("performance/1_MANIFEST0/output/CAPABILITIES::Manifested-instrument", "CAPABILITIES::Manifested-instrument");
+            // ---------------------------------
+
+
+
+            // ----------- MANIFEST -----------
+            qb.saveQuery("performance/2_MANIFEST/input/MANIFEST::Mission", "MANIFEST::Mission");
+            qb.saveQuery("performance/2_MANIFEST/input/CAPABILITIES::Manifested-instrument", "CAPABILITIES::Manifested-instrument");
+            qb.saveQuery("performance/2_MANIFEST/input/REQUIREMENTS::Measurement", "REQUIREMENTS::Measurement");
+            qb.saveQuery("performance/2_MANIFEST/input/DATABASE::Revisit-time-of", "DATABASE::Revisit-time-of");
+            qb.saveQuery("performance/2_MANIFEST/input/DATABASE::Instrumen", "DATABASE::Instrumen");
 
             r.setFocus("MANIFEST");
             r.run();
 
+            qb.saveQuery("performance/2_MANIFEST/output/MANIFEST::Mission", "MANIFEST::Mission");
+            qb.saveQuery("performance/2_MANIFEST/output/CAPABILITIES::Manifested-instrument", "CAPABILITIES::Manifested-instrument");
+            qb.saveQuery("performance/2_MANIFEST/output/REQUIREMENTS::Measurement", "REQUIREMENTS::Measurement");
+            qb.saveQuery("performance/2_MANIFEST/output/CAPABILITIES::can-measure", "CAPABILITIES::can-measure");
+            // ---------------------------------
+
+
+
+            // ----------- CAPABILITIES -----------
+            qb.saveQuery("performance/3_CAPABILITIES/input/", "");
+
             r.setFocus("CAPABILITIES");
             r.run();
+
+            qb.saveQuery("performance/3_CAPABILITIES/output/", "");
+            // ------------------------------------
+
+
+
 
             r.setFocus("CAPABILITIES-REMOVE-OVERLAPS");
             r.run();
 
             r.setFocus("CAPABILITIES-GENERATE");
             r.run();
+//            qb.saveQuery("performance/6-GENERATE-REQUIREMENTS", "REQUIREMENTS::Measurement");
+//            qb.saveQuery("performance/6-GENERATE-SYNERGIES", "SYNERGIES::cross-registered");
+//            qb.saveQuery("performance/6-GENERATE-CAPABILITY-LIMITATIONS", "CAPABILITIES::resource-limitations");
 
             r.setFocus("CAPABILITIES-CROSS-REGISTER");
             r.run();
@@ -286,7 +513,8 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                     }
 
                     // list of strings containing the fov values for this measurement
-                    //System.out.println("The fovs: " + thefovs);
+//                    System.out.println("The fovs: " + thefovs);
+//                    System.out.println("--> ORBITS USED: " + this.orbitsUsed);
                     //System.out.println("fovs: " + fovs);
 
 
@@ -318,6 +546,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                         // For each fieldOfview-orbit combination
                         for(Orbit orb: this.orbitsUsed){
                             int fov = thefovs.get(params.getOrbitIndexes().get(orb.toString())).intValue(r.getGlobalContext());
+                            // System.out.println("--> (ORBIT, FOV) (" + orb.toString() + ", " + fov + ")");
 
                             if(fov <= 0){
                                 continue;
@@ -384,19 +613,21 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
             r.setFocus("ASSIMILATION2");
             r.run();
+//            qb.saveQuery("performance/9-MEASUREMENT-REVISIT-TIME", "REQUIREMENTS::Measurement");
 
             r.setFocus("ASSIMILATION");
             r.run();
 
             r.setFocus("FUZZY");
             r.run();
+//            qb.saveQuery("performance/10-MEASUREMENT-AFTER-FUZZY", "REQUIREMENTS::Measurement");
 
             r.setFocus("SYNERGIES");
             r.run();
 
             r.setFocus("SYNERGIES-ACROSS-ORBITS");
             r.run();
-
+//            qb.saveQuery("requirements/requirement_facts", "REQUIREMENTS::Measurement");
 
 
 
@@ -405,23 +636,34 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 r.setFocus("FUZZY-REQUIREMENTS");
             }
             else {
+                qb.saveQuery("performance/14_REQUIREMENTS/input/REQUIREMENTS::Measurement", "REQUIREMENTS::Measurement");
                 r.setFocus("REQUIREMENTS");
+                qb.saveQuery("performance/14_REQUIREMENTS/output/AGGREGATION::SUBOBJECTIVE", "AGGREGATION::SUBOBJECTIVE");
             }
             r.run();
 
             // VIIRS: all subobjective satisfaction values are 0
-            qb.saveQuery("aggregationFacts", "AGGREGATION::SUBOBJECTIVE");
+//            qb.saveQuery("aggregationFacts", "AGGREGATION::SUBOBJECTIVE");
             if ((params.getRequestMode().equalsIgnoreCase("FUZZY-CASES")) || (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES"))) {
                 r.setFocus("FUZZY-AGGREGATION");
             }
             else {
+                qb.saveQuery("performance/15_AGGREGATION/input/AGGREGATION::SUBOBJECTIVE", "AGGREGATION::SUBOBJECTIVE");
                 r.setFocus("AGGREGATION");
+                qb.saveQuery("performance/15_AGGREGATION/output/AGGREGATION::SUBOBJECTIVE", "AGGREGATION::SUBOBJECTIVE");
+                qb.saveQuery("performance/15_AGGREGATION/output/AGGREGATION::OBJECTIVE", "AGGREGATION::OBJECTIVE");
+                qb.saveQuery("performance/15_AGGREGATION/output/AGGREGATION::STAKEHOLDER", "AGGREGATION::STAKEHOLDER");
             }
             r.run();
+
+            this.arch_measurements = qb.makeQuery("REQUIREMENTS::Measurement");
+//            qb.saveQuery("performance/11-MEASUREMENT-FINAL", "REQUIREMENTS::Measurement");
 
             if ((params.getRequestMode().equalsIgnoreCase("CRISP-ATTRIBUTES")) || (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES"))) {
                 result = aggregate_performance_score_facts(params, r, qb);
             }
+
+//            qb.saveQuery("performance/END-PERFORMANCE", "MANIFEST::Mission");
 
             //////////////////////////////////////////////////////////////
 
@@ -466,7 +708,11 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         FuzzyValue fuzzy_science = null;
         FuzzyValue fuzzy_cost = null;
         TreeMap<String, ArrayList<Fact>> explanations = new TreeMap<>();
+
+        // Used to compose scores from SUBOBJECTIVE up to STAKEHOLDER
         TreeMap<String, Double> subobj_scores_map = new TreeMap<>();
+
+        qb.saveQuery("performance/16_POST-AGGREGATION/input/AGGREGATION::VALUE", "AGGREGATION::VALUE");
         try {
             // General and panel scores
             ArrayList<Fact> vals = qb.makeQuery("AGGREGATION::VALUE");
@@ -544,6 +790,10 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         Result theresult = new Result(arch, science, cost, fuzzy_science, fuzzy_cost, subobj_scores, obj_scores,
                 panel_scores, subobj_scores_map);
 
+        double programmatic_risk = this.findProgrammaticRisk(qb, r);
+        System.out.println("--> PROGRAMMATIC RISK: " + programmatic_risk);
+        theresult.setProgrammaticRisk(programmatic_risk);
+
         // Get explanations on subobjective fulfillment
         theresult.setCapabilities(qb.makeQuery("REQUIREMENTS::Measurement"));
         theresult.setExplanations(explanations);
@@ -558,6 +808,56 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
         return theresult;
     }
+
+    public double findProgrammaticRisk(QueryBuilder qb, Rete r){
+
+        ArrayList<Fact> missions = qb.makeQuery("MANIFEST::Mission");
+        ArrayList<String> all_instruments = new ArrayList<>();
+
+        ArrayList<Double> mission_trls = new ArrayList<>();
+
+
+        for(Fact mission_fact: missions){
+            double sum_trl = 0;
+            double min_trl = 100;
+            try{
+                String slot_value = mission_fact.getSlotValue("instruments").listValue(r.getGlobalContext()).toString();
+                String instruments[] = slot_value.split("\\s+");
+                for(String instrument: instruments){
+                    all_instruments.add(instrument);
+                    double trl = qb.getInstrumentTRL(instrument);
+                    sum_trl += trl;
+                    if(trl < min_trl){
+                        min_trl = trl;
+                    }
+                }
+                double avg_mission_trl = sum_trl / instruments.length;
+                mission_trls.add(avg_mission_trl - min_trl);
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        // Find packaging programmatic risk
+        double sum = 0;
+        for(Double trl: mission_trls){
+            sum += trl;
+        }
+        double packaging_progammatic_risk = sum / mission_trls.size();
+
+        // Find selecting programmatic risk
+        double selecting_programmatic_risk = 0;
+        for(String instrument: all_instruments){
+            double inst_trl = qb.getInstrumentTRL(instrument);
+            if(inst_trl < 5){
+                selecting_programmatic_risk ++;
+            }
+        }
+
+        return selecting_programmatic_risk + packaging_progammatic_risk;
+    }
+
 
     protected void evaluateCost(Problem params, Rete r, AbstractArchitecture arch, Result res, QueryBuilder qb) {
 

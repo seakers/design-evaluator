@@ -170,8 +170,8 @@ public class DatabaseClient {
 
 
     // ---> Index Architecture
-    public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
-        return this.queryAPI.updateArchitecture(input, datasetId, science, cost, ga);
+    public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga, double programmatic_risk, double fairness, double data_continuity){
+        return this.queryAPI.updateArchitecture(input, datasetId, science, cost, ga, programmatic_risk, fairness, data_continuity);
     }
 
     public int insertArchitectureFast(String input, Integer datasetId, double science, double cost, boolean ga){
@@ -333,6 +333,32 @@ public class DatabaseClient {
 
     public void setUserID(int id){
         this.queryAPI.userId = id;
+    }
+
+    public void resubscribe(){
+        // 1. Cancel all subscriptions
+        for(ApolloSubscriptionCall sub: this.subscriptions){
+            sub.cancel();
+        }
+
+        // 2. Create new subscriptions
+        ArrayList<ApolloSubscriptionCall> new_subs = new ArrayList<>();
+        new_subs.add(
+                this.queryAPI.subscribeToInstruments()
+        );
+        new_subs.add(
+                this.queryAPI.subscribeToOrbits()
+        );
+        new_subs.add(
+                this.queryAPI.subscribeToStakeholders()
+        );
+        new_subs.add(
+                this.queryAPI.subscribeToInstrumentCharacteristics()
+        );
+        new_subs.add(
+                this.queryAPI.subscribeToLaunchVehicles()
+        );
+        this.subscriptions = new_subs;
     }
 
     public boolean doesArchitectureExist(String input){

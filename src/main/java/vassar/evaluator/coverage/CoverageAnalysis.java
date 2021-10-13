@@ -153,15 +153,15 @@ public class CoverageAnalysis {
     }
 
     public Map<TopocentricFrame, TimeIntervalArray> getAccesses(double fieldOfView, double inclination, double altitude, int numSats, int numPlanes, String raanLabel) throws OrekitException {
-        // System.out.println("\n----- GET ACCESSES -----");
-        // System.out.println(fieldOfView);
-        // System.out.println(inclination);
-        // System.out.println(altitude);
-        // System.out.println(numSats);
-        // System.out.println(numPlanes);
-        // System.out.println(raanLabel);
-        // System.out.println("------------------------\n");
-        // EvaluatorApp.sleep(10);
+         System.out.println("\n----- GET ACCESSES -----");
+         System.out.println("--> fieldOfView: " + fieldOfView);
+         System.out.println("--> inclination: " + inclination);
+         System.out.println("--> altitude: " + altitude);
+         System.out.println("--> numSats: " + numSats);
+         System.out.println("--> numPlanes: " + numPlanes);
+         System.out.println("--> raanLabel: " + raanLabel);
+         System.out.println("------------------------\n");
+         // EvaluatorApp.sleep(10);
 
         CoverageAnalysisIO.AccessDataDefinition definition = new CoverageAnalysisIO.AccessDataDefinition(fieldOfView, inclination, altitude, numSats, numPlanes, this.coverageGridGranularity, raanLabel);
 
@@ -258,6 +258,13 @@ public class CoverageAnalysis {
         double a = Constants.WGS84_EARTH_EQUATORIAL_RADIUS+h; //semi-major axis
         double i = FastMath.toRadians(inclination); // inclination given in deg
 
+        // Orekit 10.3's KeplarianOrbit object doesn't support orbs where inclination = 0 because RAAN becomes ambiguous
+        // - This is a quick and BAD fix, change KeplarianOrbit to EquinoctialOrbit in seakers/orekit on branch fov_changes
+        if(i == 0.0){
+            i = 0.0001;
+        }
+
+
 
         // Supported FOV: conical / rectangular
 
@@ -324,8 +331,9 @@ public class CoverageAnalysis {
         catch (Exception ex) {
 //            Logger.getLogger(CoverageAnalysis.class.getName()).log(Level.SEVERE, null, ex);
 //
-//            System.out.println("Fail: fov: " + fieldOfView + ", inc: " + inclination + ", alt: " + altitude + ", nSat: " + numSats +
-//                    ", nPlane: " + numPlanes + ", raan: " + raan );
+            System.out.println("Fail: fov: " + fieldOfView + ", inc: " + inclination + ", alt: " + altitude + ", nSat: " + numSats +
+                    ", nPlane: " + numPlanes + ", raan: " + raan );
+            System.out.println(ex.toString());
 
             throw new IllegalStateException("scenario failed to complete.");
         }
@@ -339,6 +347,7 @@ public class CoverageAnalysis {
 
         //output the time
         long end = System.nanoTime();
+        System.out.println("--> CALCULATING ACCESSES TOOK: " + String.format("%.4f sec", (end - start) / Math.pow(10, 9)));
 //        Logger.getGlobal().finest(String.format("Took %.4f sec", (end - start) / Math.pow(10, 9)));
 
         return accesses;
@@ -423,7 +432,7 @@ public class CoverageAnalysis {
                 if(FastMath.toDegrees(angle) < 0.5){
                     Properties propertiesPropagator = new Properties();
                     propertiesPropagator.setProperty("orekit.propagator.mass", "6");
-                    propertiesPropagator.setProperty("orekit.propagator.atmdrag", "true");
+                    propertiesPropagator.setProperty("orekit.propagator.atmdrag", "false");
 
                     propertiesPropagator.setProperty("orekit.propagator.dragarea", "0.075");
                     propertiesPropagator.setProperty("orekit.propagator.dragcoeff", "2.2");
@@ -441,6 +450,7 @@ public class CoverageAnalysis {
                 }
             }
         }
+        System.out.println("--> FINISHED GOING THROUGH RAANS");
 
 //        Logger.getGlobal().finest(String.format("ANGLE Diff=%.4f", minAngle));
 //        Logger.getGlobal().finest(String.format("RAAN=%.4f", optRaan));

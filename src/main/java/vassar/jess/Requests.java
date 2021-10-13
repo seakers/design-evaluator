@@ -420,9 +420,14 @@ public class Requests {
                             .templateFilePath(this.globalTemplatePath + "/AdHocRuleTemplate.clp")
                             .build()
             );
+//            build.requests.add(
+//                    new BatchFileTemplateRequest.Builder()
+//                            .templateFilePath(this.jessAppPath + "/smap_rules_test.clp")
+//                            .build()
+//            );
             build.requests.add(
                     new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/smap_rules_test.clp")
+                            .templateFilePath(this.jessAppPath + "/climate_centric_rules.clp")
                             .build()
             );
 //            build.requests.add(

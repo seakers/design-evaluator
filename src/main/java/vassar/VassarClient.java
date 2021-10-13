@@ -120,6 +120,7 @@ public class VassarClient {
             System.exit(-1);
         }
 
+        // Stopping indexing of archs for Climate Centric testing
         this.indexArchitecture(result, bitString, datasetId, ga, redo, fast);
 
         return result;
@@ -396,9 +397,12 @@ public class VassarClient {
 
         double cost    = result.getCost();
         double science = result.getScience();
+        double programmatic_risk = result.getProgrammaticRisk();
+        double fairness = result.getFairnessScore();
+        double data_continuity = result.getDataContinuityScore();
 
         if (redo) {
-            int archID = this.engine.dbClient.updateArchitecture(bitString, datasetId, science, cost, ga);
+            int archID = this.engine.dbClient.updateArchitecture(bitString, datasetId, science, cost, ga, programmatic_risk, fairness, data_continuity);
 
             // Remove previous explanations
             this.engine.dbClient.deleteArchitectureScoreExplanations(archID);
@@ -425,7 +429,7 @@ public class VassarClient {
             }
             else {
                 InsertArchitectureSlowMutation.Builder archBuilder = InsertArchitectureSlowMutation.builder();
-                this.fillArchitectureInformation(archBuilder, datasetId, bitString, science, cost, ga);
+                this.fillArchitectureInformation(archBuilder, datasetId, bitString, science, cost, ga, programmatic_risk, fairness, data_continuity);
                 
                 ScoreExplanations explanations = this.fillArchitectureScoreExplanations(result);
                 archBuilder
@@ -447,7 +451,7 @@ public class VassarClient {
         }
     }
 
-    private void fillArchitectureInformation(InsertArchitectureSlowMutation.Builder builder, Integer datasetId, String input, double science, double cost, boolean ga) {
+    private void fillArchitectureInformation(InsertArchitectureSlowMutation.Builder builder, Integer datasetId, String input, double science, double cost, boolean ga, double programmatic_risk, double fairness, double data_continuity) {
         builder
             .dataset_id(datasetId)
             .input(input)
@@ -455,7 +459,10 @@ public class VassarClient {
             .cost(cost)
             .eval_status(true)
             .ga(ga)
-            .improve_hv(false);
+            .improve_hv(false)
+            .programmatic_risk(programmatic_risk)
+            .fairness(fairness)
+            .data_continuity(data_continuity);
     }
 
     private ScoreExplanations fillArchitectureScoreExplanations(Result result) {

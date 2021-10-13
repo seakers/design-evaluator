@@ -21,7 +21,7 @@ WORKDIR /repos/orekit/orekit
 RUN mvn install
 
 WORKDIR /repos/jars
-COPY /jars/jess.jar /repos/jars/jess.jar
+COPY /design-evaluator/jars/jess.jar /repos/jars/jess.jar
 RUN mvn install:install-file -Dfile=./jess.jar -DgroupId=gov.sandia -DartifactId=jess -Dversion=7.1p2 -Dpackaging=jar
 
 
@@ -42,41 +42,35 @@ FROM amazoncorretto:11
 # COPY --from=Schema /schema/schema.json /app/src/main/graphql/com/evaluator/schema.json
 COPY --from=BUILD_TOOL /root/.m2 /root/.m2
 
-WORKDIR /app
-COPY /. /app/.
+
+WORKDIR /resources
+COPY /VASSAR_resources/. /resources/.
 
 
 
-ENV AWS_ACCESS_KEY_ID=AKIAJVM34C5MCCWRJCCQ
-ENV AWS_SECRET_ACCESS_KEY=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
-ENV REQUEST_MODE=CRISP-ATTRIBUTES
-ENV GROUP_ID=1
-ENV PROBLEM_ID=4
-ENV PRIVATE_QUEUE_NAME=RANDOM
 
-
-ENV EVAL_QUEUE_URL=http://172.19.0.3:4576/000000000000/vassar_queue
-ENV AWS_STACK_ENDPOINT=http://172.19.0.3:4576
-
-ENV APOLLO_URL_WS=ws://172.19.0.12:8080/v1/graphql
-ENV APOLLO_URL=http://172.19.0.12:8080/v1/graphql
-
-
-# -- DEPS --
+# --DEPS --
 WORKDIR /installs
 
 RUN yum update -y && \
     yum upgrade -y && \
     yum install git wget unzip tar -y
 
-# -- GRADLE --
+# --GRADLE --
 RUN wget https://services.gradle.org/distributions/gradle-6.0-bin.zip && \
     unzip gradle-6.0-bin.zip && \
     rm gradle-6.0-bin.zip
 ENV PATH="/installs/gradle-6.0/bin:${PATH}"
 
-# -- GRAPHQL SCHEMA --
+# --GRAPHQL SCHEMA --
 WORKDIR /app
+COPY /design-evaluator/. /app/.
 # RUN gradle generateApolloSources
+
+EXPOSE 10000
+EXPOSE 9091
+
+RUN gradle clean build --no-daemon
+
 CMD gradle run
 

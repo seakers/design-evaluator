@@ -94,8 +94,8 @@
     (AGGREGATION::STAKEHOLDER (id ?id2&~id1) (satisfaction ?s2))
     ?f <- (CRITIQUE-PERFORMANCE-PARAM::fairness (stake-holder1 nil) (stake-holder2 nil)(value nil) (flag 0))
     =>
-    (if (> (- ?s1 ?s2) 0.3)
+    (if (> (- ?s1 ?s2) 0.0003)
     then (modify ?f  (flag 1)(value (- ?s1 ?s2)) (stake-holder1 ?id1) (stake-holder2 ?id2)))
-    (if (> (- ?s2 ?s1) 0.3)
+    (if (> (- ?s2 ?s1) 0.0003)
     then (modify ?f (flag 1)(value (- ?s2 ?s1)) (stake-holder1 ?id2) (stake-holder2 ?id1)))
     )

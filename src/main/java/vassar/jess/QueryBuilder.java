@@ -71,6 +71,50 @@ public class QueryBuilder {
         return facts;
     }
 
+    public double getInstrumentTRL(String instrument){
+        // Technology-Readiness-Level
+        String query_call = "(defquery inst-trl-query ?f <- (DATABASE::Instrument (Name "+instrument+")))";
+        double result = 0.0;
+        ArrayList<Fact> facts = new ArrayList<>();
+        try{
+            this.r.eval(query_call);
+            QueryResult q_result = r.runQueryStar("inst-trl-query", new ValueVector());
+            while(q_result.next())
+                facts.add((Fact) q_result.getObject("f"));
+            Fact inst_fact = facts.get(0);
+            int trl_str = inst_fact.getSlotValue("Technology-Readiness-Level").intValue(this.r.getGlobalContext());
+            result = trl_str;
+        }
+        catch (JessException e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public double getFairnessScore(){
+        double fairness = 0.0;
+        ArrayList<Fact> facts = new ArrayList<>();
+        String call = "(defquery fairness-query ?f <- (CRITIQUE-PERFORMANCE-PARAM::fairness))";
+        try{
+            this.r.eval(call);
+            QueryResult q_result = r.runQueryStar("fairness-query", new ValueVector());
+            while(q_result.next())
+                facts.add((Fact) q_result.getObject("f"));
+            if(!facts.isEmpty()){
+                Fact fact = facts.get(0);
+                double ff = fact.getSlotValue("value").floatValue(this.r.getGlobalContext());
+                fairness = ff;
+            }
+
+        }
+        catch (JessException e){
+            e.printStackTrace();
+        }
+
+
+        return fairness;
+    }
+
     public ArrayList<String> getMissionInstruments(String mission_name){
         ArrayList<Fact> facts = new ArrayList<>();
         ArrayList<String> instruments = new ArrayList<>();

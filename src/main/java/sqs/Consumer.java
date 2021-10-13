@@ -153,14 +153,14 @@ public class Consumer implements Runnable {
             // CHECK CONNECTION QUEUE
             List<Message> messages = new ArrayList<>();
             List<Message> connectionMessages = new ArrayList<>();
-            connectionMessages = this.getMessages(this.requestQueueUrl, 3, 5);
+            connectionMessages = this.getMessages(this.requestQueueUrl, 1, 1);
             connectionMessages = this.handleMessages(this.requestQueueUrl, connectionMessages);
             messages.addAll(connectionMessages);
 
             // CHECK USER QUEUE
             List<Message> userMessages = new ArrayList<>();
             if (this.userRequestQueueUrl != null) {
-                userMessages = this.getMessages(this.userRequestQueueUrl, 3, 5);
+                userMessages = this.getMessages(this.userRequestQueueUrl, 1, 1);
                 userMessages = this.handleMessages(this.userRequestQueueUrl, userMessages);
                 messages.addAll(userMessages);
             }
@@ -421,7 +421,7 @@ public class Consumer implements Runnable {
         String userId = msgContents.get("user_id");
         this.userId = Integer.parseInt(userId);
 
-        // Create queues for private communication
+        // Create queues for private communication if non exist
         QueueUrls queueUrls = createUserQueues(userId);
 
         final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();

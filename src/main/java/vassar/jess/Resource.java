@@ -108,6 +108,8 @@ public class Resource {
             this.dbClient.setProblemID(problem_id);
         }
 
+        this.dbClient.resubscribe();
+
         GlobalScope.init();
 
         Resource newResource = new Resource.Builder(this.dbClient).addUserFunctionBatch(this.buildFuncs).setRequests(newRequests).setRequestMode(this.requestMode).build();

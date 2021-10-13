@@ -386,7 +386,7 @@ public class QueryAPI {
 
 
     // ---> ARCHITECTURE
-    public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
+    public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga, double programmatic_risk, double fairness, double data_continuity){
         UpdateArchitectureMutation archMutation = UpdateArchitectureMutation.builder()
                 .user_id(this.userId)
                 .problem_id(this.problemId)
@@ -396,6 +396,9 @@ public class QueryAPI {
                 .cost(cost)
                 .eval_status(true)
                 .improve_hv(false)
+                .programmatic_risk(programmatic_risk)
+                .fairness(fairness)
+                .data_continuity(data_continuity)
                 .build();
         ApolloCall<UpdateArchitectureMutation.Data>           apolloCall  = this.apollo.mutate(archMutation);
         Observable<Response<UpdateArchitectureMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
@@ -639,14 +642,22 @@ public class QueryAPI {
         ApolloSubscriptionCall<InstrumentSubscription.Data> subCall = this.apollo.subscribe(sub);
 
         subCall.execute( new ApolloSubscriptionCall.Callback<>() {
+            private boolean first = true;
+
             @Override
             public void onResponse(@NotNull Response<InstrumentSubscription.Data> response) {
-                System.out.println("-----> INSTRUMENT CHANGE: REBUILD");
                 final Map<String, String> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType", "build");
-                messageAttributes.put("group_id", "-1");
-                messageAttributes.put("problem_id", "-1");
-                privateQueue.add(messageAttributes);
+                if(!this.first){
+                    System.out.println("-----> INSTRUMENT CHANGE: REBUILD");
+                    messageAttributes.put("msgType", "build");
+                    messageAttributes.put("group_id", "-1");
+                    messageAttributes.put("problem_id", "-1");
+                    privateQueue.add(messageAttributes);
+                }
+                else{
+                    System.out.println("-----> INSTRUMENT SUBSCRIPTION INITIATED");
+                }
+                this.first = false;
             }
 
             @Override
@@ -682,14 +693,22 @@ public class QueryAPI {
         ApolloSubscriptionCall<InstrumentCharacteristicSubscription.Data> subCall = this.apollo.subscribe(sub);
 
         subCall.execute( new ApolloSubscriptionCall.Callback<>() {
+            private boolean first = true;
+
             @Override
             public void onResponse(@NotNull Response<InstrumentCharacteristicSubscription.Data> response) {
-                System.out.println("-----> INSTRUMENT CHARACTERISTIC CHANGE: REBUILD");
                 final Map<String, String> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType", "build");
-                messageAttributes.put("group_id", "-1");
-                messageAttributes.put("problem_id", "-1");
-                privateQueue.add(messageAttributes);
+                if(!this.first){
+                    System.out.println("-----> INSTRUMENT CHARACTERISTIC CHANGE: REBUILD");
+                    messageAttributes.put("msgType", "build");
+                    messageAttributes.put("group_id", "-1");
+                    messageAttributes.put("problem_id", "-1");
+                    privateQueue.add(messageAttributes);
+                }
+                else{
+                    System.out.println("-----> INSTRUMENT CHARACTERISTIC SUBSCRIPTION INITIATED");
+                }
+                this.first = false;
             }
 
             @Override
@@ -725,14 +744,22 @@ public class QueryAPI {
         ApolloSubscriptionCall<OrbitSubscription.Data> subCall = this.apollo.subscribe(sub);
 
         subCall.execute( new ApolloSubscriptionCall.Callback<>() {
+            private boolean first = true;
+
             @Override
             public void onResponse(@NotNull Response<OrbitSubscription.Data> response) {
-                System.out.println("-----> ORBIT CHANGE: REBUILD");
                 final Map<String, String> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType", "build");
-                messageAttributes.put("group_id", "-1");
-                messageAttributes.put("problem_id", "-1");
-                privateQueue.add(messageAttributes);
+                if(!this.first){
+                    System.out.println("-----> ORBIT CHANGE: REBUILD");
+                    messageAttributes.put("msgType", "build");
+                    messageAttributes.put("group_id", "-1");
+                    messageAttributes.put("problem_id", "-1");
+                    privateQueue.add(messageAttributes);
+                }
+                else{
+                    System.out.println("-----> ORBIT SUBSCRIPTION INITIATED");
+                }
+                this.first = false;
             }
 
             @Override
@@ -768,14 +795,22 @@ public class QueryAPI {
         ApolloSubscriptionCall<AggregationRuleSubscription.Data> subCall = this.apollo.subscribe(sub);
 
         subCall.execute( new ApolloSubscriptionCall.Callback<>() {
+            private boolean first = true;
+
             @Override
             public void onResponse(@NotNull Response<AggregationRuleSubscription.Data> response) {
-                System.out.println("-----> STEAKHOLDER CHANGE: REBUILD");
                 final Map<String, String> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType", "build");
-                messageAttributes.put("group_id", "-1");
-                messageAttributes.put("problem_id", "-1");
-                privateQueue.add(messageAttributes);
+                if(!this.first){
+                    System.out.println("-----> STEAKHOLDER CHANGE: REBUILD");
+                    messageAttributes.put("msgType", "build");
+                    messageAttributes.put("group_id", "-1");
+                    messageAttributes.put("problem_id", "-1");
+                    privateQueue.add(messageAttributes);
+                }
+                else{
+                    System.out.println("-----> STAKEHOLDER SUBSCRIPTION INITIATED");
+                }
+                this.first = false;
             }
 
             @Override
@@ -811,14 +846,22 @@ public class QueryAPI {
         ApolloSubscriptionCall<LaunchVehicleSubscription.Data> subCall = this.apollo.subscribe(sub);
 
         subCall.execute( new ApolloSubscriptionCall.Callback<>() {
+            private boolean first = true;
+
             @Override
             public void onResponse(@NotNull Response<LaunchVehicleSubscription.Data> response) {
-                System.out.println("-----> LAUNCH VEHICLE CHANGE: REBUILD");
                 final Map<String, String> messageAttributes = new HashMap<>();
-                messageAttributes.put("msgType", "build");
-                messageAttributes.put("group_id", "-1");
-                messageAttributes.put("problem_id", "-1");
-                privateQueue.add(messageAttributes);
+                if(!this.first){
+                    System.out.println("-----> LAUNCH VEHICLE CHANGE: REBUILD");
+                    messageAttributes.put("msgType", "build");
+                    messageAttributes.put("group_id", "-1");
+                    messageAttributes.put("problem_id", "-1");
+                    privateQueue.add(messageAttributes);
+                }
+                else{
+                    System.out.println("-----> LAUNCH VEHICLE SUBSCRIPTION INITIATED");
+                }
+                this.first = false;
             }
 
             @Override
