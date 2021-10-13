@@ -335,6 +335,32 @@ public class DatabaseClient {
         this.queryAPI.userId = id;
     }
 
+    public void resubscribe(){
+        // 1. Cancel all subscriptions
+        for(ApolloSubscriptionCall sub: this.subscriptions){
+            sub.cancel();
+        }
+
+        // 2. Create new subscriptions
+        ArrayList<ApolloSubscriptionCall> new_subs = new ArrayList<>();
+        new_subs.add(
+                this.queryAPI.subscribeToInstruments()
+        );
+        new_subs.add(
+                this.queryAPI.subscribeToOrbits()
+        );
+        new_subs.add(
+                this.queryAPI.subscribeToStakeholders()
+        );
+        new_subs.add(
+                this.queryAPI.subscribeToInstrumentCharacteristics()
+        );
+        new_subs.add(
+                this.queryAPI.subscribeToLaunchVehicles()
+        );
+        this.subscriptions = new_subs;
+    }
+
     public boolean doesArchitectureExist(String input){
         return this.queryAPI.doesArchitectureExist(input);
     }
