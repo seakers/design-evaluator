@@ -6,48 +6,47 @@
 ; 6 RULES
 
 (defrule MASS-BUDGET::compute-deltaV-injection
-    "This rule computes the delta-V required for injection for GEO or MEO assuming a transfer orbit with a perigee 
-    of 150km and an apogee at the desired orbit, as suggested in De Weck's paper found in 
+    "This rule computes the delta-V required for injection for GEO or MEO assuming a transfer orbit with a perigee
+    of 150km and an apogee at the desired orbit, as suggested in De Weck's paper found in
     http://strategic.mit.edu/docs/2_3_JSR_parametric_NGSO.pdf. For LEO/SSO, no injection is required."
-    
-    ?miss <- (MANIFEST::Mission (orbit-type ?typ) (orbit-semimajor-axis ?a&~nil) 
+
+    ?miss <- (MANIFEST::Mission (orbit-type ?typ) (orbit-semimajor-axis ?a&~nil)
          (delta-V-injection nil) (factHistory ?fh))
     =>
 	(if (or (eq ?typ GEO) (eq ?typ MEO)) then (bind ?dV (compute-dV-injection (+ 6378000 150000) ?a))
-	else (bind ?dV 0.0))  
-    
+	else (bind ?dV 0.0))
+
     (modify ?miss (delta-V-injection ?dV) (factHistory (str-cat "{R" (?*rulesMap* get MASS-BUDGET::compute-deltaV-injection) " " ?fh "}")))
     )
 
 (defrule MASS-BUDGET::compute-deltaV-drag
-    "This rule computes the delta-V required to overcome drag. The data comes from 
+    "This rule computes the delta-V required to overcome drag. The data comes from
     De Weck's paper found in http://strategic.mit.edu/docs/2_3_JSR_parametric_NGSO.pdf"
-    
-    ?miss <- (MANIFEST::Mission (orbit-semimajor-axis ?a&~nil) (orbit-eccentricity ?e&~nil) 
+
+    ?miss <- (MANIFEST::Mission (orbit-semimajor-axis ?a&~nil) (orbit-eccentricity ?e&~nil)
         (delta-V-drag nil) (lifetime ?life&~nil) (factHistory ?fh))
     =>
-    
+
     (bind ?hp (/ (- (* ?a (- 1 ?e)) 6378000) 1000)); dV for station-keeping (m/s/yr)
     (if (< ?hp 500) then (bind ?dV 12)
         elif (< ?hp 600) then (bind ?dV 5)
         elif(< ?hp 1000) then (bind ?dV 2)
-        elif (> ?hp 1000) then (bind ?dV 0)
-        ) 
+        elif (>= ?hp 1000) then (bind ?dV 0)
+        )
 
     (modify ?miss (delta-V-drag (* ?dV ?life)) (factHistory (str-cat "{R" (?*rulesMap* get MASS-BUDGET::compute-deltaV-drag) " " ?fh "}")))
     )
 
 (defrule MASS-BUDGET::compute-deltaV-ADCS
-    "This rule computes the delta-V required for attitude control. The data comes from 
+    "This rule computes the delta-V required for attitude control. The data comes from
     De Weck's paper found in http://strategic.mit.edu/docs/2_3_JSR_parametric_NGSO.pdf"
-    
-    ?miss <- (MANIFEST::Mission (ADCS-type ?adcs) (delta-V-ADCS nil) 
+
+    ?miss <- (MANIFEST::Mission (ADCS-type ?adcs) (delta-V-ADCS nil)
         (lifetime ?life&~nil) (factHistory ?fh))
     =>
-    (printout t "---> COMPUTING DELTA-V FROM ADCS: " ?adcs crlf)
     (if (eq ?adcs three-axis) then (bind ?dV 20)
         elif (eq ?adcs grav-gradient) then (bind ?dV 0))
-    
+
     (modify ?miss (delta-V-ADCS (* ?life ?dV)) (factHistory (str-cat "{R" (?*rulesMap* get MASS-BUDGET::compute-deltaV-ADCS) " " ?fh "}")))
     )
 
@@ -64,25 +63,25 @@
     =>
     (modify ?miss (deorbiting-strategy graveyard) (factHistory (str-cat "{R" (?*rulesMap* get MASS-BUDGET::graveyard-deorbiting-mode) " " ?fh "}")))
     )
-	
+
 (defrule MASS-BUDGET::compute-deltaV-deorbiting-drag-based
     "This rule computes the delta-V required for deorbiting assuming a change of semimajor axis
     so that the perigee is the surface of the earth"
-    
-    ?miss <- (MANIFEST::Mission (orbit-semimajor-axis ?a&~nil) 
+
+    ?miss <- (MANIFEST::Mission (orbit-semimajor-axis ?a&~nil)
         (delta-V-deorbit nil) (deorbiting-strategy drag-based) (factHistory ?fh))
     =>
-    
+
     (bind ?dV (compute-dV-deorbit ?a 6378000))
     (modify ?miss (delta-V-deorbit ?dV) (factHistory (str-cat "{R" (?*rulesMap* get MASS-BUDGET::compute-deltaV-deorbiting-drag-based) " " ?fh "}")))
     )
 
 (defrule MASS-BUDGET::compute-deltaV-deorbiting-graveyard
-    "This rule computes the delta-V required for deorbiting to a graveyard orbit. 
+    "This rule computes the delta-V required for deorbiting to a graveyard orbit.
     This is calculated as a change of semimajor axis to raise perigee by a certain amount
     given in http://www.iadc-online.org/Documents/IADC-UNCOPUOS-final.pdf"
-    
-    ?miss <- (MANIFEST::Mission (orbit-type GEO) (satellite-dry-mass ?m&~nil) 
+
+    ?miss <- (MANIFEST::Mission (orbit-type GEO) (satellite-dry-mass ?m&~nil)
         (orbit-semimajor-axis ?a&~nil) (satellite-dimensions $?dim)
         (delta-V-deorbit nil) (deorbiting-strategy graveyard) (factHistory ?fh))
     =>
@@ -93,12 +92,12 @@
 
 (defrule MASS-BUDGET::compute-deltaV-total
     "This rule computes the delta-V as the sum of all deltaVs"
-    
-    ?miss <- (MANIFEST::Mission (delta-V-injection ?inj&~nil) 
-        (delta-V-ADCS ?adcs&~nil) 
+
+    ?miss <- (MANIFEST::Mission (delta-V-injection ?inj&~nil)
+        (delta-V-ADCS ?adcs&~nil)
         (delta-V-drag ?drag&~nil) (delta-V-deorbit ?deorbit&~nil) (delta-V nil)  (factHistory ?fh))
     =>
-    
+
     (modify ?miss (delta-V (+ ?inj ?adcs ?drag ?deorbit)) (factHistory (str-cat "{R" (?*rulesMap* get MASS-BUDGET::compute-deltaV-total) " " ?fh "}")))
     )
 
@@ -121,14 +120,14 @@
 ;    )
 
 ;(defrule MASS-BUDGET::compute-propellant-wet-mass-deweck
-;    "This rule computes the propellant mass necessary for the DeltaV 
-;    using the rocket equation and assuming a certain Isp. 
+;    "This rule computes the propellant mass necessary for the DeltaV
+;    using the rocket equation and assuming a certain Isp.
 ;    It also fills out the satellite wet mass."
-;    
+;
 ;    ?miss <- (MANIFEST::SATELLITE (satellite-dry-mass ?dry-mass&~nil) (payload-power# ?pow&~nil) (delta-V-injection ?dV-inj&~nil) (delta-V ?dV&~nil)
 ;        (Isp-injection ?Isp-i&~nil) (Isp-ADCS ?Isp-a&~nil) (propellant-mass nil) (satellite-wet-mass nil))
 ;    =>
-;    
+;
 ;    (bind ?M0 (+ 140 (* 4.6 (?pow 0.73)))); first estimate of wet mass from De Weck: 4.6*payload power^0.73+140
 ;    (bind ?list (estim-prop-wet-mass ?M0 ?dV-inj (- ?dV ?dV-inj) ?Isp-i ?Isp-a ?pow))
 ;    (bind ?mp (nth$ 1 ?list)) (bind ?mw (nth$ 2 ?list))

@@ -4,6 +4,7 @@ package vassar;
 
 import com.evaluator.InsertArchitectureCostInformationMutation;
 import com.evaluator.InsertArchitectureSlowMutation;
+import com.evaluator.ProblemNameQuery;
 import com.evaluator.RequirementRulesForSubobjectiveQuery;
 
 // -  -  -   ____   ____                                     ______  __    _                  _
@@ -32,15 +33,12 @@ import vassar.combinatorics.Combinatorics;
 import vassar.evaluator.ADDEvaluator;
 import vassar.evaluator.AbstractArchitectureEvaluator;
 import vassar.evaluator.ArchitectureEvaluator;
+import vassar.evaluator.NDSMEvaluator;
 import vassar.jess.Requests;
 import vassar.jess.Resource;
 import vassar.result.Result;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -121,10 +119,61 @@ public class VassarClient {
         }
 
         // Stopping indexing of archs for Climate Centric testing
-        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast);
+        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast, false);
 
         return result;
     }
+
+    public Result evaluateNDSMArchitecture(String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast, boolean improve_hv){
+
+        String problem_name = this.engine.dbClient.getProblemName();
+        String _1DSM_file = "/app/output/DSM-Climate1-2021-10-16-01-03-10.dat";
+        String _2DSM_file = "/app/output/DSM-Climate2-2021-10-16-01-18-11.dat";
+        if(Objects.equals(problem_name, "ClimateCentric_2")){
+            _1DSM_file = "/app/output/DSM-Climate2-1-2021-10-19-16-07-29.dat";
+            _2DSM_file = "/app/output/DSM-Climate2-2-2021-10-19-16-23-26.dat";
+        }
+
+        NDSMEvaluator evaluator = new NDSMEvaluator.Builder(this.engine, bitString)
+                .set_1DSM(_1DSM_file)
+                .set_2DSM(_2DSM_file)
+                .build();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
+
+        Future<Result> future = executorService.submit(evaluator);
+
+        Result result = null;
+        try {
+            result = future.get();
+        }
+        catch (ExecutionException e) {
+            System.out.println("Exception when evaluating an architecture");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        catch (InterruptedException e) {
+            System.out.println("Execution got interrupted while evaluating an architecture");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast, improve_hv);
+
+        return result;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     public Result evaluateADDArchitecture(String json_design){
 
@@ -340,13 +389,11 @@ public class VassarClient {
 
     public void computeNDSMs(){
 
-        // 2 DIMENSIONAL
-        Combinatorics.computeNDSM(this.engine, this.engine.problem.instrumentList, 2);
-        // 3 DIMENSIONAL
-//        Combinatorics.computeNDSM(this.engine, this.engine.problem.instrumentList, 3);
-//        // N DIMENSIONAL
-//        Combinatorics.computeNDSM(this.engine, this.engine.problem.instrumentList, this.engine.problem.numInstr);
+        // 1 DIMENSIONAL
+        Combinatorics.compute_NDSM_AI4SE(this.engine, this.engine.problem.instrumentList, 1);
 
+        // 2 DIMENSIONAL
+        Combinatorics.compute_NDSM_AI4SE(this.engine, this.engine.problem.instrumentList, 2);
     }
 
     public void computeContinuityMatrix(){
@@ -393,7 +440,7 @@ public class VassarClient {
 
 
 
-    public void indexArchitecture(Result result, String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast){
+    public void indexArchitecture(Result result, String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast, boolean improve_hv){
 
         double cost    = result.getCost();
         double science = result.getScience();
@@ -429,7 +476,7 @@ public class VassarClient {
             }
             else {
                 InsertArchitectureSlowMutation.Builder archBuilder = InsertArchitectureSlowMutation.builder();
-                this.fillArchitectureInformation(archBuilder, datasetId, bitString, science, cost, ga, programmatic_risk, fairness, data_continuity);
+                this.fillArchitectureInformation(archBuilder, datasetId, bitString, science, cost, ga, programmatic_risk, fairness, data_continuity, improve_hv);
                 
                 ScoreExplanations explanations = this.fillArchitectureScoreExplanations(result);
                 archBuilder
@@ -441,7 +488,7 @@ public class VassarClient {
                 ArrayList<ArchitectureCostInformation_insert_input> costInserts = this.fillArchitectureCostInformations(result);
                 archBuilder
                     .cost_informations(costInserts);
-                
+
                 String critique = this.fillArchitectureCritique(result);
                 archBuilder
                     .critique(critique);
@@ -451,7 +498,7 @@ public class VassarClient {
         }
     }
 
-    private void fillArchitectureInformation(InsertArchitectureSlowMutation.Builder builder, Integer datasetId, String input, double science, double cost, boolean ga, double programmatic_risk, double fairness, double data_continuity) {
+    private void fillArchitectureInformation(InsertArchitectureSlowMutation.Builder builder, Integer datasetId, String input, double science, double cost, boolean ga, double programmatic_risk, double fairness, double data_continuity, boolean improve_hv) {
         builder
             .dataset_id(datasetId)
             .input(input)
@@ -459,7 +506,7 @@ public class VassarClient {
             .cost(cost)
             .eval_status(true)
             .ga(ga)
-            .improve_hv(false)
+            .improve_hv(improve_hv)
             .programmatic_risk(programmatic_risk)
             .fairness(fairness)
             .data_continuity(data_continuity);
@@ -470,7 +517,7 @@ public class VassarClient {
     }
 
     private ScoreExplanations fillArchitectureScoreExplanations(Result result, Optional<Integer> archID){
-        System.out.println("---> indexing architecture score explanations");
+//        System.out.println("---> indexing architecture score explanations");
         ArrayList<ArchitectureScoreExplanation_insert_input> archExplanations         = new ArrayList<>();
         ArrayList<PanelScoreExplanation_insert_input>        panelExplanations        = new ArrayList<>();
         ArrayList<ObjectiveScoreExplanation_insert_input>    objectiveExplanations    = new ArrayList<>();
@@ -496,7 +543,8 @@ public class VassarClient {
                 panelExplanations.add(
                     panelExp
                         .objective_id(this.engine.dbClient.getObjectiveID(this.engine.problem.objNames.get(panel_idx).get(obj_idx)))
-                        .satisfaction(result.getObjectiveScores().get(panel_idx).get(obj_idx))
+//                        .satisfaction(result.getObjectiveScores().get(panel_idx).get(obj_idx))
+                        .satisfaction(0)
                         .build()
                 );
 
@@ -509,11 +557,12 @@ public class VassarClient {
                     objectiveExplanations.add(
                         objExp
                             .subobjective_id(this.engine.dbClient.getSubobjectiveID(subobjectiveName))
-                            .satisfaction(result.getSubobjectiveScores().get(panel_idx).get(obj_idx).get(subobj_idx))
+//                            .satisfaction(result.getSubobjectiveScores().get(panel_idx).get(obj_idx).get(subobj_idx))
+                            .satisfaction(0)
                             .build()
                     );
 
-                    subobjectiveExplanations.addAll(getSubobjectiveExplanations(result, subobjectiveName, archID));
+                    // subobjectiveExplanations.addAll(getSubobjectiveExplanations(result, subobjectiveName, archID));
                 }
             }
         }
@@ -748,18 +797,19 @@ public class VassarClient {
     }
 
     private String fillArchitectureCritique(Result result){
-        System.out.println("---> Indexing architecture critique");
-        Vector<String> performanceCritique = result.getPerformanceCritique();
-        Vector<String> costCritique = result.getCostCritique();
-        String critique = "";
-        for(String crit: performanceCritique){
-            critique = critique + crit + " | ";
-        }
-        for(String crit: costCritique){
-            critique = critique + crit + " | ";
-        }
-        System.out.println(critique);
-        return critique;
+//        System.out.println("---> Indexing architecture critique");
+//        Vector<String> performanceCritique = result.getPerformanceCritique();
+//        Vector<String> costCritique = result.getCostCritique();
+//        String critique = "";
+//        for(String crit: performanceCritique){
+//            critique = critique + crit + " | ";
+//        }
+//        for(String crit: costCritique){
+//            critique = critique + crit + " | ";
+//        }
+//        System.out.println(critique);
+//        return critique;
+        return "";
     }
 
 

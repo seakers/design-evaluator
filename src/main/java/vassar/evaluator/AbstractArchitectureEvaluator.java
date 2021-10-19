@@ -103,6 +103,8 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             else {
                 throw new Exception("Wrong type of task");
             }
+
+
             evaluateCost(params, r, arch, result, qb);
 
             this.evaluate_data_continuity(result, qb, r);
@@ -378,42 +380,25 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
 
             // ----------- MANIFEST0 -----------
-            qb.saveQuery("performance/1_MANIFEST0/input/MANIFEST::Mission", "MANIFEST::Mission");
-
+            System.out.println("--> MANIFEST0");
             r.setFocus("MANIFEST0");
             r.run();
-
-            qb.saveQuery("performance/1_MANIFEST0/output/SYNERGIES::cross-registered-instruments", "SYNERGIES::cross-registered-instruments");
-            qb.saveQuery("performance/1_MANIFEST0/output/CAPABILITIES::Manifested-instrument", "CAPABILITIES::Manifested-instrument");
             // ---------------------------------
 
 
 
             // ----------- MANIFEST -----------
-            qb.saveQuery("performance/2_MANIFEST/input/MANIFEST::Mission", "MANIFEST::Mission");
-            qb.saveQuery("performance/2_MANIFEST/input/CAPABILITIES::Manifested-instrument", "CAPABILITIES::Manifested-instrument");
-            qb.saveQuery("performance/2_MANIFEST/input/REQUIREMENTS::Measurement", "REQUIREMENTS::Measurement");
-            qb.saveQuery("performance/2_MANIFEST/input/DATABASE::Revisit-time-of", "DATABASE::Revisit-time-of");
-            qb.saveQuery("performance/2_MANIFEST/input/DATABASE::Instrumen", "DATABASE::Instrumen");
-
+            System.out.println("--> MANIFEST");
             r.setFocus("MANIFEST");
             r.run();
-
-            qb.saveQuery("performance/2_MANIFEST/output/MANIFEST::Mission", "MANIFEST::Mission");
-            qb.saveQuery("performance/2_MANIFEST/output/CAPABILITIES::Manifested-instrument", "CAPABILITIES::Manifested-instrument");
-            qb.saveQuery("performance/2_MANIFEST/output/REQUIREMENTS::Measurement", "REQUIREMENTS::Measurement");
-            qb.saveQuery("performance/2_MANIFEST/output/CAPABILITIES::can-measure", "CAPABILITIES::can-measure");
             // ---------------------------------
 
 
 
             // ----------- CAPABILITIES -----------
-            qb.saveQuery("performance/3_CAPABILITIES/input/", "");
-
+            System.out.println("--> CAPABILITIES");
             r.setFocus("CAPABILITIES");
             r.run();
-
-            qb.saveQuery("performance/3_CAPABILITIES/output/", "");
             // ------------------------------------
 
 
@@ -434,8 +419,10 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             r.setFocus("CAPABILITIES-UPDATE");
             r.run();
 
+            System.out.println("--> SYNERGIES");
             r.setFocus("SYNERGIES");
             r.run();
+            System.out.println("--> SYNERGIES FINISHED");
 
             int javaAssertedFactID = 1;
 
@@ -636,9 +623,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 r.setFocus("FUZZY-REQUIREMENTS");
             }
             else {
-                qb.saveQuery("performance/14_REQUIREMENTS/input/REQUIREMENTS::Measurement", "REQUIREMENTS::Measurement");
                 r.setFocus("REQUIREMENTS");
-                qb.saveQuery("performance/14_REQUIREMENTS/output/AGGREGATION::SUBOBJECTIVE", "AGGREGATION::SUBOBJECTIVE");
             }
             r.run();
 
@@ -648,11 +633,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 r.setFocus("FUZZY-AGGREGATION");
             }
             else {
-                qb.saveQuery("performance/15_AGGREGATION/input/AGGREGATION::SUBOBJECTIVE", "AGGREGATION::SUBOBJECTIVE");
                 r.setFocus("AGGREGATION");
-                qb.saveQuery("performance/15_AGGREGATION/output/AGGREGATION::SUBOBJECTIVE", "AGGREGATION::SUBOBJECTIVE");
-                qb.saveQuery("performance/15_AGGREGATION/output/AGGREGATION::OBJECTIVE", "AGGREGATION::OBJECTIVE");
-                qb.saveQuery("performance/15_AGGREGATION/output/AGGREGATION::STAKEHOLDER", "AGGREGATION::STAKEHOLDER");
             }
             r.run();
 
@@ -712,7 +693,6 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         // Used to compose scores from SUBOBJECTIVE up to STAKEHOLDER
         TreeMap<String, Double> subobj_scores_map = new TreeMap<>();
 
-        qb.saveQuery("performance/16_POST-AGGREGATION/input/AGGREGATION::VALUE", "AGGREGATION::VALUE");
         try {
             // General and panel scores
             ArrayList<Fact> vals = qb.makeQuery("AGGREGATION::VALUE");

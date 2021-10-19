@@ -276,7 +276,7 @@ public class Requests {
             );
             build.requests.add(
                     new BatchFileTemplateRequest.Builder()
-                            .templateFilePath(this.jessAppPath + "/deltaV_budget_rules.clp")
+                            .templateFilePath("/app/problems/smap/clp/deltaV_budget_rules.clp")
                             .build()
             );
 

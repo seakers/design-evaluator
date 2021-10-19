@@ -288,6 +288,13 @@ query SubobjectiveAttributeInformation($problem_id: Int, $name: String) {
 }
 
 
+query ProblemName($problem_id: Int){
+    items: Problem(where: {id: {_eq: $problem_id}}) {
+        name
+    }
+}
+
+
 
 
 

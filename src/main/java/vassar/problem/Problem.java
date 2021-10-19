@@ -26,6 +26,7 @@ public class Problem {
     // -- AGGREGATION --
     public ArrayList<Double>       panelWeights;
     public ArrayList<String>       panelNames;
+    public HashMap<String, Double> panelWeightMap;
     public HashMap<String, String> panelDescriptions;
     public ArrayList<Integer>      numObjectivesPerPanel;
 
@@ -78,6 +79,7 @@ public class Problem {
         // -- AGGREGATION --
         public ArrayList<Double>       panelWeights;
         public ArrayList<String>       panelNames;
+        public HashMap<String, Double> panelWeightMap;
         public HashMap<String, String> panelDescriptions;
         public ArrayList<Integer>      numObjectivesPerPanel;
 
@@ -174,6 +176,7 @@ public class Problem {
 
             // PANELS
             this.panelWeights          = new ArrayList<>();
+            this.panelWeightMap        = new HashMap<>();
             this.panelNames            = new ArrayList<>();
             this.numObjectivesPerPanel = new ArrayList<>();
             this.panelDescriptions     = new HashMap<>();
@@ -193,6 +196,7 @@ public class Problem {
             for (AggregationRuleQuery.Item panel : rules) {  // FOR EACH: panel
                 this.panelWeights.add(Double.parseDouble(panel.weight().toString()));
                 this.panelNames.add(panel.name());
+                this.panelWeightMap.put(panel.name(), Double.parseDouble(panel.weight().toString()));
                 this.numObjectivesPerPanel.add(panel.objectives().size());
                 this.panelDescriptions.put(panel.name(), panel.description());
 
@@ -244,6 +248,7 @@ public class Problem {
         // -- AGGREGATION --
         this.panelNames            = builder.panelNames;
         this.panelWeights          = builder.panelWeights;
+        this.panelWeightMap        = builder.panelWeightMap;
         this.numObjectivesPerPanel = builder.numObjectivesPerPanel;
         this.panelDescriptions     = builder.panelDescriptions;
         this.numPanels             = builder.numPanels;

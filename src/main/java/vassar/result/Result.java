@@ -10,8 +10,10 @@ import vassar.architecture.ADDArchitecture;
 import vassar.architecture.AbstractArchitecture;
 
 import jess.*;
+import vassar.jess.Resource;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.ArrayList;
 import java.util.Vector;
@@ -19,23 +21,23 @@ import java.util.Vector;
 public class Result implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private double science;
-    private double cost;
-    private double dataContinuity;
-    private double fairnessScore;
-    private double programmaticRisk;
-    private ArrayList<ArrayList<ArrayList<Double>>> subobjectiveScores;
-    private ArrayList<ArrayList<Double>> objectiveScores;
-    private ArrayList<Double> panelScores;
-    private FuzzyValue fuzzyScience;
-    private FuzzyValue fuzzyCost;
-    private AbstractArchitecture arch;
+    public double science;
+    public double cost;
+    public double dataContinuity;
+    public double fairnessScore;
+    public double programmaticRisk;
+    public ArrayList<ArrayList<ArrayList<Double>>> subobjectiveScores;
+    public ArrayList<ArrayList<Double>> objectiveScores;
+    public ArrayList<Double> panelScores;
+    public FuzzyValue fuzzyScience;
+    public FuzzyValue fuzzyCost;
+    public AbstractArchitecture arch;
     public TreeMap<String,ArrayList<Fact>> explanations;
-    private TreeMap<String,ArrayList<Fact>> capabilityList;
-    private TreeMap<String,Double> subobjectiveScoresMap;
+    public TreeMap<String,ArrayList<Fact>> capabilityList;
+    public TreeMap<String,Double> subobjectiveScoresMap;
     public ArrayList<Fact> capabilities;
-    private ArrayList<Fact> costFacts;
-    private String taskType;
+    public ArrayList<Fact> costFacts;
+    public String taskType;
 
     private Vector<String> performanceCritique;
     private Vector<String> costCritique;
@@ -113,6 +115,10 @@ public class Result implements Serializable {
         this.designString = "";
         this.subobjectiveInfo = new JsonObject();
         this.mission_launch_mass = "";
+    }
+
+    public void setPanelScores(ArrayList<Double> panelScores){
+        this.panelScores = panelScores;
     }
 
 
@@ -281,6 +287,18 @@ public class Result implements Serializable {
             res += num;
         }
         return res;
+    }
+
+
+    public HashMap<String, Double> get_panel_satisfaction(Resource res){
+        HashMap<String, Double> satisfaction = new HashMap<>();
+        for (int panel_idx = 0; panel_idx < res.problem.panelNames.size(); ++panel_idx){
+            satisfaction.put(
+                    res.problem.panelNames.get(panel_idx),
+                    this.getPanelScores().get(panel_idx)
+            );
+        }
+        return satisfaction;
     }
 
 

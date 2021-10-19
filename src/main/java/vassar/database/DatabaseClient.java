@@ -164,6 +164,16 @@ public class DatabaseClient {
     }
 
 
+    public String getProblemName(){
+        List<ProblemNameQuery.Item> items = this.queryAPI.getProblemName();
+        String problem_name = "";
+        for(ProblemNameQuery.Item item: items){
+            problem_name = item.name();
+        }
+        return problem_name;
+    }
+
+
     public List<WalkerMissionAnalysisQuery.Item> getWalkerMissionAnalysis(){
         return this.queryAPI.walkerMissionAnalysisQuery();
     }

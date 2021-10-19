@@ -4,9 +4,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import evaluator.EvaluatorApp;
 import evaluator.ResourcePaths;
+import org.apache.commons.lang3.ArrayUtils;
 import org.paukov.combinatorics3.IGenerator;
+import vassar.architecture.AbstractArchitecture;
+import vassar.architecture.Architecture;
 import vassar.architecture.SingleSat;
 import vassar.evaluator.ADDEvaluator;
+import vassar.evaluator.AbstractArchitectureEvaluator;
+import vassar.evaluator.ArchitectureEvaluator;
 import vassar.jess.Resource;
 
 import java.io.FileInputStream;
@@ -27,9 +32,166 @@ import vassar.result.Result;
 public class Combinatorics {
 
 
+    public static String get_design_string(String[] all_orbits, String[] all_instruments, ArrayList<String> design_instruments, String design_orbit){
+        int num_orbits = all_orbits.length;
+        int num_instruments = all_instruments.length;
+        String design = "";
+
+        int orb_idx = ArrayUtils.indexOf(all_orbits, design_orbit);
+        ArrayList<Integer> inst_idxs = new ArrayList<>();
+        for(String inst: design_instruments){
+            inst_idxs.add(ArrayUtils.indexOf(all_instruments, inst));
+        }
+
+        for(int x = 0; x < num_orbits; x++){
+            for(int y = 0; y < num_instruments; y++){
+                if(x == orb_idx){
+                    if(inst_idxs.contains(y)){
+                        design += "1";
+                    }
+                    else{
+                        design += "0";
+                    }
+                }
+                else{
+                    design += "0";
+                }
+            }
+        }
+        return design;
+    }
+
+
+
+    public static HashMap<String,NDSM2> compute_NDSM_AI4SE(Resource res, String[] instruments, int dim){
+        HashMap<String,NDSM2> dsm_map = new HashMap<>();
+        IGenerator gen = Generator.combination(instruments).simple(dim);
+
+        // 1. Iterate over orbits
+        for(int x = 0; x < res.problem.getNumOrbits(); x++) {
+            String orbit = res.problem.orbitList[x];
+
+            // --> DSM KEYS: stakeholders
+            String s1_key = "S1DSM" + dim + "@" + orbit; // Oceanic
+            String s2_key = "S2DSM" + dim + "@" + orbit; // Atmosphere
+            String s3_key = "S3DSM" + dim + "@" + orbit; // Terrestrial
+
+            // --> DSM KEYS: data-continuity
+            String d_key =  "DDSM" + dim + "@" + orbit;
+
+            // --> DSM KEYS: cost
+            String c_key =  "CDSM" + dim + "@" + orbit;
+
+            // 2. Iterate over instrument combinations
+            Iterator it = gen.iterator();
+            while(it.hasNext()){
+                ArrayList<String> instrument_combination = (ArrayList<String>)it.next();
+
+                System.out.println("--> ORBIT " + orbit);
+                System.out.println("--> INSTRUMENT " + instrument_combination);
+
+                String design = Combinatorics.get_design_string(res.problem.orbitList, res.problem.instrumentList, instrument_combination, orbit);
+
+                // --> EVALUATION
+                AbstractArchitecture arch = new Architecture(design, 1, res.getProblem());
+
+                AbstractArchitectureEvaluator t = new ArchitectureEvaluator(res, arch, "Slow");
+
+                ExecutorService executorService = Executors.newFixedThreadPool(1);
+
+                Future<Result> future = executorService.submit(t);
+
+                Result result = null;
+                try {
+                    result = future.get();
+                }
+                catch (ExecutionException e) {
+                    System.out.println("Exception when evaluating an architecture");
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
+                catch (InterruptedException e) {
+                    System.out.println("Execution got interrupted while evaluating an architecture");
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
+
+                HashMap<String, Double> panel_sat = result.get_panel_satisfaction(res);
+                System.out.println("--> PANEL SATISFACTION " + panel_sat);
+                double s1 = panel_sat.get("Oceanic");
+                double s2 = panel_sat.get("Atmosphere");
+                double s3 = panel_sat.get("Terrestrial");
+                double data_continuity = result.getDataContinuityScore();
+                double cost = result.getCost();
+
+
+
+                // --> NDSM
+
+                // Oceanic
+                Combinatorics.setNDSM(res, dsm_map, s1_key, instrument_combination, s1);
+
+                // Atmospheric
+                Combinatorics.setNDSM(res, dsm_map, s2_key, instrument_combination, s2);
+
+                // Terrestrial
+                Combinatorics.setNDSM(res, dsm_map, s3_key, instrument_combination, s3);
+
+                // Data Continuity
+                Combinatorics.setNDSM(res, dsm_map, d_key, instrument_combination, data_continuity);
+
+                // Cost
+                Combinatorics.setNDSM(res, dsm_map, c_key, instrument_combination, cost);
+            }
+        }
+
+        try{
+            SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd-HH-mm-ss" );
+            String stamp = dateFormat.format( new Date() );
+            FileOutputStream file = new FileOutputStream(ResourcePaths.rootDirectory + "/output/DSM-Climate2-"+dim+"-" + stamp + ".dat");
+            ObjectOutputStream os = new ObjectOutputStream( file );
+            os.writeObject( dsm_map );
+            os.close();
+            file.close();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        return dsm_map;
+    }
+
+
+
+
+
+    public static void setNDSM(Resource res, HashMap<String,NDSM2> dsm_map, String key, ArrayList<String> instrument_combination, double value){
+        NDSM2 temp_ndsm = dsm_map.get(key);
+        if(temp_ndsm == null){
+            temp_ndsm = new NDSM2(res.problem.instrumentList, key);
+            dsm_map.put(key, temp_ndsm);
+        }
+        temp_ndsm.setInteraction(instrument_combination.toArray(new String[0]), value);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Computes synergy NDSM for instruments (for all orbits)
-    // SDSN: synergy based
+    // SDSM: synergy based
     // EDSM: cost based
     public static HashMap<String,NDSM> computeNDSM(Resource res, String[] instruments, int dim){
         HashMap<String,NDSM> dsm_map = new HashMap<>();
@@ -44,7 +206,7 @@ public class Combinatorics {
 
 
 
-            // Iterate over combinations
+            // Iterate over instrument combinations
             Iterator it = gen.iterator();
             while(it.hasNext()){
                 ArrayList<String> combination = (ArrayList<String>)it.next();
@@ -190,6 +352,21 @@ public class Combinatorics {
 
     public static HashMap<String,NDSM> getNDSMs(String path){
         HashMap<String,NDSM> result = null;
+
+        try{
+            FileInputStream stream = new FileInputStream(path);
+            ObjectInputStream object_stream = new ObjectInputStream(stream);
+            result = (HashMap) object_stream.readObject();
+            return result;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static HashMap<String,NDSM2> getNDSM2s(String path){
+        HashMap<String,NDSM2> result = null;
 
         try{
             FileInputStream stream = new FileInputStream(path);

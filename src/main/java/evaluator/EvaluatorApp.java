@@ -58,6 +58,7 @@ public class EvaluatorApp {
         String responseQueueUrl   = System.getenv("VASSAR_RESPONSE_URL");
         String apolloUrl          = System.getenv("APOLLO_URL");
         String apolloWsUrl        = System.getenv("APOLLO_URL_WS");
+        String requestKey         = System.getenv("REQUEST_KEY");
 
         boolean debug = true;
 
@@ -152,6 +153,7 @@ public class EvaluatorApp {
                                          .setVassarClient(vClient)
                                          .setRequestQueueUrl(requestQueueUrl)
                                          .setResponseQueueUrl(responseQueueUrl)
+                                         .setRequestKey(requestKey)
                                          .setPrivateQueue(queue)
                                          .setECSClient(ecsClient)
                                          .debug(debug)

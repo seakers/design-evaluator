@@ -382,7 +382,14 @@ public class QueryAPI {
         return observable.blockingFirst().getData().items();
     }
 
-
+    public List<ProblemNameQuery.Item> getProblemName(){
+        ProblemNameQuery pQuery = ProblemNameQuery.builder()
+                .problem_id(this.problemId)
+                .build();
+        ApolloCall<ProblemNameQuery.Data>           apolloCall  = this.apollo.query(pQuery);
+        Observable<Response<ProblemNameQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items();
+    }
 
 
     // ---> ARCHITECTURE
