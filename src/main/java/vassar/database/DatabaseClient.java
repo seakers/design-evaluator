@@ -26,6 +26,9 @@ public class DatabaseClient {
     private QueryAPI queryAPI;
     private DebugAPI debugAPI;
     private ArrayList<ApolloSubscriptionCall> subscriptions;
+    private HashMap<String, Integer> panel_cache;
+    private HashMap<String, Integer> obj_cache;
+    private HashMap<String, Integer> subobj_cache;
 
     ArrayList<HashMap<String, ArrayList<Date>>> historical_info;
     HashMap<String, JsonObject> subobjective_objects;
@@ -58,21 +61,27 @@ public class DatabaseClient {
 
         public Builder subscribe(){
             subscriptions = new ArrayList<>();
-            subscriptions.add(
-                    this.queryAPI.subscribeToInstruments()
-            );
-            subscriptions.add(
-                    this.queryAPI.subscribeToOrbits()
-            );
-            subscriptions.add(
-                    this.queryAPI.subscribeToStakeholders()
-            );
-            subscriptions.add(
-                    this.queryAPI.subscribeToInstrumentCharacteristics()
-            );
-            subscriptions.add(
-                    this.queryAPI.subscribeToLaunchVehicles()
-            );
+            if(this.queryAPI.problemId != 0){
+//                subscriptions.add(
+//                        this.queryAPI.subscribeToAll()
+//                );
+                subscriptions.add(
+                        this.queryAPI.subscribeToInstruments()
+                );
+                subscriptions.add(
+                        this.queryAPI.subscribeToOrbits()
+                );
+                subscriptions.add(
+                        this.queryAPI.subscribeToStakeholders()
+                );
+                subscriptions.add(
+                        this.queryAPI.subscribeToInstrumentCharacteristics()
+                );
+                subscriptions.add(
+                        this.queryAPI.subscribeToLaunchVehicles()
+                );
+            }
+
             return this;
         }
 
@@ -84,6 +93,9 @@ public class DatabaseClient {
             api.subscriptions  = this.subscriptions;
             api.historical_info = new ArrayList<>();
             api.subobjective_objects = new HashMap<>();
+            api.panel_cache = new HashMap<>();
+            api.obj_cache = new HashMap<>();
+            api.subobj_cache = new HashMap<>();
             return api;
         }
     }
@@ -270,13 +282,22 @@ public class DatabaseClient {
 
     // ---> Getters
     public int getPanelID(String panelName){
-        return this.queryAPI.getPanelID(panelName);
+        if(!this.panel_cache.containsKey(panelName)){
+            this.panel_cache.put(panelName, this.queryAPI.getPanelID(panelName));
+        }
+        return this.panel_cache.get(panelName);
     }
     public int getObjectiveID(String objName){
-        return this.queryAPI.getObjectiveID(objName);
+        if(!this.obj_cache.containsKey(objName)){
+            this.obj_cache.put(objName, this.queryAPI.getObjectiveID(objName));
+        }
+        return this.obj_cache.get(objName);
     }
     public int getSubobjectiveID(String subobjName){
-        return this.queryAPI.getSubobjectiveID(subobjName);
+        if(!this.subobj_cache.containsKey(subobjName)){
+            this.subobj_cache.put(subobjName, this.queryAPI.getSubobjectiveID(subobjName));
+        }
+        return this.subobj_cache.get(subobjName);
     }
 
     public ArrayList<String> getInstrumentMeasurements(String instrument, boolean trim){
@@ -345,6 +366,12 @@ public class DatabaseClient {
         this.queryAPI.userId = id;
     }
 
+    public void resetCache(){
+        this.panel_cache = new HashMap<>();
+        this.obj_cache = new HashMap<>();
+        this.subobj_cache = new HashMap<>();
+    }
+
     public void resubscribe(){
         // 1. Cancel all subscriptions
         for(ApolloSubscriptionCall sub: this.subscriptions){
@@ -353,6 +380,9 @@ public class DatabaseClient {
 
         // 2. Create new subscriptions
         ArrayList<ApolloSubscriptionCall> new_subs = new ArrayList<>();
+//        new_subs.add(
+//                this.queryAPI.subscribeToAll()
+//        );
         new_subs.add(
                 this.queryAPI.subscribeToInstruments()
         );
