@@ -26,6 +26,9 @@ public class DatabaseClient {
     private QueryAPI queryAPI;
     private DebugAPI debugAPI;
     private ArrayList<ApolloSubscriptionCall> subscriptions;
+    private HashMap<String, Integer> panelCache;
+    private HashMap<String, Integer> objCache;
+    private HashMap<String, Integer> subobjCache;
 
     ArrayList<HashMap<String, ArrayList<Date>>> historical_info;
     HashMap<String, JsonObject> subobjective_objects;
@@ -58,21 +61,23 @@ public class DatabaseClient {
 
         public Builder subscribe(){
             subscriptions = new ArrayList<>();
-            subscriptions.add(
-                    this.queryAPI.subscribeToInstruments()
-            );
-            subscriptions.add(
-                    this.queryAPI.subscribeToOrbits()
-            );
-            subscriptions.add(
-                    this.queryAPI.subscribeToStakeholders()
-            );
-            subscriptions.add(
-                    this.queryAPI.subscribeToInstrumentCharacteristics()
-            );
-            subscriptions.add(
-                    this.queryAPI.subscribeToLaunchVehicles()
-            );
+            if(this.queryAPI.problemId != 0) {
+                subscriptions.add(
+                        this.queryAPI.subscribeToInstruments()
+                );
+                subscriptions.add(
+                        this.queryAPI.subscribeToOrbits()
+                );
+                subscriptions.add(
+                        this.queryAPI.subscribeToStakeholders()
+                );
+                subscriptions.add(
+                        this.queryAPI.subscribeToInstrumentCharacteristics()
+                );
+                subscriptions.add(
+                        this.queryAPI.subscribeToLaunchVehicles()
+                );
+            }
             return this;
         }
 
@@ -84,6 +89,9 @@ public class DatabaseClient {
             api.subscriptions  = this.subscriptions;
             api.historical_info = new ArrayList<>();
             api.subobjective_objects = new HashMap<>();
+            api.panelCache = new HashMap<>();
+            api.objCache = new HashMap<>();
+            api.subobjCache = new HashMap<>();
             return api;
         }
     }
@@ -260,13 +268,22 @@ public class DatabaseClient {
 
     // ---> Getters
     public int getPanelID(String panelName){
-        return this.queryAPI.getPanelID(panelName);
+        if (!this.panelCache.containsKey(panelName)) {
+            this.panelCache.put(panelName, this.queryAPI.getPanelID(panelName));
+        }
+        return this.panelCache.get(panelName);
     }
     public int getObjectiveID(String objName){
-        return this.queryAPI.getObjectiveID(objName);
+        if (!this.objCache.containsKey(objName)) {
+            this.objCache.put(objName, this.queryAPI.getObjectiveID(objName));
+        }
+        return this.objCache.get(objName);
     }
     public int getSubobjectiveID(String subobjName){
-        return this.queryAPI.getSubobjectiveID(subobjName);
+        if (!this.subobjCache.containsKey(subobjName)) {
+            this.subobjCache.put(subobjName, this.queryAPI.getSubobjectiveID(subobjName));
+        }
+        return this.subobjCache.get(subobjName);
     }
 
     public ArrayList<String> getInstrumentMeasurements(String instrument, boolean trim){
@@ -333,6 +350,12 @@ public class DatabaseClient {
 
     public void setUserID(int id){
         this.queryAPI.userId = id;
+    }
+
+    public void resetCache(){
+        this.panelCache = new HashMap<>();
+        this.objCache = new HashMap<>();
+        this.subobjCache = new HashMap<>();
     }
 
     public void resubscribe(){

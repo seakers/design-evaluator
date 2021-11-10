@@ -109,6 +109,7 @@ public class Resource {
         }
 
         this.dbClient.resubscribe();
+        this.dbClient.resetCache();
 
         GlobalScope.init();
 

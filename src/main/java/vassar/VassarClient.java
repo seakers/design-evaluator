@@ -411,7 +411,6 @@ public class VassarClient {
                 this.engine.dbClient.insertPanelScoreExplanationBatch(explanations.panelExplanations);
                 this.engine.dbClient.insertObjectiveScoreExplanationBatch(explanations.objectiveExplanations);
                 this.engine.dbClient.insertSubobjectiveScoreExplanationBatch(explanations.subobjectiveExplanations);
-
                 ArrayList<ArchitectureCostInformation_insert_input> costInserts = this.fillArchitectureCostInformations(result, Optional.of(archID));
                 this.engine.dbClient.insertArchitectureCostInformationBatch(costInserts);
 

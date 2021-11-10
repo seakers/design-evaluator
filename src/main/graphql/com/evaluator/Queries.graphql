@@ -464,8 +464,8 @@ mutation InsertArchitectureSlow($problem_id: Int!,
     }
 }
 
-mutation UpdateArchitecture($problem_id: Int!, $dataset_id: Int!, $user_id: Int!, $input: String!, $science: float8, $cost: float8, $eval_status: Boolean, $improve_hv: Boolean = false){
-    items: update_Architecture(where: {problem_id: {_eq: $problem_id}, dataset_id: {_eq: $dataset_id}, user_id: {_eq: $user_id}, input: {_eq: $input}}, _set: {science: $science, cost: $cost, eval_status: $eval_status, improve_hv: $improve_hv}) {
+mutation UpdateArchitecture($problem_id: Int!, $dataset_id: Int!, $input: String!, $science: float8, $cost: float8, $eval_status: Boolean, $improve_hv: Boolean = false){
+    items: update_Architecture(where: {problem_id: {_eq: $problem_id}, dataset_id: {_eq: $dataset_id}, input: {_eq: $input}}, _set: {science: $science, cost: $cost, eval_status: $eval_status, improve_hv: $improve_hv}) {
         returning {
             id
         }

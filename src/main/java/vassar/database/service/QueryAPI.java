@@ -388,7 +388,6 @@ public class QueryAPI {
     // ---> ARCHITECTURE
     public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
         UpdateArchitectureMutation archMutation = UpdateArchitectureMutation.builder()
-                .user_id(this.userId)
                 .problem_id(this.problemId)
                 .dataset_id(datasetId)
                 .input(input)
