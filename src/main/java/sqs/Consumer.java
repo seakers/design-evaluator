@@ -332,7 +332,7 @@ public class Consumer implements Runnable {
                 }
                 break;
             case READY:
-                if (System.currentTimeMillis() - this.lastPingTime > 5*60*1000) {
+                if (System.currentTimeMillis() - this.lastPingTime > 30*60*1000) {
                     this.currentState = State.WAITING_FOR_USER;
                     this.userRequestQueueUrl = null;
                     this.userResponseQueueUrl = null;
