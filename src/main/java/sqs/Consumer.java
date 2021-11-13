@@ -671,7 +671,7 @@ public class Consumer implements Runnable {
         messageAttributes.put("msgType",
                 MessageAttributeValue.builder()
                         .dataType("String")
-                        .stringValue("isReady")
+                        .stringValue("buildDone")
                         .build()
         );
         messageAttributes.put("type",
