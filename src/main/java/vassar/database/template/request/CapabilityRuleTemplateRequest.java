@@ -11,6 +11,7 @@ import vassar.database.template.TemplateResponse;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 public class CapabilityRuleTemplateRequest extends TemplateRequest {
@@ -62,7 +63,7 @@ public class CapabilityRuleTemplateRequest extends TemplateRequest {
 
 
 
-    public class CapabilityRules{
+    public class CapabilityRules {
 
         private List<CapabilityRuleQuery.Item>      items;
         public  ArrayList<Instrument>               instruments;
@@ -93,7 +94,7 @@ public class CapabilityRuleTemplateRequest extends TemplateRequest {
             return this.instruments;
         }
 
-        public class Instrument{
+        public class Instrument {
             public String                                               name;
             public ArrayList<Measurement>                               measurements;
             public HashMap<String, ArrayList<CapabilityRuleQuery.Item>> measurement_partition;
@@ -141,11 +142,13 @@ public class CapabilityRuleTemplateRequest extends TemplateRequest {
                 this.attributes = new ArrayList<>();
 
                 for (CapabilityRuleQuery.Item item : items) {
-                    MPair pair = new MPair(
-                            item.measurement_attribute().name(),
-                            item.measurement_attribute_value()
-                    );
-                    this.attributes.add(pair);
+                    if (item.measurement().name().equals(name)) {
+                        MPair pair = new MPair(
+                                item.measurement_attribute().name(),
+                                item.measurement_attribute_value()
+                        );
+                        this.attributes.add(pair);
+                    }
                 }
             }
         }
