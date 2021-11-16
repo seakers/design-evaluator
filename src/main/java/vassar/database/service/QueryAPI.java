@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 public class QueryAPI {
 
@@ -427,8 +428,23 @@ public class QueryAPI {
                 .build();
         ApolloCall<InsertArchitectureSlowMutation.Data>           apolloCall  = this.apollo.mutate(archMutation);
         Observable<Response<InsertArchitectureSlowMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
-
-        return observable.blockingFirst().getData().architecture().returning().get(0).id();
+        Response<InsertArchitectureSlowMutation.Data> response = observable.blockingFirst();
+        if (response.hasErrors()) {
+            for (com.apollographql.apollo.api.Error err: response.getErrors()) {
+                System.out.println(err.getMessage());
+            }
+            try {
+                TimeUnit.SECONDS.sleep(10);
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return -1;
+        }
+        else {
+            return observable.blockingFirst().getData().architecture().returning().get(0).id();
+        }
+        
     }
 
     public int insertArchitectureScoreExplanation(int archID, int panelID, double satisfaction){
