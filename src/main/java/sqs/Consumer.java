@@ -4,6 +4,7 @@ import evaluator.EvaluatorApp;
 import software.amazon.awssdk.services.sqs.model.*;
 import vassar.VassarClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.MessageSystemAttributeName;
 import software.amazon.awssdk.services.ecs.EcsClient;
 import software.amazon.awssdk.services.ecs.model.DescribeServicesRequest;
 import software.amazon.awssdk.services.ecs.model.DescribeServicesResponse;
@@ -18,6 +19,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -726,7 +729,25 @@ public class Consumer implements Runnable {
                 .attributeNames(QueueAttributeName.ALL)
                 .messageAttributeNames("All")
                 .build();
-        return this.sqsClient.receiveMessage(receiveMessageRequest).messages();
+
+        List<Message> messages = new ArrayList<>(this.sqsClient.receiveMessage(receiveMessageRequest).messages());
+
+        Collections.sort(messages, (Message a, Message b) -> {
+            Long timestamp_a = Long.parseLong(a.attributes().get(MessageSystemAttributeName.SENT_TIMESTAMP));
+            Long timestamp_b = Long.parseLong(b.attributes().get(MessageSystemAttributeName.SENT_TIMESTAMP));
+            Long diff = timestamp_a - timestamp_b;
+            if (diff > 0) {
+                return 1;
+            }
+            else if (diff < 0) {
+                return -1;
+            }
+            else {
+                return 0;
+            }
+        });
+        
+        return messages;
     }
 
     // 2.
