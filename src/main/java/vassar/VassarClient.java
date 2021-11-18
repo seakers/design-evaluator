@@ -393,7 +393,7 @@ public class VassarClient {
 
 
     public void indexArchitecture(Result result, String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast){
-
+        System.out.println("---> Indexing architecture: dataset_id: " + datasetId + "; ga: " + ga + "; redo: " + redo + "; fast: " + fast);
         double cost    = result.getCost();
         double science = result.getScience();
 
@@ -420,7 +420,8 @@ public class VassarClient {
         }
         else {
             if (fast) {
-                this.engine.dbClient.insertArchitectureFast(bitString, datasetId, science, cost, ga);
+                int archID = this.engine.dbClient.insertArchitectureFast(bitString, datasetId, science, cost, ga);
+                System.out.println("---> Fast indexed architecture ID: " + archID);
             }
             else {
                 InsertArchitectureSlowMutation.Builder archBuilder = InsertArchitectureSlowMutation.builder();
@@ -442,6 +443,7 @@ public class VassarClient {
                     .critique(critique);
                 
                 int archID = this.engine.dbClient.insertArchitectureSlow(archBuilder);
+                System.out.println("---> Slow indexed architecture ID: " + archID);
             }
         }
     }

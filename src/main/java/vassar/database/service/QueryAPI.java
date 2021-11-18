@@ -433,12 +433,6 @@ public class QueryAPI {
             for (com.apollographql.apollo.api.Error err: response.getErrors()) {
                 System.out.println(err.getMessage());
             }
-            try {
-                TimeUnit.SECONDS.sleep(10);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             return -1;
         }
         else {
