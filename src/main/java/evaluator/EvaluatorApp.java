@@ -162,7 +162,7 @@ public class EvaluatorApp {
             evaluator.run();
         }
         catch (Exception e) {
-            throw e;
+            e.printStackTrace();
         }
         finally {
             sqsClient.close();

@@ -442,7 +442,7 @@ public class QueryAPI {
             return -1;
         }
         else {
-            return observable.blockingFirst().getData().architecture().returning().get(0).id();
+            return response.getData().architecture().returning().get(0).id();
         }
         
     }
