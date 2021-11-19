@@ -2,6 +2,7 @@ package vassar;
 
 
 
+import com.evaluator.DatasetInfoQuery;
 import com.evaluator.InsertArchitectureCostInformationMutation;
 import com.evaluator.InsertArchitectureSlowMutation;
 import com.evaluator.RequirementRulesForSubobjectiveQuery;
@@ -784,6 +785,23 @@ public class VassarClient {
 
         Resource newResource = this.engine.rebuild(group_id, problem_id, newRequests.getRequests());
         this.engine          = newResource;
+    }
+
+    public DatasetInfoQuery.Data getDatasetInfo(int datasetId) {
+        return this.engine.dbClient.getDatasetInfo(datasetId);
+    }
+
+    public boolean checkDatasetInfo(int datasetId) {
+        DatasetInfoQuery.Data datasetInfo = this.getDatasetInfo(datasetId);
+        return datasetInfo.dataset().problem_id() == this.engine.dbClient.getProblemID();
+    }
+
+    public int getProblemID() {
+        return this.engine.dbClient.getProblemID();
+    }
+
+    public int getGroupID() {
+        return this.engine.dbClient.getGroupID();
     }
 
 

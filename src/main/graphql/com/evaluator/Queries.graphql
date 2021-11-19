@@ -405,6 +405,16 @@ query SubobjectiveId($problem_id: Int!, $name: String!){
 #  / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
 # /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
+
+query DatasetInfo($id: Int! = -1) {
+    dataset: Dataset_by_pk(id: $id) {
+        problem_id
+        group_id
+        id
+        user_id
+    }
+}
+
 query ArchitectureCount($problem_id: Int!, $dataset_id: Int!, $input: String!) {
     items: Architecture_aggregate(where: {problem_id: {_eq: $problem_id}, dataset_id: {_eq: $dataset_id}, input: {_eq: $input}}) {
         aggregate {

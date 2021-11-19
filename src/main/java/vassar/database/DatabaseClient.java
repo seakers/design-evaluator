@@ -337,6 +337,9 @@ public class DatabaseClient {
         return this.queryAPI.getRequirementRulesForSubobjective(subobjectiveName);
     }
 
+    public DatasetInfoQuery.Data getDatasetInfo(int datasetId) {
+        return this.queryAPI.getDatasetInfo(datasetId);
+    }
 
 
 
@@ -344,8 +347,16 @@ public class DatabaseClient {
         this.queryAPI.problemId = id;
     }
 
+    public int getProblemID(){
+        return this.queryAPI.problemId;
+    }
+
     public void setGroupID(int id){
         this.queryAPI.groupId = id;
+    }
+
+    public int getGroupID(){
+        return this.queryAPI.groupId;
     }
 
     public void setUserID(int id){

@@ -533,7 +533,6 @@ public class Consumer implements Runnable {
         boolean re_evaluate = false;
         boolean fast        = false;
 
-
         if(msg_contents.containsKey("ga")){
             ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
         }
@@ -553,6 +552,13 @@ public class Consumer implements Runnable {
                 this.consumerSleep(1);
                 return;
             }
+        }
+
+        // Ensure we are on the right problem for the data, rebuild if not
+        if (!this.client.checkDatasetInfo(datasetId)) {
+            int groupId = this.client.getGroupID();
+            int newProblemId = this.client.getDatasetInfo(datasetId).dataset().problem_id();
+            this.client.rebuildResource(groupId, newProblemId);
         }
 
         Result result = this.client.evaluateArchitecture(input, datasetId, ga_arch, re_evaluate, fast);

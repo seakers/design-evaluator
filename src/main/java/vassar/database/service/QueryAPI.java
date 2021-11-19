@@ -387,6 +387,14 @@ public class QueryAPI {
 
 
     // ---> ARCHITECTURE
+    public DatasetInfoQuery.Data getDatasetInfo(int datasetId) {
+        DatasetInfoQuery datasetQuery = DatasetInfoQuery.builder().id(datasetId).build();
+        ApolloCall<DatasetInfoQuery.Data>           apolloCall  = this.apollo.query(datasetQuery);
+        Observable<Response<DatasetInfoQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+
+        return observable.blockingFirst().getData();
+    }
+
     public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga){
         UpdateArchitectureMutation archMutation = UpdateArchitectureMutation.builder()
                 .problem_id(this.problemId)
