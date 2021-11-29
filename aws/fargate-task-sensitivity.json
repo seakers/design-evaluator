@@ -1,0 +1,37 @@
+{
+  "family": "sensitivity-evaluator",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "evaluator",
+      "image": "923405430231.dkr.ecr.us-east-2.amazonaws.com/vassar-sensitivity:latest",
+      "essential": true,
+      "command": ["/app/evaluator/bin/evaluator"],
+      "environment": [
+        { "name": "REQUEST_MODE", "value": "CRISP-ATTRIBUTES" },
+        { "name": "APOLLO_URL", "value": "http://ec2-3-128-235-245.us-east-2.compute.amazonaws.com:6002/v1/graphql" },
+        { "name": "APOLLO_URL_WS", "value": "ws://ec2-3-128-235-245.us-east-2.compute.amazonaws.com:6002/v1/graphql" },
+        { "name": "VASSAR_REQUEST_URL", "value": "https://sqs.us-east-2.amazonaws.com/923405430231/vassar_request_sensitivity" },
+        { "name": "VASSAR_RESPONSE_URL", "value": "https://sqs.us-east-2.amazonaws.com/923405430231/vassar_response_sensitivity" },
+        { "name": "DEPLOYMENT_TYPE", "value": "AWS" },
+        { "name": "CLUSTER_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster" },
+        { "name": "SERVICE_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/evaluator-service" },
+        { "name": "MAXEVAL", "value": "3" }
+      ],
+      "interactive": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "daphne-evaluator",
+          "awslogs-region": "us-east-2",
+          "awslogs-stream-prefix": "sensitivity"
+        }
+      }
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "taskRoleArn": "arn:aws:iam::923405430231:role/DaphneEvaluatorTaskRole",
+  "executionRoleArn": "arn:aws:iam::923405430231:role/ecsTaskExecutionRole"
+}

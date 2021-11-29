@@ -39,6 +39,7 @@ public class Problem {
     public ArrayList<ArrayList<ArrayList<Double>>> subobjWeights;
     public HashMap<String, String> subobjDescriptions;
     public HashMap<String, Double> subobjWeightsMap;
+    public HashMap<String, Integer> stakeholderIdMap;
 
 
 
@@ -71,6 +72,7 @@ public class Problem {
         public int      numPanels;
 
         public HashMap<String, String>            subobjectivesToMeasurements;
+        public HashMap<String, Integer>           stakeholderIdMap;
         public HashMap<String, ArrayList<String>> measurementsToSubobjectives;
         public HashMap<String, ArrayList<String>> instrumentsToMeasurements;
         public HashMap<String, ArrayList<String>> measurementsToInstruments;
@@ -180,6 +182,7 @@ public class Problem {
             this.panelNames            = new ArrayList<>();
             this.numObjectivesPerPanel = new ArrayList<>();
             this.panelDescriptions     = new HashMap<>();
+            this.stakeholderIdMap      = new HashMap<>();
             this.numPanels             = rules.size();
 
             // OBJECTIVES
@@ -196,6 +199,7 @@ public class Problem {
             for (AggregationRuleQuery.Item panel : rules) {  // FOR EACH: panel
                 this.panelWeights.add(Double.parseDouble(panel.weight().toString()));
                 this.panelNames.add(panel.name());
+                this.stakeholderIdMap.put(panel.name(), panel.id());
                 this.panelWeightMap.put(panel.name(), Double.parseDouble(panel.weight().toString()));
                 this.numObjectivesPerPanel.add(panel.objectives().size());
                 this.panelDescriptions.put(panel.name(), panel.description());
@@ -207,11 +211,13 @@ public class Problem {
                 for (AggregationRuleQuery.Objective objective : panel.objectives()){  // FOR EACH: objective
                     objWeights2.add(Double.parseDouble(objective.weight().toString()));
                     objNames2.add(objective.name());
+                    this.stakeholderIdMap.put(objective.name(), objective.id());
                     this.objectiveDescriptions.put(objective.name(), objective.description());
 
                     ArrayList<Double> subobjWeights3 = new ArrayList<>();
                     ArrayList<String> subobjectives3 = new ArrayList<>();
                     for (AggregationRuleQuery.Subobjective subobjective : objective.subobjectives()){ // FOR EACH: subobjective
+                        this.stakeholderIdMap.put(subobjective.name(), subobjective.id());
                         this.subobjDescriptions.put(subobjective.name(), subobjective.description());
                         this.subobjWeightsMap.put(subobjective.name(), Double.parseDouble(subobjective.weight().toString()));
                         subobjWeights3.add(((BigDecimal) subobjective.weight()).doubleValue());
@@ -259,6 +265,7 @@ public class Problem {
         this.subobjectives         = builder.subobjectives;
         this.subobjDescriptions    = builder.subobjDescriptions;
         this.subobjWeightsMap      = builder.subobjWeightsMap;
+        this.stakeholderIdMap      = builder.stakeholderIdMap;
 
         this.requestMode                 = builder.requestMode;
         this.parameterList               = builder.parameterList;

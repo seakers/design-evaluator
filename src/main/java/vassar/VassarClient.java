@@ -119,25 +119,28 @@ public class VassarClient {
         }
 
         // Stopping indexing of archs for Climate Centric testing
-        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast, false);
+        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast, false, 0);
 
         return result;
     }
 
-    public Result evaluateNDSMArchitecture(String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast, boolean improve_hv){
+    public Result evaluateNDSMArchitecture(String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast, boolean improve_hv, int eval_idx){
 
         String problem_name = this.engine.dbClient.getProblemName();
-        String _1DSM_file = "/app/output/DSM-Climate1-2021-10-16-01-03-10.dat";
-        String _2DSM_file = "/app/output/DSM-Climate2-2021-10-16-01-18-11.dat";
+        String _1DSM_file = "/app/output/DSM-Climate_1-1-2021-11-10-17-41-01.dat";
+        String _2DSM_file = "/app/output/DSM-Climate_1-2-2021-11-10-17-56-41.dat";
         if(Objects.equals(problem_name, "ClimateCentric_2")){
-            _1DSM_file = "/app/output/DSM-Climate2-1-2021-10-19-16-07-29.dat";
-            _2DSM_file = "/app/output/DSM-Climate2-2-2021-10-19-16-23-26.dat";
+            _1DSM_file = "/app/output/DSM-Climate_2-1-2021-11-10-18-14-15.dat";
+            _2DSM_file = "/app/output/DSM-Climate_2-2-2021-11-10-18-30-07.dat";
         }
 
         NDSMEvaluator evaluator = new NDSMEvaluator.Builder(this.engine, bitString)
                 .set_1DSM(_1DSM_file)
                 .set_2DSM(_2DSM_file)
                 .build();
+
+        long start_time = System.nanoTime();
+
 
         ExecutorService executorService = Executors.newFixedThreadPool(1);
 
@@ -158,20 +161,17 @@ public class VassarClient {
             System.exit(-1);
         }
 
-        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast, improve_hv);
+        long finish_eval_time = System.nanoTime();
+
+        double eval_time = (finish_eval_time - start_time) / 1000000000.0;
+        System.out.println("--> EVAL TIME: " + eval_time);
+
+
+        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast, improve_hv, eval_idx);
+
 
         return result;
     }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -440,13 +440,17 @@ public class VassarClient {
 
 
 
-    public void indexArchitecture(Result result, String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast, boolean improve_hv){
+    public void indexArchitecture(Result result, String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast, boolean improve_hv, int eval_idx){
+        long start_index_time = System.nanoTime();
 
         double cost    = result.getCost();
         double science = result.getScience();
         double programmatic_risk = result.getProgrammaticRisk();
         double fairness = result.getFairnessScore();
         double data_continuity = result.getDataContinuityScore();
+
+        long finish_init_time = System.nanoTime();
+
 
         if (redo) {
             int archID = this.engine.dbClient.updateArchitecture(bitString, datasetId, science, cost, ga, programmatic_risk, fairness, data_continuity);
@@ -476,29 +480,56 @@ public class VassarClient {
             }
             else {
                 InsertArchitectureSlowMutation.Builder archBuilder = InsertArchitectureSlowMutation.builder();
-                this.fillArchitectureInformation(archBuilder, datasetId, bitString, science, cost, ga, programmatic_risk, fairness, data_continuity, improve_hv);
-                
+                this.fillArchitectureInformation(archBuilder, datasetId, bitString, science, cost, ga, programmatic_risk, fairness, data_continuity, improve_hv, eval_idx);
+
+                long finish_fill_arch_time = System.nanoTime();
+
+                // --> This is taking a lot of time
                 ScoreExplanations explanations = this.fillArchitectureScoreExplanations(result);
                 archBuilder
                     .arch_scores(explanations.archExplanations)
                     .panel_scores(explanations.panelExplanations)
                     .objective_scores(explanations.objectiveExplanations)
                     .subobjective_scores(explanations.subobjectiveExplanations);
+
+                long finish_fill_score_explanations_time = System.nanoTime();
                 
                 ArrayList<ArchitectureCostInformation_insert_input> costInserts = this.fillArchitectureCostInformations(result);
                 archBuilder
                     .cost_informations(costInserts);
 
+                long finish_fill_cost_info_time = System.nanoTime();
+
                 String critique = this.fillArchitectureCritique(result);
                 archBuilder
                     .critique(critique);
+
+                long finish_preprocess_time = System.nanoTime();
                 
                 int archID = this.engine.dbClient.insertArchitectureSlow(archBuilder);
+                long finish_index_time = System.nanoTime();
+
+                double preprocess_time = (finish_preprocess_time - start_index_time) / 1000000000.0;
+                double init_time = (finish_init_time - start_index_time) / 1000000000.0;
+                double fill_arch_time = (finish_fill_arch_time - finish_init_time) / 1000000000.0;
+                double fill_score_explanation_time = (finish_fill_score_explanations_time - finish_fill_arch_time) / 1000000000.0;
+                double fill_cost_info_time = (finish_fill_cost_info_time - finish_fill_score_explanations_time) / 1000000000.0;
+                double fill_arch_critique_time = (finish_preprocess_time - finish_fill_cost_info_time) / 1000000000.0;
+                double index_time = (finish_index_time - finish_preprocess_time) / 1000000000.0;
+
+                System.out.println("\n------- INDEX STATS -------");
+                System.out.println("--> PREPROCESS TIME TOTAL: " + preprocess_time);
+                System.out.println("--> INIT TIME: " + init_time);
+                System.out.println("--> FILL ARCH TIME: " + fill_arch_time);
+                System.out.println("--> FILL SCORE EXPO TIME: " + fill_score_explanation_time);
+                System.out.println("--> FILL COST INFO TIME: " + fill_cost_info_time);
+                System.out.println("--> FILL ARCH CRITIQUE TIME: " + fill_arch_critique_time);
+                System.out.println("--> INDEX TIME: " + index_time);
             }
         }
     }
 
-    private void fillArchitectureInformation(InsertArchitectureSlowMutation.Builder builder, Integer datasetId, String input, double science, double cost, boolean ga, double programmatic_risk, double fairness, double data_continuity, boolean improve_hv) {
+    private void fillArchitectureInformation(InsertArchitectureSlowMutation.Builder builder, Integer datasetId, String input, double science, double cost, boolean ga, double programmatic_risk, double fairness, double data_continuity, boolean improve_hv, int eval_idx) {
         builder
             .dataset_id(datasetId)
             .input(input)
@@ -509,6 +540,7 @@ public class VassarClient {
             .improve_hv(improve_hv)
             .programmatic_risk(programmatic_risk)
             .fairness(fairness)
+            .eval_idx(eval_idx)
             .data_continuity(data_continuity);
     }
 
@@ -530,7 +562,7 @@ public class VassarClient {
             if (archID.isPresent()) { archExp.architecture_id(archID.get()); }
             archExplanations.add(
                 archExp
-                    .panel_id(this.engine.dbClient.getPanelID(this.engine.problem.panelNames.get(panel_idx)))
+                    .panel_id(this.engine.problem.stakeholderIdMap.get(this.engine.problem.panelNames.get(panel_idx)))
                     .satisfaction(result.getPanelScores().get(panel_idx))
                     .build()
             );
@@ -542,7 +574,7 @@ public class VassarClient {
                 if (archID.isPresent()) { panelExp.architecture_id(archID.get()); }
                 panelExplanations.add(
                     panelExp
-                        .objective_id(this.engine.dbClient.getObjectiveID(this.engine.problem.objNames.get(panel_idx).get(obj_idx)))
+                        .objective_id(this.engine.problem.stakeholderIdMap.get(this.engine.problem.objNames.get(panel_idx).get(obj_idx)))
 //                        .satisfaction(result.getObjectiveScores().get(panel_idx).get(obj_idx))
                         .satisfaction(0)
                         .build()
@@ -556,7 +588,7 @@ public class VassarClient {
                     if (archID.isPresent()) { objExp.architecture_id(archID.get()); }
                     objectiveExplanations.add(
                         objExp
-                            .subobjective_id(this.engine.dbClient.getSubobjectiveID(subobjectiveName))
+                            .subobjective_id(this.engine.problem.stakeholderIdMap.get(subobjectiveName))
 //                            .satisfaction(result.getSubobjectiveScores().get(panel_idx).get(obj_idx).get(subobj_idx))
                             .satisfaction(0)
                             .build()

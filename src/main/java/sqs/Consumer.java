@@ -45,12 +45,18 @@ public class Consumer implements Runnable {
     private String                                     requestKey;
     private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
     private State                                      currentState = State.WAITING_FOR_USER;
+    private String                                     brainPrivateQueue;
+    private String                                     brainPrivateQueueResponse;
     private String                                     uuid = UUID.randomUUID().toString();
     private String                                     userRequestQueueUrl = null;
     private String                                     userResponseQueueUrl = null;
     private long                                       lastPingTime = System.currentTimeMillis();
     private long                                       lastDownsizeRequestTime = System.currentTimeMillis();
     private int                                        userId;
+
+    private ConcurrentLinkedQueue<Map<String, String>> statusConsumerQueue;
+    private ConcurrentLinkedQueue<Map<String, String>> statusConsumerQueueResponse;
+    private PingConsumer statusConsumer;
 
 
     public static class Builder {
@@ -114,6 +120,9 @@ public class Consumer implements Runnable {
             build.privateQueue     = this.privateQueue;
             build.requestKey       = this.requestKey;
             build.running          = true;
+            build.statusConsumerQueue = new ConcurrentLinkedQueue<>();
+            build.statusConsumerQueueResponse = new ConcurrentLinkedQueue<>();
+            build.statusConsumer = new PingConsumer(build.statusConsumerQueue, build.statusConsumerQueueResponse);
             return build;
         }
 
@@ -128,6 +137,22 @@ public class Consumer implements Runnable {
     public void run() {
         int counter = 0;
 
+        // Get number of eval messages from ENV
+        String eval_msg_count = System.getenv("MAXEVAL");
+        int eval_msg_max = 1;
+        if(eval_msg_count != null){
+            eval_msg_max = Integer.parseInt(eval_msg_count);
+        }
+
+        // Get brain private queue name
+        this.brainPrivateQueue = System.getenv("PRIVATE_QUEUE_REQUEST");
+        this.brainPrivateQueueResponse = System.getenv("PRIVATE_QUEUE_RESPONSE");
+
+        // Run status consumer
+        this.statusConsumer.run();
+
+
+
         // this.sendTestMessages();
         this.deletePrivMessages();
 
@@ -140,40 +165,44 @@ public class Consumer implements Runnable {
             
             List<Map<String, String>> messagesContents = new ArrayList<>();
 
-            // Check if timers are expired for different states
-            // this.checkTimers();
+            // Check if timers in ping queue have expired
+            this.checkPingQueue();
 
             // CHECK PRIVATE QUEUE FIRST - IF PRIVATE QUEUE EMPTY, CHECK EVAL QUEUE
-            if (!this.privateQueue.isEmpty()) {
-                ArrayList<Map<String,String>> returnMessages = new ArrayList<>();
-                while (!this.privateQueue.isEmpty()) {
-                    Map<String, String> msgContents = this.privateQueue.poll();
-                    if (isMessageAllowed(msgContents)) {
-                        messagesContents.add(msgContents);
-                    }
-                    else {
-                        returnMessages.add(msgContents);
-                    }
-                }
-                this.privateQueue.addAll(returnMessages);
-            }
-            
+//            if (!this.privateQueue.isEmpty()) {
+//                ArrayList<Map<String,String>> returnMessages = new ArrayList<>();
+//                while (!this.privateQueue.isEmpty()) {
+//                    Map<String, String> msgContents = this.privateQueue.poll();
+//                    if (isMessageAllowed(msgContents)) {
+//                        messagesContents.add(msgContents);
+//                    }
+//                    else {
+//                        returnMessages.add(msgContents);
+//                    }
+//                }
+//                this.privateQueue.addAll(returnMessages);
+//            }
+
+
             // CHECK CONNECTION QUEUE
             List<Message> messages = new ArrayList<>();
-            List<Message> connectionMessages = new ArrayList<>();
-            if(this.currentState == State.WAITING_FOR_USER){
-                connectionMessages = this.getMessages(this.requestQueueUrl, 1, 3);
-                connectionMessages = this.handleMessages(this.requestQueueUrl, connectionMessages);
-            }
-            messages.addAll(connectionMessages);
 
             // CHECK USER QUEUE
             List<Message> userMessages = new ArrayList<>();
-            if (this.userRequestQueueUrl != null) {
-                userMessages = this.getMessages(this.userRequestQueueUrl, 5, 3);
+            if (this.userRequestQueueUrl != null && this.currentState == State.READY) {
+                userMessages = this.getMessages(this.userRequestQueueUrl, eval_msg_max, 3);
                 userMessages = this.handleMessages(this.userRequestQueueUrl, userMessages);
                 messages.addAll(userMessages);
             }
+
+            // CHECK BRAIN PRIVATE QUEUE IF EXISTS
+            List<Message> brainMessages = new ArrayList<>();
+            if(this.brainPrivateQueue != null){
+                brainMessages = this.getMessages(this.brainPrivateQueue, 1, 1);
+                brainMessages = this.handleMessages(this.brainPrivateQueue, brainMessages);
+            }
+            messages.addAll(brainMessages);
+
 
             // PROCESS ALL MESSAGES
             for (Message msg: messages) {
@@ -187,9 +216,6 @@ public class Consumer implements Runnable {
                     String msgType = msgContents.get("msgType");
                     if (msgType.equals("connectionRequest")) {
                         this.msgTypeConnectionRequest(msgContents);
-                    }
-                    else if (msgType.equals("statusCheck")) {
-                        this.msgTypeStatusCheck(msgContents);
                     }
                     else if (msgType.equals("evaluate")) {
                         // this.msgTypeEvaluate(msgContents);
@@ -220,8 +246,8 @@ public class Consumer implements Runnable {
                     else if (msgType.equals("build")) {
                         this.msgTypeBuild(msgContents);
                     }
-                    else if (msgType.equals("ping")) {
-                        this.msgTypePing(msgContents);
+                    else if (msgType.equals("build_experiment")) {
+                        this.msgTypeBuildExperiment(msgContents);
                     }
                     else if (msgType.equals("exit")) {
                         System.out.println("----> Exiting gracefully");
@@ -234,13 +260,19 @@ public class Consumer implements Runnable {
                 }
             }
 
-            if (!connectionMessages.isEmpty()) {
-                this.deleteMessages(connectionMessages, this.requestQueueUrl);
+            if (!brainMessages.isEmpty()) {
+                this.deleteMessages(brainMessages, this.brainPrivateQueue);
             }
             if (!userMessages.isEmpty()) {
                 this.deleteMessages(userMessages, this.userRequestQueueUrl);
             }
             counter++;
+        }
+    }
+
+    private void checkPingQueue() {
+        if(!this.statusConsumerQueueResponse.isEmpty()){
+            this.running = false;
         }
     }
 
@@ -390,7 +422,7 @@ public class Consumer implements Runnable {
                 allowedTypes = Arrays.asList("connectionRequest", "statusCheck");
                 break;
             case READY:
-                allowedTypes = Arrays.asList("build", "ping", "statusCheck", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ndsm_evaluate", "ContinuityMatrix", "exit");
+                allowedTypes = Arrays.asList("build", "build_experiment", "ping", "statusCheck", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ndsm_evaluate", "ContinuityMatrix", "exit");
                 break;
         }
         // Check for both allowedTypes and UUID match
@@ -673,6 +705,34 @@ public class Consumer implements Runnable {
     }
 
 
+    public void msgTypeBuildExperiment(Map<String, String> msg_contents){
+        int group_id   = Integer.parseInt(msg_contents.get("group_id"));
+        int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
+
+        this.client.rebuildResource(group_id, problem_id);
+
+        // Send message announcing it's ready to eval architectures - does this message still need to be sent?
+        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+        messageAttributes.put("msgType",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("SUCCESS")
+                        .build()
+        );
+        this.sqsClient.sendMessage(SendMessageRequest.builder()
+                .queueUrl(this.brainPrivateQueueResponse)
+                .messageBody("vassar_message")
+                .messageAttributes(messageAttributes)
+                .delaySeconds(0)
+                .build());
+
+        System.out.println("\n-------------------- BUILD REQUEST --------------------");
+        System.out.println("--------> GROUP ID: " + group_id);
+        System.out.println("------> PROBLEM ID: " + problem_id);
+        System.out.println("-------------------------------------------------------\n");
+        // this.consumerSleep(5);
+    }
+
     public void msgTypeBuild(Map<String, String> msg_contents){
         int group_id   = Integer.parseInt(msg_contents.get("group_id"));
         int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
@@ -750,6 +810,11 @@ public class Consumer implements Runnable {
             fast = Boolean.parseBoolean(msg_contents.get("fast"));
         }
 
+        int eval_idx = 1;
+        if(msg_contents.containsKey("eval_idx")){
+            eval_idx = Integer.parseInt(msg_contents.get("eval_idx"));
+        }
+
         if(!re_evaluate) {
             if (this.client.doesArchitectureExist(input)) {
                 System.out.println("---> Architecture already exists!!!");
@@ -759,7 +824,7 @@ public class Consumer implements Runnable {
             }
         }
 
-        Result result = this.client.evaluateNDSMArchitecture(input, datasetId, ga_arch, re_evaluate, fast, improve_hv);
+        Result result = this.client.evaluateNDSMArchitecture(input, datasetId, ga_arch, re_evaluate, fast, improve_hv, eval_idx);
     }
 
     public void msgTypeContinuityMatrix(Map<String, String> msg_contents){
@@ -958,19 +1023,16 @@ public class Consumer implements Runnable {
     }
 
     private QueueUrls createUserQueues(String userId) {
-        String requestQueueName = "user-queue-request-" + userId;
-        String responseQueueName = "user-queue-response-" + userId;
+        String requestQueueName = "user-" + userId + "-public-request-queue";
+        String responseQueueName = "user-" + userId + "-public-response-queue";
         Map<String,String> tags = new HashMap<>();
         tags.put("USER_ID", userId);
-        Map<QueueAttributeName, String> queueAttrs = new HashMap<>();
-        queueAttrs.put(QueueAttributeName.MESSAGE_RETENTION_PERIOD, Integer.toString(5*60));
-        queueAttrs.put(QueueAttributeName.REDRIVE_POLICY, "{\"maxReceiveCount\":\"3\", \"deadLetterTargetArn\":\"" + this.deadLetterQueueArn + "\"}");
+
         
         String newUserRequestQueueUrl = "";
         if (!this.queueExistsByName(requestQueueName)) {
             CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
                 .queueName(requestQueueName)
-                .attributes(queueAttrs)
                 .tags(tags)
                 .build();
             CreateQueueResponse response = this.sqsClient.createQueue(createQueueRequest);
@@ -978,18 +1040,12 @@ public class Consumer implements Runnable {
         }
         else {
             newUserRequestQueueUrl = this.getQueueUrl(requestQueueName);
-            SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
-                .queueUrl(newUserRequestQueueUrl)
-                .attributes(queueAttrs)
-                .build();
-            this.sqsClient.setQueueAttributes(setAttrReq);
         }
         
         String newUserResponseQueueUrl = "";
         if (!this.queueExistsByName(responseQueueName)) {
             CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
                 .queueName(responseQueueName)
-                .attributes(queueAttrs)
                 .tags(tags)
                 .build();
             CreateQueueResponse response = this.sqsClient.createQueue(createQueueRequest);
@@ -997,11 +1053,6 @@ public class Consumer implements Runnable {
         }
         else {
             newUserResponseQueueUrl = this.getQueueUrl(responseQueueName);
-            SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
-                .queueUrl(newUserResponseQueueUrl)
-                .attributes(queueAttrs)
-                .build();
-            this.sqsClient.setQueueAttributes(setAttrReq);
         }
 
         QueueUrls returnVal = new QueueUrls();

@@ -108,7 +108,8 @@ public class Resource {
             this.dbClient.setProblemID(problem_id);
         }
 
-        this.dbClient.resubscribe();
+        // this.dbClient.resubscribe();
+        this.dbClient.resetCache();
 
         GlobalScope.init();
 

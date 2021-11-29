@@ -176,6 +176,14 @@ public class NDSMEvaluator implements Callable<Result> {
         return result;
     }
 
+
+//     _____          _
+//    / ____|        | |
+//   | |     ___  ___| |_
+//   | |    / _ \/ __| __|
+//   | |___| (_) \__ \ |_
+//    \_____\___/|___/\__|
+
     public void load_design_rbs(boolean reset){
         // Reset engine
         if(reset){
@@ -345,56 +353,18 @@ public class NDSMEvaluator implements Callable<Result> {
         }
     }
 
-    public double evaluate_programmatic_risk(){
-        QueryBuilder q_builder = this.engine.getQueryBuilder();
-        ArrayList<Double> mission_trls = new ArrayList<>();
-        ArrayList<String> all_instruments = new ArrayList<>();
-        for(String orbit: this.design.keySet()){
-            double sat_trl_sum = 0;
-            double min_inst_trl = 100;
-            ArrayList<String> instruments = this.design.get(orbit);
-            for(String instrument: instruments){
-                if(!all_instruments.contains(instrument)){
-                    all_instruments.add(instrument);
-                }
-                double inst_trl = q_builder.getInstrumentTRL(instrument);
-                sat_trl_sum += inst_trl;
-                if(inst_trl < min_inst_trl){
-                    min_inst_trl = inst_trl;
-                }
-            }
-            double avg_mission_trl = sat_trl_sum / instruments.size();
-            mission_trls.add(avg_mission_trl - min_inst_trl);
-        }
-
-        // Find packaging programmatic risk
-        double sum = 0;
-        for(Double trl: mission_trls){
-            sum += trl;
-        }
-        double packaging_progammatic_risk = sum / mission_trls.size();
 
 
-        double selecting_programmatic_risk = 0;
-        for(String instrument: all_instruments){
-            double inst_trl = q_builder.getInstrumentTRL(instrument);
-            if(inst_trl < 5){
-                selecting_programmatic_risk++;
-            }
-        }
 
-        return (packaging_progammatic_risk + selecting_programmatic_risk);
-    }
+//     _____           __
+//    |  __ \         / _|
+//    | |__) |__ _ __| |_ ___  _ __ _ __ ___   __ _ _ __   ___ ___
+//    |  ___/ _ \ '__|  _/ _ \| '__| '_ ` _ \ / _` | '_ \ / __/ _ \
+//    | |  |  __/ |  | || (_) | |  | | | | | | (_| | | | | (_|  __/
+//    |_|   \___|_|  |_| \___/|_|  |_| |_| |_|\__,_|_| |_|\___\___|
 
-    public double evaluate_fairness(double oceanic, double atmospheric, double data_continuity){
-        ArrayList<Double> list = new ArrayList<>();
-        list.add(oceanic);
-        list.add(atmospheric);
-        list.add(data_continuity);
-        Collections.sort(list);
-        return (list.get(1) - list.get(0));
-    }
 
+    // Oceanic, Atmospheric, Terrestrial, Data Continuity
     public double evaluate_score(String key){
         double score = 0.0;
 
@@ -457,6 +427,58 @@ public class NDSMEvaluator implements Callable<Result> {
             score = score * this.panel_weights_map.get(key);
         }
         return score;
+    }
+
+    // Programmatic Risk
+    public double evaluate_programmatic_risk(){
+        QueryBuilder q_builder = this.engine.getQueryBuilder();
+        ArrayList<Double> mission_trls = new ArrayList<>();
+        ArrayList<String> all_instruments = new ArrayList<>();
+        for(String orbit: this.design.keySet()){
+            double sat_trl_sum = 0;
+            double min_inst_trl = 100;
+            ArrayList<String> instruments = this.design.get(orbit);
+            for(String instrument: instruments){
+                if(!all_instruments.contains(instrument)){
+                    all_instruments.add(instrument);
+                }
+                double inst_trl = q_builder.getInstrumentTRL(instrument);
+                sat_trl_sum += inst_trl;
+                if(inst_trl < min_inst_trl){
+                    min_inst_trl = inst_trl;
+                }
+            }
+            double avg_mission_trl = sat_trl_sum / instruments.size();
+            mission_trls.add(avg_mission_trl - min_inst_trl);
+        }
+
+        // Find packaging programmatic risk
+        double sum = 0;
+        for(Double trl: mission_trls){
+            sum += trl;
+        }
+        double packaging_progammatic_risk = sum / mission_trls.size();
+
+
+        double selecting_programmatic_risk = 0;
+        for(String instrument: all_instruments){
+            double inst_trl = q_builder.getInstrumentTRL(instrument);
+            if(inst_trl < 5){
+                selecting_programmatic_risk++;
+            }
+        }
+
+        return (packaging_progammatic_risk + selecting_programmatic_risk);
+    }
+
+    // Fairness
+    public double evaluate_fairness(double oceanic, double atmospheric, double data_continuity){
+        ArrayList<Double> list = new ArrayList<>();
+        list.add(oceanic);
+        list.add(atmospheric);
+        list.add(data_continuity);
+        Collections.sort(list);
+        return (list.get(1) - list.get(0));
     }
 
     public double get_science_multiplier(String orbit){

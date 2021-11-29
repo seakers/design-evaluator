@@ -183,14 +183,17 @@ query AggregationRule($problem_id: Int) {
         index_id
         weight
         description
+        id
         objectives: Stakeholder_Needs_Objectives {
             name
             weight
             description
+            id
             subobjectives: Stakeholder_Needs_Subobjectives {
                 name
                 description
                 weight
+                id
             }
         }
     }
@@ -434,6 +437,7 @@ mutation InsertArchitectureSlow($problem_id: Int!,
                                 $cost: float8,
                                 $programmatic_risk: float8,
                                 $fairness: float8,
+                                $eval_idx: Int!,
                                 $data_continuity: float8,
                                 $ga: Boolean!,
                                 $eval_status: Boolean,
@@ -457,6 +461,7 @@ mutation InsertArchitectureSlow($problem_id: Int!,
             cost: $cost,
             programmatic_risk: $programmatic_risk,
             fairness: $fairness,
+            eval_idx: $eval_idx,
             data_continuity: $data_continuity,
             ga: $ga,
             eval_status: $eval_status,
@@ -657,6 +662,54 @@ query HistoricalMissionMeasurementContinuity{
 # |_____/ \__,_|_.__/|___/\___|_|  |_| .__/ \__|_|\___/|_| |_|___/
 #                                    | |
 #                                    |_|
+
+# --> THIS IS NOT VALID - ONLY ONE ROOT ALLOWED IN A SUBSCRIPTION
+subscription CombinedSubscription($problem_id: Int!){
+    Join__Problem_Instrument(where: {problem_id: {_eq: $problem_id}}) {
+        Instrument {
+            id
+            name
+        }
+        problem_id
+    }
+    Join__Problem_Orbit(where: {problem_id: {_eq: $problem_id}}) {
+        Orbit {
+            id
+            name
+        }
+        problem_id
+    }
+    Stakeholder_Needs_Panel(where: {problem_id: {_eq: $problem_id}}) {
+        name
+        index_id
+        weight
+        description
+        objectives: Stakeholder_Needs_Objectives {
+            name
+            weight
+            description
+            subobjectives: Stakeholder_Needs_Subobjectives {
+                name
+                description
+                weight
+            }
+        }
+    }
+    Join__Instrument_Characteristic(where: {problem_id: {_eq: $problem_id}}) {
+        id
+        value
+    }
+    Join__Problem_Launch_Vehicle(where: {problem_id: {_eq: $problem_id}}) {
+        id
+        Launch_Vehicle {
+            name
+            Join__Launch_Vehicle_Attributes {
+                value
+            }
+        }
+    }
+}
+
 
 
 subscription InstrumentSubscription($problem_id: Int!){

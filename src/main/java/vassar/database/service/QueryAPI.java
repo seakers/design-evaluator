@@ -7,6 +7,9 @@ import com.apollographql.apollo.subscription.WebSocketSubscriptionTransport;
 import com.evaluator.*;
 import com.evaluator.type.*;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 // APOLLO
@@ -26,6 +29,7 @@ import java.io.IOException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 public class QueryAPI {
 
@@ -56,7 +60,11 @@ public class QueryAPI {
 
         public Builder(String apolloUrl, String apolloWsUrl){
             this.apolloUrl = apolloUrl;
-            this.http       = new OkHttpClient.Builder().build();
+            this.http       = new OkHttpClient.Builder()
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
+                    .build();
             this.apollo     = ApolloClient.builder()
                     .serverUrl(this.apolloUrl)
                     .subscriptionTransportFactory(new WebSocketSubscriptionTransport.Factory(apolloWsUrl, this.http)) // ws://graphql:8080/v1/graphql
@@ -639,6 +647,60 @@ public class QueryAPI {
 
 
     // ---> SUBSCRIPTIONS
+    public ApolloSubscriptionCall<CombinedSubscription.Data> subscribeToAll(){
+        System.out.println("-----> SUBSCRIBING: " + this.problemId);
+
+        CombinedSubscription sub = CombinedSubscription.builder()
+                .problem_id(this.problemId)
+                .build();
+
+        ApolloSubscriptionCall<CombinedSubscription.Data> subCall = this.apollo.subscribe(sub);
+
+        subCall.execute( new ApolloSubscriptionCall.Callback<>() {
+            private boolean first = true;
+
+            @Override
+            public void onResponse(@NotNull Response<CombinedSubscription.Data> response) {
+                final Map<String, String> messageAttributes = new HashMap<>();
+                if(!this.first){
+                    System.out.println("-----> PROBLEM CHANGE: REBUILD");
+                    messageAttributes.put("msgType", "build");
+                    messageAttributes.put("group_id", "-1");
+                    messageAttributes.put("problem_id", "-1");
+                    privateQueue.add(messageAttributes);
+                }
+                else{
+                    System.out.println("-----> SUBSCRIPTION INITIATED");
+                }
+                this.first = false;
+            }
+
+            @Override
+            public void onFailure(@NotNull ApolloException e) {
+                System.out.println("-----> FAILURE");
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("-----> COMPLETED");
+            }
+
+            @Override
+            public void onTerminated() {
+                System.out.println("-----> TERMINATED");
+            }
+
+            @Override
+            public void onConnected() {
+                System.out.println("-----> CONNECTED");
+            }
+        });
+        return subCall;
+    }
+
+
+
     public ApolloSubscriptionCall<InstrumentSubscription.Data> subscribeToInstruments(){
         System.out.println("-----> subscribeToInstruments");
 

@@ -28,46 +28,31 @@ COPY /design-evaluator/jars/jess.jar /repos/jars/jess.jar
 RUN mvn install:install-file -Dfile=./jess.jar -DgroupId=gov.sandia -DartifactId=jess -Dversion=7.1p2 -Dpackaging=jar
 
 
+## 4. INSTALL APP ##
+WORKDIR /resources
+COPY /VASSAR_resources/. /resources/.
+WORKDIR /app
+COPY /design-evaluator/. /app/.
+
+RUN ./gradlew installDist
+
+
+
 
 
 #######################
 ### Final Container ###
 #######################
-
-
 FROM amazoncorretto:11
-# COPY --from=Schema /schema/schema.json /app/src/main/graphql/com/evaluator/schema.json
-COPY --from=BUILD_TOOL /root/.m2 /root/.m2
 
+WORKDIR /app
+COPY /design-evaluator/. /app/.
 
 WORKDIR /resources
 COPY /VASSAR_resources/. /resources/.
 
+COPY --from=BUILD_TOOL /app/build/install/evaluator /app/evaluator
 
-
-
-# --DEPS --
-WORKDIR /installs
-
-RUN yum update -y && \
-    yum upgrade -y && \
-    yum install git wget unzip tar -y
-
-# --GRADLE --
-RUN wget https://services.gradle.org/distributions/gradle-6.0-bin.zip && \
-    unzip gradle-6.0-bin.zip && \
-    rm gradle-6.0-bin.zip
-ENV PATH="/installs/gradle-6.0/bin:${PATH}"
-
-# --GRAPHQL SCHEMA --
-WORKDIR /app
-COPY /design-evaluator/. /app/.
-# RUN gradle generateApolloSources
-
-EXPOSE 10000
-EXPOSE 9091
-
-RUN gradle clean build --no-daemon
-
-CMD gradle run
+WORKDIR /app/evaluator
+CMD ./bin/evaluator
 

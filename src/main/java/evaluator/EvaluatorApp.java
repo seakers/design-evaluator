@@ -136,7 +136,7 @@ public class EvaluatorApp {
                                         .debug(debug)
                                         .queryClient(queryAPI)
                                         .debugClient(debugAPI)
-                                        .subscribe()
+//                                        .subscribe()
                                         .build();
 
         Resource engine = new Resource.Builder(dbClient)

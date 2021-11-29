@@ -148,7 +148,7 @@ public class Combinatorics {
         try{
             SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd-HH-mm-ss" );
             String stamp = dateFormat.format( new Date() );
-            FileOutputStream file = new FileOutputStream(ResourcePaths.rootDirectory + "/output/DSM-Climate2-"+dim+"-" + stamp + ".dat");
+            FileOutputStream file = new FileOutputStream(ResourcePaths.rootDirectory + "/output/DSM-Climate_2-"+dim+"-" + stamp + ".dat");
             ObjectOutputStream os = new ObjectOutputStream( file );
             os.writeObject( dsm_map );
             os.close();

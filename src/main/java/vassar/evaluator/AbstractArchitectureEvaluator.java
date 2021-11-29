@@ -130,7 +130,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         int overlap_counter = 0;
 
         // HARDCODE
-        int    t_zero           = 2000; // 2010 for SMAP, 2000 for DECADAL
+        int    t_zero           = 2010; // 2010 for SMAP, 2000 for DECADAL
         double yearly_budget    = 200;  // In Millions
         int    mission_duration = 5; // 5 year default mission duration
 
@@ -272,7 +272,6 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         return (new HashMap<>(measurements));
     }
 
-
     private HashMap<String, Integer> get_mission_fact_measurements(Fact mission, Rete r){
 
         // Maps measurement name to the number of occurrences for this missions
@@ -305,8 +304,6 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
         return measurement_map;
     }
-
-
 
     public Vector<String> critiquePerformance(Rete r, Result res, QueryBuilder qb){
         System.out.println("--> Critiquing Performance");
@@ -770,9 +767,10 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         Result theresult = new Result(arch, science, cost, fuzzy_science, fuzzy_cost, subobj_scores, obj_scores,
                 panel_scores, subobj_scores_map);
 
-        double programmatic_risk = this.findProgrammaticRisk(qb, r);
-        System.out.println("--> PROGRAMMATIC RISK: " + programmatic_risk);
-        theresult.setProgrammaticRisk(programmatic_risk);
+        // --> Programmatic Risk
+//        double programmatic_risk = this.findProgrammaticRisk(qb, r);
+//        System.out.println("--> PROGRAMMATIC RISK: " + programmatic_risk);
+//        theresult.setProgrammaticRisk(programmatic_risk);
 
         // Get explanations on subobjective fulfillment
         theresult.setCapabilities(qb.makeQuery("REQUIREMENTS::Measurement"));
