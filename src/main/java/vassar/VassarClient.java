@@ -30,6 +30,7 @@ import jess.Value;
 import jess.ValueVector;
 import vassar.architecture.*;
 import vassar.combinatorics.Combinatorics;
+import vassar.database.DatabaseClient;
 import vassar.evaluator.ADDEvaluator;
 import vassar.evaluator.AbstractArchitectureEvaluator;
 import vassar.evaluator.ArchitectureEvaluator;
@@ -91,87 +92,63 @@ public class VassarClient {
 // |______\_/ \__,_|_|\__,_|\__,_|\__\___| /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 //
 
-    public Result evaluateArchitecture(String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast){
 
-        AbstractArchitecture arch = new Architecture(bitString, 1, this.engine.getProblem());
+    public Result evaluateArchitecture(String input){
 
-        System.out.println(arch.isFeasibleAssignment());
+        // --> 1. Create architecture
+        AbstractArchitecture arch = new Architecture(input, 1, this.engine.getProblem());
 
+        // --> 2. Create evaluator
         AbstractArchitectureEvaluator t = new ArchitectureEvaluator(this.engine, arch, "Slow");
 
+        // --> 3. Submit for evaluation
         ExecutorService executorService = Executors.newFixedThreadPool(1);
-
         Future<Result> future = executorService.submit(t);
 
+        // --> 4. Retrieve result
         Result result = null;
         try {
             result = future.get();
         }
-        catch (ExecutionException e) {
+        catch (Exception e) {
             System.out.println("Exception when evaluating an architecture");
             e.printStackTrace();
             System.exit(-1);
         }
-        catch (InterruptedException e) {
-            System.out.println("Execution got interrupted while evaluating an architecture");
-            e.printStackTrace();
-            System.exit(-1);
-        }
 
-        // Stopping indexing of archs for Climate Centric testing
-        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast, false, 0);
-
+        // --> 5. Return result
         return result;
     }
 
-    public Result evaluateNDSMArchitecture(String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast, boolean improve_hv, int eval_idx){
+    public Result evaluateArchitectureNDSM(String input){
 
+        // --> 1. Create evaluator
         String problem_name = this.engine.dbClient.getProblemName();
-        String _1DSM_file = "/app/output/DSM-Climate_1-1-2021-11-10-17-41-01.dat";
-        String _2DSM_file = "/app/output/DSM-Climate_1-2-2021-11-10-17-56-41.dat";
-        if(Objects.equals(problem_name, "ClimateCentric_2")){
-            _1DSM_file = "/app/output/DSM-Climate_2-1-2021-11-10-18-14-15.dat";
-            _2DSM_file = "/app/output/DSM-Climate_2-2-2021-11-10-18-30-07.dat";
-        }
-
-        NDSMEvaluator evaluator = new NDSMEvaluator.Builder(this.engine, bitString)
-                .set_1DSM(_1DSM_file)
-                .set_2DSM(_2DSM_file)
+        NDSMEvaluator evaluator = new NDSMEvaluator.Builder(this.engine, input)
+                .setProblem(problem_name)
                 .build();
 
-        long start_time = System.nanoTime();
-
-
+        // --> 2. Submit for evaluation
         ExecutorService executorService = Executors.newFixedThreadPool(1);
-
         Future<Result> future = executorService.submit(evaluator);
 
+        // --> 3. Retrieve result
         Result result = null;
         try {
             result = future.get();
         }
-        catch (ExecutionException e) {
+        catch (Exception e) {
             System.out.println("Exception when evaluating an architecture");
             e.printStackTrace();
             System.exit(-1);
         }
-        catch (InterruptedException e) {
-            System.out.println("Execution got interrupted while evaluating an architecture");
-            e.printStackTrace();
-            System.exit(-1);
-        }
 
-        long finish_eval_time = System.nanoTime();
-
-        double eval_time = (finish_eval_time - start_time) / 1000000000.0;
-        System.out.println("--> EVAL TIME: " + eval_time);
-
-
-        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast, improve_hv, eval_idx);
-
-
+        // --> 4. Return result
         return result;
+
     }
+
+
 
 
 
@@ -223,8 +200,6 @@ public class VassarClient {
             return result;
         }
     }
-
-
 
     public Result evaluateSELECTINGArchitecture(String json_design){
 
@@ -380,12 +355,15 @@ public class VassarClient {
         return result;
     }
 
-//  _   _ _____   _____ __  __
-// | \ | |  __ \ / ____|  \/  |
-// |  \| | |  | | (___ | \  / |
-// | . ` | |  | |\___ \| |\/| |
-// | |\  | |__| |____) | |  | |
-// |_| \_|_____/|_____/|_|  |_|
+
+
+
+//     _   _ _____   _____ __  __
+//    | \ | |  __ \ / ____|  \/  |
+//    |  \| | |  | | (___ | \  / |
+//    | . ` | |  | |\___ \| |\/| |
+//    | |\  | |__| |____) | |  | |
+//    |_| \_|_____/|_____/|_|  |_|
 
     public void computeNDSMs(){
 
@@ -424,433 +402,12 @@ public class VassarClient {
     }
 
 
-//  _____           _                               _     _ _            _
-// |_   _|         | |               /\            | |   (_) |          | |
-//   | |  _ __   __| | _____  __    /  \   _ __ ___| |__  _| |_ ___  ___| |_ _   _ _ __ ___
-//   | | | '_ \ / _` |/ _ \ \/ /   / /\ \ | '__/ __| '_ \| | __/ _ \/ __| __| | | | '__/ _ \
-//  _| |_| | | | (_| |  __/>  <   / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
-// |_____|_| |_|\__,_|\___/_/\_\ /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
-
-    public class ScoreExplanations {
-        ArrayList<ArchitectureScoreExplanation_insert_input> archExplanations;
-        ArrayList<PanelScoreExplanation_insert_input>        panelExplanations;
-        ArrayList<ObjectiveScoreExplanation_insert_input>    objectiveExplanations;
-        ArrayList<SubobjectiveScoreExplanation_insert_input> subobjectiveExplanations;
-    }
-
-
-
-    public void indexArchitecture(Result result, String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast, boolean improve_hv, int eval_idx){
-        long start_index_time = System.nanoTime();
-
-        double cost    = result.getCost();
-        double science = result.getScience();
-        double programmatic_risk = result.getProgrammaticRisk();
-        double fairness = result.getFairnessScore();
-        double data_continuity = result.getDataContinuityScore();
-
-        long finish_init_time = System.nanoTime();
-
-
-        if (redo) {
-            int archID = this.engine.dbClient.updateArchitecture(bitString, datasetId, science, cost, ga, programmatic_risk, fairness, data_continuity);
-
-            // Remove previous explanations
-            this.engine.dbClient.deleteArchitectureScoreExplanations(archID);
-            this.engine.dbClient.deleteArchitectureCostInformation(archID);
-
-            // Add new explanations
-            if (!fast) {
-                ScoreExplanations explanations = this.fillArchitectureScoreExplanations(result, Optional.of(archID));
-                this.engine.dbClient.insertArchitectureScoreExplanationBatch(explanations.archExplanations);
-                this.engine.dbClient.insertPanelScoreExplanationBatch(explanations.panelExplanations);
-                this.engine.dbClient.insertObjectiveScoreExplanationBatch(explanations.objectiveExplanations);
-                this.engine.dbClient.insertSubobjectiveScoreExplanationBatch(explanations.subobjectiveExplanations);
-
-                ArrayList<ArchitectureCostInformation_insert_input> costInserts = this.fillArchitectureCostInformations(result, Optional.of(archID));
-                this.engine.dbClient.insertArchitectureCostInformationBatch(costInserts);
-
-                String critique = this.fillArchitectureCritique(result);
-                this.engine.dbClient.updateArchitectureCritique(archID, critique);
-            }
-        }
-        else {
-            if (fast) {
-                this.engine.dbClient.insertArchitectureFast(bitString, datasetId, science, cost, ga);
-            }
-            else {
-                InsertArchitectureSlowMutation.Builder archBuilder = InsertArchitectureSlowMutation.builder();
-                this.fillArchitectureInformation(archBuilder, datasetId, bitString, science, cost, ga, programmatic_risk, fairness, data_continuity, improve_hv, eval_idx);
-
-                long finish_fill_arch_time = System.nanoTime();
-
-                // --> This is taking a lot of time
-                ScoreExplanations explanations = this.fillArchitectureScoreExplanations(result);
-                archBuilder
-                    .arch_scores(explanations.archExplanations)
-                    .panel_scores(explanations.panelExplanations)
-                    .objective_scores(explanations.objectiveExplanations)
-                    .subobjective_scores(explanations.subobjectiveExplanations);
-
-                long finish_fill_score_explanations_time = System.nanoTime();
-                
-                ArrayList<ArchitectureCostInformation_insert_input> costInserts = this.fillArchitectureCostInformations(result);
-                archBuilder
-                    .cost_informations(costInserts);
-
-                long finish_fill_cost_info_time = System.nanoTime();
-
-                String critique = this.fillArchitectureCritique(result);
-                archBuilder
-                    .critique(critique);
-
-                long finish_preprocess_time = System.nanoTime();
-                
-                int archID = this.engine.dbClient.insertArchitectureSlow(archBuilder);
-                long finish_index_time = System.nanoTime();
-
-                double preprocess_time = (finish_preprocess_time - start_index_time) / 1000000000.0;
-                double init_time = (finish_init_time - start_index_time) / 1000000000.0;
-                double fill_arch_time = (finish_fill_arch_time - finish_init_time) / 1000000000.0;
-                double fill_score_explanation_time = (finish_fill_score_explanations_time - finish_fill_arch_time) / 1000000000.0;
-                double fill_cost_info_time = (finish_fill_cost_info_time - finish_fill_score_explanations_time) / 1000000000.0;
-                double fill_arch_critique_time = (finish_preprocess_time - finish_fill_cost_info_time) / 1000000000.0;
-                double index_time = (finish_index_time - finish_preprocess_time) / 1000000000.0;
-
-                System.out.println("\n------- INDEX STATS -------");
-                System.out.println("--> PREPROCESS TIME TOTAL: " + preprocess_time);
-                System.out.println("--> INIT TIME: " + init_time);
-                System.out.println("--> FILL ARCH TIME: " + fill_arch_time);
-                System.out.println("--> FILL SCORE EXPO TIME: " + fill_score_explanation_time);
-                System.out.println("--> FILL COST INFO TIME: " + fill_cost_info_time);
-                System.out.println("--> FILL ARCH CRITIQUE TIME: " + fill_arch_critique_time);
-                System.out.println("--> INDEX TIME: " + index_time);
-            }
-        }
-    }
-
-    private void fillArchitectureInformation(InsertArchitectureSlowMutation.Builder builder, Integer datasetId, String input, double science, double cost, boolean ga, double programmatic_risk, double fairness, double data_continuity, boolean improve_hv, int eval_idx) {
-        builder
-            .dataset_id(datasetId)
-            .input(input)
-            .science(science)
-            .cost(cost)
-            .eval_status(true)
-            .ga(ga)
-            .improve_hv(improve_hv)
-            .programmatic_risk(programmatic_risk)
-            .fairness(fairness)
-            .eval_idx(eval_idx)
-            .data_continuity(data_continuity);
-    }
-
-    private ScoreExplanations fillArchitectureScoreExplanations(Result result) {
-        return this.fillArchitectureScoreExplanations(result, Optional.empty());
-    }
-
-    private ScoreExplanations fillArchitectureScoreExplanations(Result result, Optional<Integer> archID){
-//        System.out.println("---> indexing architecture score explanations");
-        ArrayList<ArchitectureScoreExplanation_insert_input> archExplanations         = new ArrayList<>();
-        ArrayList<PanelScoreExplanation_insert_input>        panelExplanations        = new ArrayList<>();
-        ArrayList<ObjectiveScoreExplanation_insert_input>    objectiveExplanations    = new ArrayList<>();
-        ArrayList<SubobjectiveScoreExplanation_insert_input> subobjectiveExplanations = new ArrayList<>();
-
-        for (int panel_idx = 0; panel_idx < this.engine.problem.panelNames.size(); ++panel_idx) {
-
-            // getArchitectureScoreExplanation
-            ArchitectureScoreExplanation_insert_input.Builder archExp = ArchitectureScoreExplanation_insert_input.builder();
-            if (archID.isPresent()) { archExp.architecture_id(archID.get()); }
-            archExplanations.add(
-                archExp
-                    .panel_id(this.engine.problem.stakeholderIdMap.get(this.engine.problem.panelNames.get(panel_idx)))
-                    .satisfaction(result.getPanelScores().get(panel_idx))
-                    .build()
-            );
-
-            for (int obj_idx = 0; obj_idx < this.engine.problem.objNames.get(panel_idx).size(); ++obj_idx) {
-
-                // getPanelScoreExplanation
-                PanelScoreExplanation_insert_input.Builder panelExp = PanelScoreExplanation_insert_input.builder();
-                if (archID.isPresent()) { panelExp.architecture_id(archID.get()); }
-                panelExplanations.add(
-                    panelExp
-                        .objective_id(this.engine.problem.stakeholderIdMap.get(this.engine.problem.objNames.get(panel_idx).get(obj_idx)))
-//                        .satisfaction(result.getObjectiveScores().get(panel_idx).get(obj_idx))
-                        .satisfaction(0)
-                        .build()
-                );
-
-
-                for (int subobj_idx = 0; subobj_idx < this.engine.problem.subobjectives.get(panel_idx).get(obj_idx).size(); ++subobj_idx) {
-                    String subobjectiveName = this.engine.problem.subobjectives.get(panel_idx).get(obj_idx).get(subobj_idx);
-                    // getObjectiveScoreExplanation
-                    ObjectiveScoreExplanation_insert_input.Builder objExp = ObjectiveScoreExplanation_insert_input.builder();
-                    if (archID.isPresent()) { objExp.architecture_id(archID.get()); }
-                    objectiveExplanations.add(
-                        objExp
-                            .subobjective_id(this.engine.problem.stakeholderIdMap.get(subobjectiveName))
-//                            .satisfaction(result.getSubobjectiveScores().get(panel_idx).get(obj_idx).get(subobj_idx))
-                            .satisfaction(0)
-                            .build()
-                    );
-
-                    // subobjectiveExplanations.addAll(getSubobjectiveExplanations(result, subobjectiveName, archID));
-                }
-            }
-        }
-
-        ScoreExplanations explanations = new ScoreExplanations();  
-        explanations.archExplanations = archExplanations;
-        explanations.panelExplanations = panelExplanations;
-        explanations.objectiveExplanations = objectiveExplanations;
-        explanations.subobjectiveExplanations = subobjectiveExplanations;
-
-        return explanations;
-    }
-
-    private List<SubobjectiveScoreExplanation_insert_input> getSubobjectiveExplanations(Result result, String subobj, Optional<Integer> archID) {
-        String measurement = this.engine.problem.subobjectivesToMeasurements.get(subobj);
-
-        // Obtain list of attributes for this measurement
-        ArrayList<String> attrNames = new ArrayList<>();
-        HashMap<String, String> attrTypes = new HashMap<>();
-        List<RequirementRulesForSubobjectiveQuery.Item> requirementRules = this.engine.dbClient.getRequirementRulesForSubobjective(subobj);
-        Integer subobjectiveId = requirementRules.get(0).subobjective().id();
-        requirementRules.forEach((reqRule) -> attrNames.add(reqRule.measurement_attribute().name()));
-        requirementRules.forEach((reqRule) -> attrTypes.put(reqRule.measurement_attribute().name(), reqRule.type()));
-        HashMap<String, Integer> numDecimals = new HashMap<>();
-        numDecimals.put("Horizontal-Spatial-Resolution#", 0);
-        numDecimals.put("Temporal-resolution#", 0);
-        numDecimals.put("Swath#", 0);
-
-        // Loop to get rows of details for each data product
-        ArrayList<SubobjectiveScoreExplanation_insert_input> subobjectiveExplanations = new ArrayList<>();
-        for (Fact explanation: result.getExplanations().get(subobj)) {
-            try {
-                // Try to find the requirement fact!
-                int measurementId = explanation.getSlotValue("requirement-id").intValue(null);
-                if (measurementId == -1) {
-                    continue;
-                }
-                Fact measurementFact = null;
-                for (Fact capability: result.getCapabilities()) {
-                    if (capability.getFactId() == measurementId) {
-                        measurementFact = capability;
-                        break;
-                    }
-                }
-                // Start by putting all attribute values into list
-                HashMap<String, String> attributes = new HashMap<>();
-                for (String attrName: attrNames) {
-                    String attrType = attrTypes.get(attrName);
-                    // Check type and convert to String if needed
-                    Value attrValue = measurementFact.getSlotValue(attrName);
-                    switch (attrType) {
-                        case "SIB":
-                        case "LIB": {
-                            Double value = attrValue.floatValue(null);
-                            double scale = 100;
-                            if (numDecimals.containsKey(attrName)) {
-                                scale = Math.pow(10, numDecimals.get(attrName));
-                            }
-                            value = Math.round(value * scale) / scale;
-                            attributes.put(attrName, value.toString());
-                            break;
-                        }
-                        default: {
-                            attributes.put(attrName, attrValue.toString());
-                            break;
-                        }
-                    }
-                }
-                JSONObject attributesJson = new JSONObject(attributes);
-
-                // Get information from explanation fact
-                Double score = explanation.getSlotValue("satisfaction").floatValue(null);
-                String satisfiedBy = explanation.getSlotValue("satisfied-by").stringValue(null);
-                ArrayList<String> rowJustifications = new ArrayList<>();
-                ValueVector reasons = explanation.getSlotValue("reasons").listValue(null);
-                for (int i = 0; i < reasons.size(); ++i) {
-                    String reason = reasons.get(i).stringValue(null);
-                    if (!reason.equals("N-A")) {
-                        rowJustifications.add(reason);
-                    }
-                }
-                JSONArray justificationsJson = new JSONArray();
-                justificationsJson.addAll(rowJustifications);
-
-                // Put everything in their respective object
-                SubobjectiveScoreExplanation_insert_input.Builder subobjExp = SubobjectiveScoreExplanation_insert_input.builder();
-                if (archID.isPresent()) { subobjExp.architecture_id(archID.get()); }
-                SubobjectiveScoreExplanation_insert_input scoreExplanation = subobjExp
-                    .subobjective_id(subobjectiveId)
-                    .measurement_attribute_values(attributesJson)
-                    .score(score)
-                    .taken_by(satisfiedBy)
-                    .justifications(justificationsJson)
-                    .build();
-                subobjectiveExplanations.add(scoreExplanation);
-            }
-            catch (JessException e) {
-                System.err.println(e.toString());
-            }
-        }
-
-        return subobjectiveExplanations;
-    }
-
-    private ArrayList<ArchitectureCostInformation_insert_input> fillArchitectureCostInformations(Result result) { 
-        return this.fillArchitectureCostInformations(result, Optional.empty());
-    }
-
-    private ArrayList<ArchitectureCostInformation_insert_input> fillArchitectureCostInformations(Result result, Optional<Integer> archID) {
-        //System.out.println("---> Indexing architecture cost information");
-        ArrayList<String> attributes = new ArrayList<>();
-        String[] powerBudgetSlots    = { "payload-peak-power#", "satellite-BOL-power#" };
-        String[] costBudgetSlots     = { "payload-cost#", "bus-cost#", "launch-cost#", "program-cost#", "IAT-cost#", "operations-cost#" };
-        String[] massBudgetSlots     = { "adapter-mass", "propulsion-mass#", "structure-mass#", "avionics-mass#", "ADCS-mass#", "EPS-mass#", "propellant-mass-injection", "propellant-mass-ADCS", "thermal-mass#", "payload-mass#" };
-        for(String atr: powerBudgetSlots){attributes.add(atr);}
-        for(String atr: costBudgetSlots){attributes.add(atr);}
-        for(String atr: massBudgetSlots){attributes.add(atr);}
-        HashMap<String, Integer> attrKeys = this.engine.dbClient.getMissionAttributeIDs(attributes);
-        HashMap<String, Integer> instKeys = this.engine.dbClient.getInstrumentIDs();
-
-        ArrayList<ArchitectureCostInformation_insert_input> costInserts = new ArrayList<>();
-        for(Fact costFact: result.getCostFacts()){
-            try {
-                // --> ArchitectureCostInformation
-                String mission_name   = costFact.getSlotValue("Name").stringValue(null);                     // ArchitectureCostInformation!!!
-                String launch_vehicle = costFact.getSlotValue("launch-vehicle").stringValue(null);           // ArchitectureCostInformation!!!
-                Double cost           = costFact.getSlotValue("mission-cost#").floatValue(null);             // ArchitectureCostInformation!!!
-                Double mass           = costFact.getSlotValue("satellite-launch-mass").floatValue(null);     // ArchitectureCostInformation!!!
-                Double power          = 0.0;                                                                            // ArchitectureCostInformation!!!
-                Double others         = 0.0;                                                                            // ArchitectureCostInformation!!!
-                
-                // ArchitectureBudget: power
-                HashMap<Integer, Double> powerBudget = new HashMap<>();                                                  // ArchitectureBudget!!!
-                for (String powerSlot: powerBudgetSlots) {
-                    Double value = costFact.getSlotValue(powerSlot).floatValue(null);
-                    power += value;                                                                                     // SET POWER - ArchitectureCostInformation
-                    powerBudget.put(attrKeys.get(powerSlot), value);
-                }
-
-                // ArchitectureBudget: cost
-                double[] costMultipliers = { 1e-3, 1e-3, 1.0, 1e-3, 1e-3, 1e-3 };
-                HashMap<Integer, Double> costBudget = new HashMap<>();                                                   // ArchitectureBudget!!!
-                Double sumCost = 0.0;
-                for (int i = 0; i < costBudgetSlots.length; ++i) {
-                    String costSlot = costBudgetSlots[i];
-                    Double multiplier = costMultipliers[i];
-                    Double value = costFact.getSlotValue(costSlot).floatValue(null);
-                    sumCost += value*multiplier;
-                    costBudget.put(attrKeys.get(costSlot), value*multiplier);
-                }
-                others = cost - sumCost;                                                                                // SET OTHERS - ArchitectureCostInformation
-
-                // ArchitectureBudget: mass
-                HashMap<Integer, Double> massBudget = new HashMap<>();                                                   // ArchitectureBudget!!!
-                for (String massSlot: massBudgetSlots) {
-                    Double value = costFact.getSlotValue(massSlot).floatValue(null);
-                    massBudget.put(attrKeys.get(massSlot), value);
-                }
-
-                // ArchitecturePayload
-                ArrayList<Integer> payloads = new ArrayList<>();                                                         // ArchitecturePayload!!!
-                ValueVector instruments = costFact.getSlotValue("instruments").listValue(null);
-                for (int i = 0; i < instruments.size(); ++i) {
-                    System.out.println("--> " + instruments.get(i).stringValue(null));
-                    payloads.add(instKeys.get(instruments.get(i).stringValue(null)));
-                }
-
-                // --> 1. Index ArchitectureCostInformation - get arch_cost_id
-                ArchitectureCostInformation_insert_input.Builder costInsertBuilder = ArchitectureCostInformation_insert_input.builder();
-                if (archID.isPresent()) { costInsertBuilder.architecture_id(archID.get()); }
-                costInsertBuilder
-                    .mission_name(mission_name)
-                    .launch_vehicle(launch_vehicle)
-                    .mass(mass)
-                    .power(power)
-                    .cost(cost)
-                    .others(others);
-                
-                // --> 2. Index ArchitectureBudget with arch_cost_id
-                ArrayList<ArchitectureBudget_insert_input> budget_inserts = new ArrayList<>();
-                // power
-                for(Integer mission_attribute_id: powerBudget.keySet()){
-                    budget_inserts.add(
-                            ArchitectureBudget_insert_input.builder()
-                                .value(powerBudget.get(mission_attribute_id))
-                                .mission_attribute_id(mission_attribute_id)
-                                .build()
-                    );
-                }
-                // cost
-                for(Integer mission_attribute_id: costBudget.keySet()){
-                    budget_inserts.add(
-                            ArchitectureBudget_insert_input.builder()
-                                    .value(costBudget.get(mission_attribute_id))
-                                    .mission_attribute_id(mission_attribute_id)
-                                    .build()
-                    );
-                }
-                // mass
-                for(Integer mission_attribute_id: massBudget.keySet()){
-                    budget_inserts.add(
-                            ArchitectureBudget_insert_input.builder()
-                                    .value(massBudget.get(mission_attribute_id))
-                                    .mission_attribute_id(mission_attribute_id)
-                                    .build()
-                    );
-                }
-                ArchitectureBudget_arr_rel_insert_input budgets_input = ArchitectureBudget_arr_rel_insert_input.builder().data(budget_inserts).build();
-
-                // --> 3. Index ArchitecturePayload with arch_cost_id
-                ArrayList<ArchitecturePayload_insert_input> payload_inserts = new ArrayList<>();
-                for(Integer instrument_id: payloads){
-                    payload_inserts.add(
-                            ArchitecturePayload_insert_input.builder()
-                                .instrument_id(instrument_id)
-                                .build()
-                    );
-                }
-                ArchitecturePayload_arr_rel_insert_input payloads_input = ArchitecturePayload_arr_rel_insert_input.builder().data(payload_inserts).build();
-
-                costInsertBuilder
-                    .architectureBudgets(budgets_input)
-                    .architecturePayloads(payloads_input);
-
-                costInserts.add(costInsertBuilder.build());
-            }
-            catch (JessException e) {
-                System.err.println(e.toString());
-            }
-        }
-        return costInserts;
-    }
-
-    private String fillArchitectureCritique(Result result){
-//        System.out.println("---> Indexing architecture critique");
-//        Vector<String> performanceCritique = result.getPerformanceCritique();
-//        Vector<String> costCritique = result.getCostCritique();
-//        String critique = "";
-//        for(String crit: performanceCritique){
-//            critique = critique + crit + " | ";
-//        }
-//        for(String crit: costCritique){
-//            critique = critique + crit + " | ";
-//        }
-//        System.out.println(critique);
-//        return critique;
-        return "";
-    }
-
-
-//  _____      _           _ _     _   _____
-// |  __ \    | |         (_) |   | | |  __ \
-// | |__) |___| |__  _   _ _| | __| | | |__) |___  ___  ___  _   _ _ __ ___ ___
-// |  _  // _ \ '_ \| | | | | |/ _` | |  _  // _ \/ __|/ _ \| | | | '__/ __/ _ \
-// | | \ \  __/ |_) | |_| | | | (_| | | | \ \  __/\__ \ (_) | |_| | | | (_|  __/
-// |_|  \_\___|_.__/ \__,_|_|_|\__,_| |_|  \_\___||___/\___/ \__,_|_|  \___\___|
+//     _____      _           _ _     _   _____
+//    |  __ \    | |         (_) |   | | |  __ \
+//    | |__) |___| |__  _   _ _| | __| | | |__) |___  ___  ___  _   _ _ __ ___ ___
+//    |  _  // _ \ '_ \| | | | | |/ _` | |  _  // _ \/ __|/ _ \| | | | '__/ __/ _ \
+//    | | \ \  __/ |_) | |_| | | | (_| | | | \ \  __/\__ \ (_) | |_| | | | (_|  __/
+//    |_|  \_\___|_.__/ \__,_|_|_|\__,_| |_|  \_\___||___/\___/ \__,_|_|  \___\___|
 
 
     public void rebuildResource(int group_id, int problem_id){
@@ -873,6 +430,23 @@ public class VassarClient {
         Resource newResource = this.engine.rebuild(group_id, problem_id, newRequests.getRequests());
         this.engine          = newResource;
     }
+
+
+//     _    _      _
+//    | |  | |    | |
+//    | |__| | ___| |_ __   ___ _ __ ___
+//    |  __  |/ _ \ | '_ \ / _ \ '__/ __|
+//    | |  | |  __/ | |_) |  __/ |  \__ \
+//    |_|  |_|\___|_| .__/ \___|_|  |___/
+//                  | |
+//                  |_|
+
+    public Resource getEngine(){
+        return this.engine;
+    }
+
+    public DatabaseClient getDbClient(){ return this.engine.dbClient; }
+
 
 
 }

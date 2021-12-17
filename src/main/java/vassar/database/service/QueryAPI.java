@@ -2,6 +2,7 @@ package vassar.database.service;
 
 import com.apollographql.apollo.ApolloClient;
 import com.apollographql.apollo.ApolloSubscriptionCall;
+import com.apollographql.apollo.api.Error;
 import com.apollographql.apollo.exception.ApolloException;
 import com.apollographql.apollo.subscription.WebSocketSubscriptionTransport;
 import com.evaluator.*;
@@ -400,6 +401,7 @@ public class QueryAPI {
     }
 
 
+
     // ---> ARCHITECTURE
     public int updateArchitecture(String input, Integer datasetId, double science, double cost, boolean ga, double programmatic_risk, double fairness, double data_continuity){
         UpdateArchitectureMutation archMutation = UpdateArchitectureMutation.builder()
@@ -438,6 +440,56 @@ public class QueryAPI {
 
         return observable.blockingFirst().getData().architecture().id();
     }
+
+
+
+
+    // ------------------ UPDATE ARCHITECTURE --------------------
+    public int updateArchitectureFull(UpdateArchitectureFullMutation mutation){
+        ApolloCall<UpdateArchitectureFullMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<UpdateArchitectureFullMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().architecture().id();
+    }
+
+    public FullArchitectureByPkQuery.Architecture fullArchitectureQuery(int arch_id){
+        FullArchitectureByPkQuery query = FullArchitectureByPkQuery.builder().arch_id(arch_id).build();
+        ApolloCall<FullArchitectureByPkQuery.Data>           apolloCall  = this.apollo.query(query);
+        Observable<Response<FullArchitectureByPkQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().architecture();
+    }
+    // -----------------------------------------------------------
+
+    // ------------------ INSERT ARCHITECTURE --------------------
+    public int insertArchitectureWrapper(InsertArchitectureWrapperFastMutation.Builder builder){
+        InsertArchitectureWrapperFastMutation insert = builder.user_id(this.userId).problem_id(this.problemId).build();
+        ApolloCall<InsertArchitectureWrapperFastMutation.Data>           apolloCall  = this.apollo.mutate(insert);
+        Observable<Response<InsertArchitectureWrapperFastMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().architecture().id();
+    }
+
+    public int insertArchitectureWrapperFull(InsertArchitectureWrapperFullMutation.Builder builder){
+        InsertArchitectureWrapperFullMutation mutation = builder.user_id(this.userId).problem_id(this.problemId).build();
+        ApolloCall<InsertArchitectureWrapperFullMutation.Data>           apolloCall  = this.apollo.mutate(mutation);
+        Observable<Response<InsertArchitectureWrapperFullMutation.Data>> observable  = Rx2Apollo.from(apolloCall);
+
+        List<Error> errors = observable.blockingFirst().getErrors();
+        if(errors != null){
+            for(Error error: errors){
+                System.out.println(error.toString());
+            }
+        }
+
+        return observable.blockingFirst().getData().insert_Architecture().returning().get(0).id();
+    }
+    // -----------------------------------------------------------
+
+
+
+
+
+
+
+
 
     public int insertArchitectureSlow(InsertArchitectureSlowMutation.Builder archBuilder){
         InsertArchitectureSlowMutation archMutation = archBuilder
@@ -641,6 +693,21 @@ public class QueryAPI {
             return false;
         }
     }
+
+    public int getArchitectureID(String input){
+        if(this.doesArchitectureExist(input)){
+            ArchitectureIDQuery countQuery = ArchitectureIDQuery.builder()
+                    .problem_id(this.problemId)
+                    .input(input)
+                    .build();
+            ApolloCall<ArchitectureIDQuery.Data>           apolloCall  = this.apollo.query(countQuery);
+            Observable<Response<ArchitectureIDQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+            return observable.blockingFirst().getData().items().get(0).id();
+        }
+        return -1;
+    }
+
+
 
 
 

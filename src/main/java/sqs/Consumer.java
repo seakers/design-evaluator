@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.ecs.model.StopTaskRequest;
 import software.amazon.awssdk.services.ecs.model.StopTaskResponse;
 import software.amazon.awssdk.services.ecs.model.UpdateServiceRequest;
 import software.amazon.awssdk.services.ecs.model.UpdateServiceResponse;
+import vassar.architecture.ArchitectureDB;
 import vassar.result.Result;
 
 import java.net.HttpURLConnection;
@@ -32,7 +33,7 @@ import org.json.simple.parser.JSONParser;
 public class Consumer implements Runnable {
 
     private enum State {
-        WAITING_FOR_USER, READY
+        READY, RUNNING
     }
     private boolean                                    debug;
     private boolean                                    running;
@@ -44,19 +45,22 @@ public class Consumer implements Runnable {
     private String                                     deadLetterQueueArn;
     private String                                     requestKey;
     private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
-    private State                                      currentState = State.WAITING_FOR_USER;
-    private String                                     brainPrivateQueue;
-    private String                                     brainPrivateQueueResponse;
+    private State                                      currentState = State.READY;
     private String                                     uuid = UUID.randomUUID().toString();
     private String                                     userRequestQueueUrl = null;
     private String                                     userResponseQueueUrl = null;
     private long                                       lastPingTime = System.currentTimeMillis();
     private long                                       lastDownsizeRequestTime = System.currentTimeMillis();
     private int                                        userId;
+    private int                                        numEvalMessages;
 
-    private ConcurrentLinkedQueue<Map<String, String>> statusConsumerQueue;
-    private ConcurrentLinkedQueue<Map<String, String>> statusConsumerQueueResponse;
-    private PingConsumer statusConsumer;
+    // --> PING
+    private ConcurrentLinkedQueue<Map<String, String>> pingConsumerQueue;
+    private ConcurrentLinkedQueue<Map<String, String>> pingConsumerQueueResponse;
+    private PingConsumer pingConsumer;
+    private Thread pingThread = null;
+    private String                                     brainPrivateQueue;
+    private String                                     brainPrivateQueueResponse;
 
 
     public static class Builder {
@@ -120,110 +124,65 @@ public class Consumer implements Runnable {
             build.privateQueue     = this.privateQueue;
             build.requestKey       = this.requestKey;
             build.running          = true;
-            build.statusConsumerQueue = new ConcurrentLinkedQueue<>();
-            build.statusConsumerQueueResponse = new ConcurrentLinkedQueue<>();
-            build.statusConsumer = new PingConsumer(build.statusConsumerQueue, build.statusConsumerQueueResponse);
+            build.pingConsumerQueue = new ConcurrentLinkedQueue<>();
+            build.pingConsumerQueueResponse = new ConcurrentLinkedQueue<>();
+            build.pingConsumer = new PingConsumer(build.pingConsumerQueue, build.pingConsumerQueueResponse);
+
+
+            build.numEvalMessages = this.getNumEvalMessages();
+            build.brainPrivateQueue = System.getenv("PRIVATE_QUEUE_REQUEST");
+            build.brainPrivateQueueResponse = System.getenv("PRIVATE_QUEUE_RESPONSE");
+            build.pingThread = null;
+
+
             return build;
+        }
+
+        public int getNumEvalMessages(){
+            String eval_msg_count = System.getenv("MAXEVAL");
+            if(eval_msg_count == null){
+                return 1;
+            }
+            return Integer.parseInt(eval_msg_count);
         }
 
     }
 
 
-    // ----- MESSAGE TYPES -----
-    // 1. Evaluate architecture message
-    // 2. Reload rete object from database
-
+//     _____
+//    |  __ \
+//    | |__) |   _ _ __
+//    |  _  / | | | '_ \
+//    | | \ \ |_| | | | |
+//    |_|  \_\__,_|_| |_|
 
     public void run() {
         int counter = 0;
 
-        // Get number of eval messages from ENV
-        String eval_msg_count = System.getenv("MAXEVAL");
-        int eval_msg_max = 1;
-        if(eval_msg_count != null){
-            eval_msg_max = Integer.parseInt(eval_msg_count);
-        }
-
-        // Get brain private queue name
-        this.brainPrivateQueue = System.getenv("PRIVATE_QUEUE_REQUEST");
-        this.brainPrivateQueueResponse = System.getenv("PRIVATE_QUEUE_RESPONSE");
-
-        // Run status consumer
-        this.statusConsumer.run();
-
-
-
-        // this.sendTestMessages();
-        this.deletePrivMessages();
-
-        // Ensure queues exist
-        this.createConnectionQueues();
+        this.startPingThread();
 
         while (this.running) {
-            System.out.println("-----> Loop iteration: " + counter);
-            System.out.println("Current State: " + this.currentState);
-            
-            List<Map<String, String>> messagesContents = new ArrayList<>();
+            System.out.println("-----> (Cons) Loop iteration: " + counter + " -- " + this.currentState);
 
-            // Check if timers in ping queue have expired
+
+            // --> 1. Check ping queue
             this.checkPingQueue();
-
-            // CHECK PRIVATE QUEUE FIRST - IF PRIVATE QUEUE EMPTY, CHECK EVAL QUEUE
-//            if (!this.privateQueue.isEmpty()) {
-//                ArrayList<Map<String,String>> returnMessages = new ArrayList<>();
-//                while (!this.privateQueue.isEmpty()) {
-//                    Map<String, String> msgContents = this.privateQueue.poll();
-//                    if (isMessageAllowed(msgContents)) {
-//                        messagesContents.add(msgContents);
-//                    }
-//                    else {
-//                        returnMessages.add(msgContents);
-//                    }
-//                }
-//                this.privateQueue.addAll(returnMessages);
-//            }
+            if(!this.running){break;}
 
 
-            // CHECK CONNECTION QUEUE
-            List<Message> messages = new ArrayList<>();
-
-            // CHECK USER QUEUE
-            List<Message> userMessages = new ArrayList<>();
-            if (this.userRequestQueueUrl != null && this.currentState == State.READY) {
-                userMessages = this.getMessages(this.userRequestQueueUrl, eval_msg_max, 3);
-                userMessages = this.handleMessages(this.userRequestQueueUrl, userMessages);
-                messages.addAll(userMessages);
-            }
-
-            // CHECK BRAIN PRIVATE QUEUE IF EXISTS
-            List<Message> brainMessages = new ArrayList<>();
-            if(this.brainPrivateQueue != null){
-                brainMessages = this.getMessages(this.brainPrivateQueue, 1, 1);
-                brainMessages = this.handleMessages(this.brainPrivateQueue, brainMessages);
-            }
-            messages.addAll(brainMessages);
-
-
-            // PROCESS ALL MESSAGES
-            for (Message msg: messages) {
+            // --> 2. Handle private messages
+            List<Message> privateMessages = this.checkPrivateQueue();
+            List<Map<String, String>> privateMessageContents = new ArrayList<>();
+            for (Message msg: privateMessages) {
                 HashMap<String, String> msgContents = this.processMessage(msg, true);
-                messagesContents.add(msgContents);
+                privateMessageContents.add(msgContents);
             }
-
-            for (Map<String, String> msgContents: messagesContents) {
+            for (Map<String, String> msgContents: privateMessageContents) {
 
                 if (msgContents.containsKey("msgType")) {
                     String msgType = msgContents.get("msgType");
                     if (msgType.equals("connectionRequest")) {
                         this.msgTypeConnectionRequest(msgContents);
-                    }
-                    else if (msgType.equals("evaluate")) {
-                        // this.msgTypeEvaluate(msgContents);
-                        this.msgTypeNDSMEvaluate(msgContents);
-
-                    }
-                    else if (msgType.equals("ndsm_evaluate")) {
-                        this.msgTypeNDSMEvaluate(msgContents);
                     }
                     else if (msgType.equals("add")) {
                         this.msgTypeADD(msgContents);
@@ -246,8 +205,37 @@ public class Consumer implements Runnable {
                     else if (msgType.equals("build")) {
                         this.msgTypeBuild(msgContents);
                     }
-                    else if (msgType.equals("build_experiment")) {
-                        this.msgTypeBuildExperiment(msgContents);
+                    else if (msgType.equals("exit")) {
+                        System.out.println("----> Exiting gracefully");
+                        this.running = false;
+                    }
+                }
+                else {
+                    System.out.println("-----> INCOMING MESSAGE DIDN'T HAVE ATTRIBUTE: msgType");
+                }
+            }
+            if (!privateMessages.isEmpty()) {
+                this.deleteMessages(privateMessages, this.brainPrivateQueue);
+            }
+
+
+
+            // --> 3. Handle evaluation messages
+            List<Message> evalMessages = this.checkEvalQueue();
+            List<Map<String, String>> evalMessageContents = new ArrayList<>();
+            for (Message msg: evalMessages) {
+                HashMap<String, String> msgContents = this.processMessage(msg, true);
+                evalMessageContents.add(msgContents);
+            }
+            for (Map<String, String> msgContents: evalMessageContents) {
+
+                if (msgContents.containsKey("msgType")) {
+                    String msgType = msgContents.get("msgType");
+                    if (msgType.equals("evaluate")) {
+                        this.msgTypeEvaluate(msgContents);
+                    }
+                    else if (msgType.equals("build")) {
+                        this.msgTypeBuild(msgContents);
                     }
                     else if (msgType.equals("exit")) {
                         System.out.println("----> Exiting gracefully");
@@ -256,140 +244,105 @@ public class Consumer implements Runnable {
                 }
                 else {
                     System.out.println("-----> INCOMING MESSAGE DIDN'T HAVE ATTRIBUTE: msgType");
-                    // this.consumerSleep(10);
                 }
             }
+            if (!evalMessages.isEmpty()) {
+                this.deleteMessages(evalMessages, this.requestQueueUrl);
+            }
 
-            if (!brainMessages.isEmpty()) {
-                this.deleteMessages(brainMessages, this.brainPrivateQueue);
-            }
-            if (!userMessages.isEmpty()) {
-                this.deleteMessages(userMessages, this.userRequestQueueUrl);
-            }
+
             counter++;
         }
+
+        this.sendExitMessage();
+        this.closePingThread();
+    }
+
+
+
+//     _____ _               _    _                 _ _ _
+//    |  __ (_)             | |  | |               | | (_)
+//    | |__) | _ __   __ _  | |__| | __ _ _ __   __| | |_ _ __   __ _
+//    |  ___/ | '_ \ / _` | |  __  |/ _` | '_ \ / _` | | | '_ \ / _` |
+//    | |   | | | | | (_| | | |  | | (_| | | | | (_| | | | | | | (_| |
+//    |_|   |_|_| |_|\__, | |_|  |_|\__,_|_| |_|\__,_|_|_|_| |_|\__, |
+//                    __/ |                                      __/ |
+//                   |___/                                      |___/
+
+
+    private void startPingThread(){
+        System.out.println("--> RUNNING PING THREAD");
+        this.pingThread = new Thread(this.pingConsumer);
+        this.pingThread.start();
+        this.sendReadyStatus();
     }
 
     private void checkPingQueue() {
-        if(!this.statusConsumerQueueResponse.isEmpty()){
+        if(!this.pingConsumerQueueResponse.isEmpty()){
+            Map<String, String> msgContents = this.pingConsumerQueueResponse.poll();
+            System.out.println("--> THERE IS A STOP MESSAGE FROM THE PING CONTAINER ");
+            System.out.println(msgContents);
             this.running = false;
         }
     }
 
-    private boolean queueExists(String queueUrl) {
-        ListQueuesResponse listResponse = this.sqsClient.listQueues();
-        for (String url: listResponse.queueUrls()) {
-            if (queueUrl.equals(url)) {
-                return true;
-            }
+    private void sendRunningStatus(int groupId, int problemId){
+        Map<String, String> status_message = new HashMap<>();
+        status_message.put("STATUS", "RUNNING");
+        status_message.put("PROBLEM_ID", String.valueOf(problemId));
+        status_message.put("GROUP_ID", String.valueOf(groupId));
+        status_message.put("DATASET_ID", "-----");
+        this.pingConsumerQueue.add(status_message);
+    }
+
+    private void sendReadyStatus(){
+        Map<String, String> status_message = new HashMap<>();
+        status_message.put("STATUS", "READY");
+        status_message.put("PROBLEM_ID", "-----");
+        status_message.put("GROUP_ID", "-----");
+        status_message.put("DATASET_ID", "-----");
+        this.pingConsumerQueue.add(status_message);
+    }
+
+    private void closePingThread(){
+        System.out.println("--> CLOSING PING THREAD");
+        Map<String, String> status_message = new HashMap<>();
+        status_message.put("msgType", "stop");
+        this.pingConsumerQueue.add(status_message);
+
+        try{
+            this.pingThread.join();
         }
-        return false;
-    }
-
-    private boolean queueExistsByName(String queueName) {
-        ListQueuesResponse listResponse = this.sqsClient.listQueues();
-        for (String url: listResponse.queueUrls()) {
-            String[] nameSplit = url.split("/");
-            String name = nameSplit[nameSplit.length-1];
-            if (queueName.equals(name)) {
-                return true;
-            }
+        catch (Exception e){
+            e.printStackTrace();
         }
-        return false;
     }
 
-    private String getQueueArn(String queueUrl) {
-        ArrayList<QueueAttributeName> attrList = new ArrayList<>();
-        attrList.add(QueueAttributeName.QUEUE_ARN);
-        GetQueueAttributesRequest attrRequest = GetQueueAttributesRequest.builder()
-            .queueUrl(queueUrl)
-            .attributeNames(attrList)
-            .build();
-        GetQueueAttributesResponse attrResponse = sqsClient.getQueueAttributes(attrRequest);
-        String queueArn = attrResponse.attributes().get(QueueAttributeName.QUEUE_ARN);
-        return queueArn;
-    }
 
-    private String getQueueUrl(String queueName) {
-        GetQueueUrlRequest request = GetQueueUrlRequest.builder()
-            .queueName(queueName)
-            .build();
-        GetQueueUrlResponse response = this.sqsClient.getQueueUrl(request);
-        return response.queueUrl();
-    }
 
-    private void createConnectionQueues() {
-        String[] requestQueueUrls = this.requestQueueUrl.split("/");
-        String requestQueueName = requestQueueUrls[requestQueueUrls.length-1];
+//     __  __                                  _    _                 _ _ _
+//    |  \/  |                                | |  | |               | | (_)
+//    | \  / | ___  ___ ___  __ _  __ _  ___  | |__| | __ _ _ __   __| | |_ _ __   __ _
+//    | |\/| |/ _ \/ __/ __|/ _` |/ _` |/ _ \ |  __  |/ _` | '_ \ / _` | | | '_ \ / _` |
+//    | |  | |  __/\__ \__ \ (_| | (_| |  __/ | |  | | (_| | | | | (_| | | | | | | (_| |
+//    |_|  |_|\___||___/___/\__,_|\__, |\___| |_|  |_|\__,_|_| |_|\__,_|_|_|_| |_|\__, |
+//                                 __/ |                                           __/ |
+//                                |___/                                           |___/
 
-        String deadQueueArn = "";
-        if (!this.queueExistsByName("dead-letter")) {
-            CreateQueueRequest deadQueueRequest = CreateQueueRequest.builder()
-                .queueName("dead-letter")
+
+    // 1.
+    public List<Message> getMessages(String url, int maxMessages, int waitTimeSeconds){
+        ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
+                .queueUrl(url)
+                .waitTimeSeconds(waitTimeSeconds)
+                .maxNumberOfMessages(maxMessages)
+                .attributeNames(QueueAttributeName.ALL)
+                .messageAttributeNames("All")
                 .build();
-            CreateQueueResponse response = sqsClient.createQueue(deadQueueRequest);
-            String deadQueueUrl = response.queueUrl();
-            deadQueueArn = this.getQueueArn(deadQueueUrl);
-        }
-        else {
-            String deadQueueUrl = this.getQueueUrl("dead-letter");
-            deadQueueArn = this.getQueueArn(deadQueueUrl);
-        }
-
-        Map<QueueAttributeName, String> queueAttrs = new HashMap<>();
-        queueAttrs.put(QueueAttributeName.MESSAGE_RETENTION_PERIOD, Integer.toString(5*60));
-        queueAttrs.put(QueueAttributeName.REDRIVE_POLICY, "{\"maxReceiveCount\":\"3\", \"deadLetterTargetArn\":\"" + deadQueueArn + "\"}");
-        if (!this.queueExists(this.requestQueueUrl)) {
-            CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
-                .queueName(requestQueueName)
-                .attributes(queueAttrs)
-                .build();
-            CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
-        }
-        SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
-            .queueUrl(this.requestQueueUrl)
-            .attributes(queueAttrs)
-            .build();
-        sqsClient.setQueueAttributes(setAttrReq);
-        
-
-        String[] responseQueueUrls = this.responseQueueUrl.split("/");
-        String responseQueueName = responseQueueUrls[responseQueueUrls.length-1];
-        if (!this.queueExists(this.responseQueueUrl)) {
-            CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
-                .queueName(responseQueueName)
-                .attributes(queueAttrs)
-                .build();
-                CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
-        }
-        setAttrReq = SetQueueAttributesRequest.builder()
-            .queueUrl(this.responseQueueUrl)
-            .attributes(queueAttrs)
-            .build();
-        sqsClient.setQueueAttributes(setAttrReq);
-
-        this.deadLetterQueueArn = deadQueueArn;
+        return this.sqsClient.receiveMessage(receiveMessageRequest).messages();
     }
 
-    private void checkTimers() {
-        switch (this.currentState) {
-            case WAITING_FOR_USER:
-                if (System.currentTimeMillis() - this.lastPingTime > 60*60*1000) {
-                    this.downsizeAwsService();
-                }
-                break;
-            case READY:
-                if (System.currentTimeMillis() - this.lastPingTime > 5*60*1000) {
-                    this.currentState = State.WAITING_FOR_USER;
-                    this.userRequestQueueUrl = null;
-                    this.userResponseQueueUrl = null;
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
+    // 2.
     private List<Message> handleMessages(String queueUrl, List<Message> messages) {
         List<Message> processedMessages = new ArrayList<>();
         int rejectedCount = 0;
@@ -401,27 +354,27 @@ public class Consumer implements Runnable {
             else {
                 // Reject the message and send back to queue
                 ChangeMessageVisibilityRequest changeMessageVisibilityRequest = ChangeMessageVisibilityRequest.builder()
-                    .queueUrl(queueUrl)
-                    .receiptHandle(msg.receiptHandle())
-                    .visibilityTimeout(1)
-                    .build();
+                        .queueUrl(queueUrl)
+                        .receiptHandle(msg.receiptHandle())
+                        .visibilityTimeout(1)
+                        .build();
                 this.sqsClient.changeMessageVisibility(changeMessageVisibilityRequest);
                 rejectedCount += 1;
             }
         }
-        System.out.println("Rejected " + rejectedCount + " messages");
+        // System.out.println("Rejected " + rejectedCount + " messages");
         return processedMessages;
     }
 
-    // Filter valid messages based on the current state of the system
+    // 2.5
     private boolean isMessageAllowed(Map<String, String> msgContents) {
         String msgType = msgContents.get("msgType");
         List<String> allowedTypes = new ArrayList<>();
         switch (this.currentState) {
-            case WAITING_FOR_USER:
+            case READY:
                 allowedTypes = Arrays.asList("connectionRequest", "statusCheck");
                 break;
-            case READY:
+            case RUNNING:
                 allowedTypes = Arrays.asList("build", "build_experiment", "ping", "statusCheck", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ndsm_evaluate", "ContinuityMatrix", "exit");
                 break;
         }
@@ -439,8 +392,154 @@ public class Consumer implements Runnable {
         return isAllowed;
     }
 
+    // 3.
+    public HashMap<String, String> processMessage(Message msg, boolean printInfo){
+        HashMap<String, String> contents = new HashMap<>();
+        contents.put("body", msg.body());
+        for(String key: msg.messageAttributes().keySet()){
+            contents.put(key, msg.messageAttributes().get(key).stringValue());
+        }
+        if (printInfo) {
+            System.out.println("\n--------------- SQS MESSAGE ---------------");
+            System.out.println("--------> BODY: " + msg.body());
+            for(String key: msg.messageAttributes().keySet()){
+                System.out.println("---> ATTRIBUTE: " + key + " - " + msg.messageAttributes().get(key).stringValue());
+            }
+            System.out.println("-------------------------------------------\n");
+        }
+        // this.consumerSleep(5);
+        return contents;
+    }
 
-    // ---> MESSAGE TYPES
+    // 4.
+    public void deleteMessages(List<Message> messages, String url){
+        for (Message message : messages) {
+            DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
+                    .queueUrl(url)
+                    .receiptHandle(message.receiptHandle())
+                    .build();
+            try{
+                this.sqsClient.deleteMessage(deleteMessageRequest);
+            }
+            catch (ReceiptHandleIsInvalidException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+    private List<Message> checkPrivateQueue(){
+        List<Message> brainMessages = new ArrayList<>();
+        if(this.brainPrivateQueue != null){
+            brainMessages = this.getMessages(this.brainPrivateQueue, 1, 1);
+            brainMessages = this.handleMessages(this.brainPrivateQueue, brainMessages);
+        }
+        return brainMessages;
+    }
+
+    private List<Message> checkEvalQueue(){
+        List<Message> userMessages = new ArrayList<>();
+        if (this.requestQueueUrl != null && this.currentState == State.RUNNING) {
+            userMessages = this.getMessages(this.requestQueueUrl, this.numEvalMessages, 3);
+            userMessages = this.handleMessages(this.requestQueueUrl, userMessages);
+        }
+        return userMessages;
+    }
+
+    private void sendExitMessage(){
+        System.out.println("--> SENDING EXIT MESSAGE");
+        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+        messageAttributes.put("msgType",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("exit")
+                        .build()
+        );
+        messageAttributes.put("status",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("finished")
+                        .build()
+        );
+        this.sqsClient.sendMessage(SendMessageRequest.builder()
+                .queueUrl(this.brainPrivateQueueResponse)
+                .messageBody("vassar_message")
+                .messageAttributes(messageAttributes)
+                .delaySeconds(0)
+                .build());
+    }
+
+
+
+//     __  __                                  _______
+//    |  \/  |                                |__   __|
+//    | \  / | ___  ___ ___  __ _  __ _  ___     | |_   _ _ __   ___  ___
+//    | |\/| |/ _ \/ __/ __|/ _` |/ _` |/ _ \    | | | | | '_ \ / _ \/ __|
+//    | |  | |  __/\__ \__ \ (_| | (_| |  __/    | | |_| | |_) |  __/\__ \
+//    |_|  |_|\___||___/___/\__,_|\__, |\___|    |_|\__, | .__/ \___||___/
+//                                 __/ |             __/ | |
+//                                |___/             |___/|_|
+
+
+    public void msgTypeEvaluate(Map<String, String> msg_contents){
+
+        // --> 1. Get evaluation parameters
+        String  input       = msg_contents.get("input");
+        String  eval_type   = msg_contents.get("eval_type");  // NORMAL | NDSM
+        String  index_type  = msg_contents.get("index_type"); // FULL   | FAST | GA | UPDATE
+        Integer dataset_id  = Integer.parseInt(msg_contents.get("dataset_id"));
+
+
+
+        // --> 2. Check to see if architecture already exists
+        Integer arch_id = this.client.getDbClient().getArchitectureID(input);
+        if(msg_contents.containsKey("arch_id")){
+            arch_id  = Integer.parseInt(msg_contents.get("arch_id"));
+        }
+
+        // --> 3. Evaluate architecture
+        Result result = null;
+        if(eval_type.equals("NORMAL")){
+            result = this.client.evaluateArchitecture(input);
+        }
+        else if(eval_type.equals("NDSM")){
+            result = this.client.evaluateArchitectureNDSM(input);
+        }
+        else{
+            System.out.println("--> INVALID EVAL TYPE: " + eval_type);
+            return;
+        }
+
+
+        // --> 4. Index architecture
+        ArchitectureDB insert_client = new ArchitectureDB(this.client.getEngine(), dataset_id);
+        if(result != null){
+            if(index_type.equals("FULL")){
+                insert_client.insert_architecture(input, result);
+            }
+            else if(index_type.equals("GA")){
+                insert_client.insert_architecture_ga(input, result);
+            }
+            else if(index_type.equals("FAST")){
+                insert_client.insert_architecture_fast(input, result);
+            }
+            else if(index_type.equals("UPDATE")){
+                insert_client.update_architecture(input, result, arch_id);
+            }
+        }
+        else{
+            System.out.println("--> CANT INDEX, RESULT IS NULL");
+        }
+    }
+
+
+
+
+
+
+
+
     private void msgTypeConnectionRequest(Map<String, String> msgContents) {
         String userId = msgContents.get("user_id");
         this.userId = Integer.parseInt(userId);
@@ -449,8 +548,8 @@ public class Consumer implements Runnable {
         int group_id   = Integer.parseInt(msgContents.get("group_id"));
         int problem_id = Integer.parseInt(msgContents.get("problem_id"));
 
-        // Create queues for private communication if non exist
-        QueueUrls queueUrls = createUserQueues(userId);
+        // Send running status to ping thread
+        this.sendRunningStatus(group_id, problem_id);
 
         // Build evaluation container
         this.client.rebuildResource(group_id, problem_id);
@@ -485,126 +584,15 @@ public class Consumer implements Runnable {
                         .stringValue(userId)
                         .build()
         );
-        messageAttributes.put("request_queue_url",
-                MessageAttributeValue.builder()
-                        .dataType("String")
-                        .stringValue(queueUrls.requestUrl)
-                        .build()
-        );
-        messageAttributes.put("response_queue_url",
-                MessageAttributeValue.builder()
-                        .dataType("String")
-                        .stringValue(queueUrls.responseUrl)
-                        .build()
-        );
 
         this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.responseQueueUrl)
+                .queueUrl(this.brainPrivateQueueResponse)
                 .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(0)
                 .build());
-        this.currentState = State.READY;
-        this.userRequestQueueUrl = queueUrls.requestUrl;
-        this.userResponseQueueUrl = queueUrls.responseUrl;
+        this.currentState = State.RUNNING;
         this.lastPingTime = System.currentTimeMillis();
-    }
-
-    private void msgTypeStatusCheck(Map<String, String> msgContents) {
-        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-        messageAttributes.put("msgType",
-                MessageAttributeValue.builder()
-                        .dataType("String")
-                        .stringValue("currentStatus")
-                        .build()
-        );
-        String currentStatus = "";
-        switch (this.currentState) {
-            case WAITING_FOR_USER:
-                currentStatus = "waiting_for_user";
-                break;
-            case READY:
-                currentStatus = "ready";
-                break;
-        }
-        messageAttributes.put("current_status",
-                MessageAttributeValue.builder()
-                        .dataType("String")
-                        .stringValue(currentStatus)
-                        .build()
-        );
-
-        this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.userResponseQueueUrl)
-                .messageBody("vassar_message")
-                .messageAttributes(messageAttributes)
-                .delaySeconds(0)
-                .build());
-        this.lastPingTime = System.currentTimeMillis();
-    }
-
-    private void msgTypePing(Map<String, String> msgContents) {
-        this.lastPingTime = System.currentTimeMillis();
-        // Send ping ack back
-        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-        messageAttributes.put("msgType",
-                              MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue("pingAck")
-                                .build()
-        );
-        messageAttributes.put("UUID",
-                              MessageAttributeValue.builder()
-                                .dataType("String")
-                                .stringValue(this.uuid)
-                                .build()
-        );
-        this.sqsClient.sendMessage(SendMessageRequest.builder()
-                                    .queueUrl(this.userResponseQueueUrl)
-                                    .messageBody("vassar_message")
-                                    .messageAttributes(messageAttributes)
-                                    .delaySeconds(0)
-                                    .build());
-    }
-    
-    public void msgTypeEvaluate(Map<String, String> msg_contents){
-
-        String  input       = msg_contents.get("input");
-        Integer datasetId   = Integer.parseInt(msg_contents.get("dataset_id"));
-        boolean ga_arch     = false;
-        boolean re_evaluate = false;
-        boolean fast        = false;
-
-
-        if(msg_contents.containsKey("ga")){
-            ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
-        }
-
-        if(msg_contents.containsKey("redo")){
-            re_evaluate = Boolean.parseBoolean(msg_contents.get("redo"));
-        }
-
-        if(msg_contents.containsKey("fast")){
-            fast = Boolean.parseBoolean(msg_contents.get("fast"));
-        }
-
-        if(!re_evaluate) {
-            if (this.client.doesArchitectureExist(input)) {
-                System.out.println("---> Architecture already exists!!!");
-                System.out.println("---> INPUT: " + input);
-                this.consumerSleep(1);
-                return;
-            }
-        }
-
-        Result result = this.client.evaluateArchitecture(input, datasetId, ga_arch, re_evaluate, fast);
-
-        System.out.println("\n-------------------- EVALUATE REQUEST OUTPUT --------------------");
-        System.out.println("-----> INPUT: " + input);
-        System.out.println("------> COST: " + result.getCost());
-        System.out.println("---> SCIENCE: " + result.getScience());
-        System.out.println("----------------------------------------------------------------\n");
-        // this.consumerSleep(3);
     }
 
     public void msgTypeADD(Map<String, String> msg_contents){
@@ -633,7 +621,6 @@ public class Consumer implements Runnable {
         System.out.println("--------------------------------------------------------------------\n");
         // this.consumerSleep(20);
     }
-
 
     public void msgTypeSELECTING(Map<String, String> msg_contents){
 
@@ -704,35 +691,6 @@ public class Consumer implements Runnable {
         // EvaluatorApp.sleep(5);
     }
 
-
-    public void msgTypeBuildExperiment(Map<String, String> msg_contents){
-        int group_id   = Integer.parseInt(msg_contents.get("group_id"));
-        int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
-
-        this.client.rebuildResource(group_id, problem_id);
-
-        // Send message announcing it's ready to eval architectures - does this message still need to be sent?
-        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-        messageAttributes.put("msgType",
-                MessageAttributeValue.builder()
-                        .dataType("String")
-                        .stringValue("SUCCESS")
-                        .build()
-        );
-        this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.brainPrivateQueueResponse)
-                .messageBody("vassar_message")
-                .messageAttributes(messageAttributes)
-                .delaySeconds(0)
-                .build());
-
-        System.out.println("\n-------------------- BUILD REQUEST --------------------");
-        System.out.println("--------> GROUP ID: " + group_id);
-        System.out.println("------> PROBLEM ID: " + problem_id);
-        System.out.println("-------------------------------------------------------\n");
-        // this.consumerSleep(5);
-    }
-
     public void msgTypeBuild(Map<String, String> msg_contents){
         int group_id   = Integer.parseInt(msg_contents.get("group_id"));
         int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
@@ -760,17 +718,21 @@ public class Consumer implements Runnable {
                         .build()
         );
         this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.userResponseQueueUrl)
+                .queueUrl(this.brainPrivateQueueResponse)
                 .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(0)
                 .build());
 
+        if(group_id != -1 && problem_id != -1){
+            this.sendRunningStatus(group_id, problem_id);
+        }
+        this.currentState = State.RUNNING;
+
         System.out.println("\n-------------------- BUILD REQUEST --------------------");
         System.out.println("--------> GROUP ID: " + group_id);
         System.out.println("------> PROBLEM ID: " + problem_id);
         System.out.println("-------------------------------------------------------\n");
-        // this.consumerSleep(5);
     }
 
     public void msgTypeNDSM(Map<String, String> msg_contents){
@@ -778,53 +740,6 @@ public class Consumer implements Runnable {
         System.out.println("---> COMPUTING NDSM");
         EvaluatorApp.sleep(1);
         this.client.computeNDSMs();
-    }
-
-    public void msgTypeNDSMEvaluate(Map<String, String> msg_contents){
-
-        String  input       = msg_contents.get("input");
-        Integer datasetId   = Integer.parseInt(msg_contents.get("dataset_id"));
-
-        boolean ga_arch     = false;
-        if(msg_contents.containsKey("ga")){
-            ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
-        }
-
-        boolean re_evaluate = false;
-        boolean fast        = false;
-
-        boolean improve_hv = false;
-        if(msg_contents.containsKey("improve_hv")){
-            improve_hv = Boolean.parseBoolean(msg_contents.get("improve_hv"));
-        }
-
-        if(msg_contents.containsKey("ga")){
-            ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
-        }
-
-        if(msg_contents.containsKey("redo")){
-            re_evaluate = Boolean.parseBoolean(msg_contents.get("redo"));
-        }
-
-        if(msg_contents.containsKey("fast")){
-            fast = Boolean.parseBoolean(msg_contents.get("fast"));
-        }
-
-        int eval_idx = 1;
-        if(msg_contents.containsKey("eval_idx")){
-            eval_idx = Integer.parseInt(msg_contents.get("eval_idx"));
-        }
-
-        if(!re_evaluate) {
-            if (this.client.doesArchitectureExist(input)) {
-                System.out.println("---> Architecture already exists!!!");
-                System.out.println("---> INPUT: " + input);
-                this.consumerSleep(1);
-                return;
-            }
-        }
-
-        Result result = this.client.evaluateNDSMArchitecture(input, datasetId, ga_arch, re_evaluate, fast, improve_hv, eval_idx);
     }
 
     public void msgTypeContinuityMatrix(Map<String, String> msg_contents){
@@ -836,62 +751,68 @@ public class Consumer implements Runnable {
     }
 
 
-    // ---> MESSAGE FLOW
-    // 1.
-    public List<Message> getMessages(String url, int maxMessages, int waitTimeSeconds){
-        ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
-                .queueUrl(url)
-                .waitTimeSeconds(waitTimeSeconds)
-                .maxNumberOfMessages(maxMessages)
-                .attributeNames(QueueAttributeName.ALL)
-                .messageAttributeNames("All")
-                .build();
-        return this.sqsClient.receiveMessage(receiveMessageRequest).messages();
-    }
 
-    // 2.
-    public HashMap<String, String> processMessage(Message msg, boolean printInfo){
-        HashMap<String, String> contents = new HashMap<>();
-        contents.put("body", msg.body());
-        for(String key: msg.messageAttributes().keySet()){
-            contents.put(key, msg.messageAttributes().get(key).stringValue());
-        }
-        if (printInfo) {
-            System.out.println("\n--------------- SQS MESSAGE ---------------");
-            System.out.println("--------> BODY: " + msg.body());
-            for(String key: msg.messageAttributes().keySet()){
-                System.out.println("---> ATTRIBUTE: " + key + " - " + msg.messageAttributes().get(key).stringValue());
-            }
-            System.out.println("-------------------------------------------\n");
-        }
-        // this.consumerSleep(5);
-        return contents;
-    }
 
-    // 3.
-    public void deleteMessages(List<Message> messages, String url){
-        for (Message message : messages) {
-            DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
-                    .queueUrl(url)
-                    .receiptHandle(message.receiptHandle())
-                    .build();
-            try{
-                this.sqsClient.deleteMessage(deleteMessageRequest);
-            }
-            catch (ReceiptHandleIsInvalidException e){
-                e.printStackTrace();
+
+
+
+//     _    _      _
+//    | |  | |    | |
+//    | |__| | ___| |_ __   ___ _ __ ___
+//    |  __  |/ _ \ | '_ \ / _ \ '__/ __|
+//    | |  | |  __/ | |_) |  __/ |  \__ \
+//    |_|  |_|\___|_| .__/ \___|_|  |___/
+//                  | |
+//                  |_|
+
+
+    private boolean queueExists(String queueUrl) {
+        ListQueuesResponse listResponse = this.sqsClient.listQueues();
+        for (String url: listResponse.queueUrls()) {
+            if (queueUrl.equals(url)) {
+                return true;
             }
         }
+        return false;
     }
 
-    // ---> THREAD SLEEP
+    private boolean queueExistsByName(String queueName) {
+        ListQueuesResponse listResponse = this.sqsClient.listQueues();
+        for (String url: listResponse.queueUrls()) {
+            String[] nameSplit = url.split("/");
+            String name = nameSplit[nameSplit.length-1];
+            if (queueName.equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String getQueueArn(String queueUrl) {
+        ArrayList<QueueAttributeName> attrList = new ArrayList<>();
+        attrList.add(QueueAttributeName.QUEUE_ARN);
+        GetQueueAttributesRequest attrRequest = GetQueueAttributesRequest.builder()
+            .queueUrl(queueUrl)
+            .attributeNames(attrList)
+            .build();
+        GetQueueAttributesResponse attrResponse = sqsClient.getQueueAttributes(attrRequest);
+        String queueArn = attrResponse.attributes().get(QueueAttributeName.QUEUE_ARN);
+        return queueArn;
+    }
+
+    private String getQueueUrl(String queueName) {
+        GetQueueUrlRequest request = GetQueueUrlRequest.builder()
+            .queueName(queueName)
+            .build();
+        GetQueueUrlResponse response = this.sqsClient.getQueueUrl(request);
+        return response.queueUrl();
+    }
+
     public void consumerSleep(int seconds){
         try                            { TimeUnit.SECONDS.sleep(seconds); }
         catch (InterruptedException e) { e.printStackTrace(); }
     }
 
-
-    // ---> DEBUG MESSAGES
     public void sendTestMessages(){
         String arch = "0000000010000000000000000";
         String arch2= "0000000010000000100000000";
@@ -1010,8 +931,6 @@ public class Consumer implements Runnable {
                 .build());
     }
 
-
-    // --> DELETE PRIVATE MESSAGES
     public void deletePrivMessages(){
         System.out.println("---> DELETING PRIVATE MESSAGES");
         this.privateQueue.clear();

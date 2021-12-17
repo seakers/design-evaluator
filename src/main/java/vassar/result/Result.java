@@ -6,6 +6,7 @@ package vassar.result;
  */
 
 import com.google.gson.JsonObject;
+import org.checkerframework.checker.units.qual.A;
 import vassar.architecture.ADDArchitecture;
 import vassar.architecture.AbstractArchitecture;
 
@@ -26,6 +27,7 @@ public class Result implements Serializable {
     public double dataContinuity;
     public double fairnessScore;
     public double programmaticRisk;
+    public Integer eval_idx;
     public ArrayList<ArrayList<ArrayList<Double>>> subobjectiveScores;
     public ArrayList<ArrayList<Double>> objectiveScores;
     public ArrayList<Double> panelScores;
@@ -50,7 +52,18 @@ public class Result implements Serializable {
 
 
     //Constructors
-    public Result(){}
+    public Result(){
+        this.panelScores = new ArrayList<>();
+        this.objectiveScores = new ArrayList<>();
+        this.subobjectiveScores = new ArrayList<>();
+        this.explanations = new TreeMap<>();
+        this.capabilityList = new TreeMap<>();
+        this.subobjectiveScoresMap = new TreeMap<>();
+        this.capabilities = new ArrayList<>();
+        this.costFacts = new ArrayList<>();
+        this.performanceCritique = new Vector<>();
+        this.costCritique = new Vector<>();
+    }
 
     public Result(AbstractArchitecture arch, double science, double cost) {
         this.science = science;
@@ -69,6 +82,8 @@ public class Result implements Serializable {
 
         this.dataContinuity = -1;
         this.fairnessScore  = -1;
+
+        this.eval_idx = null;
     }
 
     public Result(AbstractArchitecture arch,
@@ -93,6 +108,8 @@ public class Result implements Serializable {
         this.designString = "";
         this.subobjectiveInfo = new JsonObject();
         this.mission_launch_mass = "";
+
+        this.eval_idx = null;
     }
 
     public Result(AbstractArchitecture arch,
@@ -115,6 +132,8 @@ public class Result implements Serializable {
         this.designString = "";
         this.subobjectiveInfo = new JsonObject();
         this.mission_launch_mass = "";
+
+        this.eval_idx = null;
     }
 
     public void setPanelScores(ArrayList<Double> panelScores){
@@ -125,9 +144,7 @@ public class Result implements Serializable {
     public void setProgrammaticRisk(double programmaticRisk){
         this.programmaticRisk = programmaticRisk;
     }
-    public double getProgrammaticRisk(){
-        return this.programmaticRisk;
-    }
+
 
     public void setSubobjectiveInfo(JsonObject subobjectiveInfo){
         this.subobjectiveInfo = subobjectiveInfo;
@@ -176,16 +193,12 @@ public class Result implements Serializable {
         this.arch = arch;
     }
 
-    public double getScience() {
-        return science;
-    }
+
     public void setScience(double science) {
         this.science = science;
     }
 
-    public double getCost() {
-        return cost;
-    }
+
     public void setCost(double cost) {
         this.cost = cost;
     }
@@ -238,16 +251,12 @@ public class Result implements Serializable {
         this.fuzzyCost = fuzzyCost;
     }
 
-    public double getDataContinuityScore(){
-        return this.dataContinuity;
-    }
+
     public void setDataContinuityScore(double dataContinuity){
         this.dataContinuity = dataContinuity;
     }
 
-    public double getFairnessScore(){
-        return this.fairnessScore;
-    }
+
     public void setFairnessScore(double fairnessScore){
         this.fairnessScore = fairnessScore;
     }
@@ -304,9 +313,32 @@ public class Result implements Serializable {
 
 
 
+    public Double getPanelScore(int panel_idx){
+        if(panel_idx < this.panelScores.size()){
+            return this.panelScores.get(panel_idx);
+        }
+        return 0.0;
+    }
 
+    public Double getObjectiveScore(int panel_idx, int objective_idx){
+        if(panel_idx < this.objectiveScores.size()){
+            if(objective_idx < this.objectiveScores.get(panel_idx).size()){
+                return this.objectiveScores.get(panel_idx).get(objective_idx);
+            }
+        }
+        return 0.0;
+    }
 
-
+    public Double getSubobjectiveScore(int panel_idx, int objective_idx, int subobjective_idx){
+        if(panel_idx < this.subobjectiveScores.size()){
+            if(objective_idx < this.subobjectiveScores.get(panel_idx).size()){
+                if(subobjective_idx < this.subobjectiveScores.get(panel_idx).get(objective_idx).size()){
+                    return this.subobjectiveScores.get(panel_idx).get(objective_idx).get(subobjective_idx);
+                }
+            }
+        }
+        return 0.0;
+    }
 
     @Override
     public String toString() {
@@ -322,5 +354,64 @@ public class Result implements Serializable {
             fc = fuzzyCost.toString();
         return "Result{" + "science=" + science + ", cost=" + cost + " fuz_sc=" + fs + " fuz_co=" + fc + ", arch=" + arch.toString() + '}';
     }
+
+
+//      _____      _   _
+//     / ____|    | | | |
+//    | |  __  ___| |_| |_ ___ _ __ ___
+//    | | |_ |/ _ \ __| __/ _ \ '__/ __|
+//    | |__| |  __/ |_| ||  __/ |  \__ \
+//     \_____|\___|\__|\__\___|_|  |___/
+
+
+    public String getCritique(){
+        Vector<String> performanceCritique = this.getPerformanceCritique();
+        Vector<String> costCritique = this.getCostCritique();
+        String critique = " ";
+        if(performanceCritique != null){
+            for(String crit: performanceCritique){
+                critique = critique + crit + " | ";
+            }
+        }
+        if(costCritique != null){
+            for(String crit: costCritique){
+                critique = critique + crit + " | ";
+            }
+        }
+        return critique;
+    }
+
+    public int getEvalIdx(){
+        if(this.eval_idx != null){
+            return this.eval_idx;
+        }
+        return 0;
+    }
+
+    public double getScience() {
+        System.out.println("--> SCIENCE: " + this.science);
+        return this.science;
+    }
+
+    public double getCost() {
+        System.out.println("--> COST: " + this.cost);
+        return this.cost;
+    }
+
+    public double getDataContinuityScore(){
+        System.out.println("--> DATA CONTINUITY: " + this.dataContinuity);
+        return this.dataContinuity;
+    }
+
+    public double getFairnessScore(){
+        System.out.println("--> FAIRNESS: " + this.fairnessScore);
+        return this.fairnessScore;
+    }
+
+    public double getProgrammaticRisk(){
+        System.out.println("--> PROGRAMMATIC RISK: " + this.programmaticRisk);
+        return this.programmaticRisk;
+    }
+
 
 }

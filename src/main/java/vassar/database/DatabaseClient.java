@@ -3,11 +3,15 @@ package vassar.database;
 // I/O
 
 // JSON
+import com.apollographql.apollo.ApolloCall;
 import com.apollographql.apollo.ApolloSubscriptionCall;
+import com.apollographql.apollo.api.Response;
+import com.apollographql.apollo.rx2.Rx2Apollo;
 import com.evaluator.*;
 import com.evaluator.type.*;
 import com.google.gson.JsonObject;
 import evaluator.EvaluatorApp;
+import io.reactivex.Observable;
 import vassar.database.service.DebugAPI;
 import vassar.database.service.QueryAPI;
 import vassar.database.template.TemplateRequest;
@@ -23,7 +27,7 @@ import java.util.*;
 public class DatabaseClient {
 
     private boolean  debug;
-    private QueryAPI queryAPI;
+    public QueryAPI queryAPI;
     private DebugAPI debugAPI;
     private ArrayList<ApolloSubscriptionCall> subscriptions;
     private HashMap<String, Integer> panel_cache;
@@ -200,6 +204,11 @@ public class DatabaseClient {
         return this.queryAPI.insertArchitecture(input, datasetId, science, cost, ga);
     }
 
+
+    public int insertArchitectureWrapperFull(InsertArchitectureWrapperFullMutation.Builder builder){
+        return this.queryAPI.insertArchitectureWrapperFull(builder);
+    }
+
     public int insertArchitectureSlow(InsertArchitectureSlowMutation.Builder archBuilder){
         return this.queryAPI.insertArchitectureSlow(archBuilder);
     }
@@ -300,6 +309,10 @@ public class DatabaseClient {
         return this.subobj_cache.get(subobjName);
     }
 
+
+
+
+
     public ArrayList<String> getInstrumentMeasurements(String instrument, boolean trim){
         ArrayList<String> measurements = new ArrayList<>();
 
@@ -351,7 +364,9 @@ public class DatabaseClient {
         return this.queryAPI.getRequirementRulesForSubobjective(subobjectiveName);
     }
 
-
+    public int getCurrentProblemID(){
+        return this.queryAPI.problemId;
+    }
 
 
     public void setProblemID(int id){
@@ -403,6 +418,10 @@ public class DatabaseClient {
 
     public boolean doesArchitectureExist(String input){
         return this.queryAPI.doesArchitectureExist(input);
+    }
+
+    public int getArchitectureID(String input){
+        return this.queryAPI.getArchitectureID(input);
     }
 
 

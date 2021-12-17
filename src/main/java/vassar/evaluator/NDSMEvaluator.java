@@ -46,8 +46,33 @@ public class NDSMEvaluator implements Callable<Result> {
             this.orbits = engine.getProblem().orbitList;
         }
 
+        public Builder setProblem(String problem_name){
+            String _1DSM_file = "";
+            String _2DSM_file = "";
 
-        public Builder set_1DSM(String path){
+            if(Objects.equals(problem_name, "ClimateCentric")){
+                _1DSM_file = "/app/output/DSM-Climate_1-1-2021-11-10-17-41-01.dat";
+                _2DSM_file = "/app/output/DSM-Climate_1-2-2021-11-10-17-56-41.dat";
+            }
+            else if(Objects.equals(problem_name, "ClimateCentric_1")){
+                _1DSM_file = "/app/output/DSM-Climate_1-1-2021-11-10-17-41-01.dat";
+                _2DSM_file = "/app/output/DSM-Climate_1-2-2021-11-10-17-56-41.dat";
+            }
+            else if(Objects.equals(problem_name, "ClimateCentric_2")){
+                _1DSM_file = "/app/output/DSM-Climate_2-1-2021-11-10-18-14-15.dat";
+                _2DSM_file = "/app/output/DSM-Climate_2-2-2021-11-10-18-30-07.dat";
+            }
+            else{
+                System.out.println("--> INVALID NDSM PROBLEM !!!");
+                return this;
+            }
+
+            this.set_1DSM(_1DSM_file);
+            this.set_2DSM(_2DSM_file);
+            return this;
+        }
+
+        public void set_1DSM(String path){
             this._1DSM = new HashMap<>();
             HashMap<String, NDSM2> ndsm_map = Combinatorics.getNDSM2s(path);
             int dim = 1;
@@ -69,10 +94,9 @@ public class NDSMEvaluator implements Callable<Result> {
 
                 this._1DSM.put(orbit, temp);
             }
-            return this;
         }
 
-        public Builder set_2DSM(String path){
+        public void set_2DSM(String path){
             this._2DSM = new HashMap<>();
             HashMap<String, NDSM2> ndsm_map = Combinatorics.getNDSM2s(path);
             int dim = 2;
@@ -94,7 +118,6 @@ public class NDSMEvaluator implements Callable<Result> {
 
                 this._2DSM.put(orbit, temp);
             }
-            return this;
         }
 
         public NDSMEvaluator build(){

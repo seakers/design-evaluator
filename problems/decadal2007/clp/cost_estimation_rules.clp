@@ -31,8 +31,7 @@
     (bind ?p (get-instrument-power ?instr))
     (bind ?rb (get-instrument-datarate ?instr))
 
-    (bind ?cost (* 25600 (** (/ ?p 61.5) 0.32) (** (/ ?m 53.8) 0.26)
-            (** (/ (* 1000 ?rb) 40.4) 0.11))); in FY04$
+    (bind ?cost (* 25600 (** (/ ?p 61.5) 0.32) (** (/ ?m 53.8) 0.26) (** (/ (* 1000 ?rb) 40.4) 0.11))  ); in FY04$
     (bind ?cost (/ ?cost 1.097))
     ;(printout t apply-NICM " " ?instr " = " ?m " " ?p " " ?rb " " ?cost crlf)
     (return ?cost)
