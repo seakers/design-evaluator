@@ -139,7 +139,7 @@ public class ADDEvaluator implements Callable<Result> {
 
 
     @Override
-    public Result call(){
+    public Result call() throws Exception {
         boolean reset_engine_globals = true;
 
         // --> Result
@@ -742,7 +742,7 @@ public class ADDEvaluator implements Callable<Result> {
 //                                       __/ |
 //                                      |___/
 
-    private void evaluateCoverage(){
+    private void evaluateCoverage() throws Exception {
 
         try{
             int javaAssertedFactID = 1;
@@ -880,7 +880,7 @@ public class ADDEvaluator implements Callable<Result> {
         return idx;
     }
 
-    private HashMap<String, Double> get_revisit_time_metrics(HashMap<String, ArrayList<Integer>> orbit_fov_map){
+    private HashMap<String, Double> get_revisit_time_metrics(HashMap<String, ArrayList<Integer>> orbit_fov_map) throws Exception {
 
 
         // COVERAGE GRANULARITY
@@ -948,13 +948,13 @@ public class ADDEvaluator implements Callable<Result> {
 //                                               |___/
 
 
-    private void evaluateScheduling(Result result){
+    private void evaluateScheduling(Result result) throws Exception {
 
         this.evaluateDataContinuityScore(result);
         this.evaluateFairnessScore(result);
     }
 
-    private void evaluateDataContinuityScore(Result result){
+    private void evaluateDataContinuityScore(Result result) throws Exception{
 
         this.q_builder.saveQuery("data-continuity/1-INITIAL-MEASUREMENTS", "REQUIREMENTS::Measurement");
 

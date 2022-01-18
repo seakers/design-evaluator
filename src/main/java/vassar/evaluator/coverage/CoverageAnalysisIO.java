@@ -70,7 +70,7 @@ public class CoverageAnalysisIO {
         this.binaryEncoding = binaryEncoding;
     }
 
-    public void writeAccessData(AccessDataDefinition definition, Map<TopocentricFrame, TimeIntervalArray> fovEvents){
+    public void writeAccessData(AccessDataDefinition definition, Map<TopocentricFrame, TimeIntervalArray> fovEvents) throws FileNotFoundException, IOException {
         if(this.binaryEncoding){
             this.writeAccessDataBinary(definition, fovEvents);
 
@@ -79,7 +79,7 @@ public class CoverageAnalysisIO {
         }
     }
 
-    public Map<TopocentricFrame, TimeIntervalArray> readAccessData(AccessDataDefinition definition){
+    public Map<TopocentricFrame, TimeIntervalArray> readAccessData(AccessDataDefinition definition) throws FileNotFoundException, IOException, ClassNotFoundException {
         if(this.binaryEncoding){
             return this.readAccessDataBinary(definition);
         }else{
@@ -248,7 +248,7 @@ public class CoverageAnalysisIO {
         );
     }
 
-    public Map<TopocentricFrame, TimeIntervalArray> readAccessDataBinary(AccessDataDefinition definition) {
+    public Map<TopocentricFrame, TimeIntervalArray> readAccessDataBinary(AccessDataDefinition definition) throws FileNotFoundException, IOException, ClassNotFoundException {
 
         String filename = getAccessDataFilename(definition);
 
@@ -264,13 +264,16 @@ public class CoverageAnalysisIO {
         } catch (FileNotFoundException exc) {
             System.out.println("Exc in finding the file: " + exc.getMessage());
             exc.printStackTrace();
+            throw exc;
 
         } catch (IOException exc) {
             System.out.println("Exc in reading binary access data: " + filename + "\n"+ exc.getMessage());
             exc.printStackTrace();
+            throw exc;
 
         } catch (ClassNotFoundException exc) {
             exc.printStackTrace();
+            throw exc;
         }
         finally {
             CoverageAnalysisIO.unlockFile(filename);
@@ -279,7 +282,7 @@ public class CoverageAnalysisIO {
         return out;
     }
 
-    public void writeAccessDataBinary(AccessDataDefinition definition, Map<TopocentricFrame, TimeIntervalArray> accesses) {
+    public void writeAccessDataBinary(AccessDataDefinition definition, Map<TopocentricFrame, TimeIntervalArray> accesses) throws FileNotFoundException, IOException {
 
         String filename = getAccessDataFilename(definition);
 
@@ -294,10 +297,12 @@ public class CoverageAnalysisIO {
         } catch (FileNotFoundException exc) {
             System.out.println("Exc in finding the file: " + exc.getMessage());
             exc.printStackTrace();
+            throw exc;
 
         } catch (IOException exc) {
             System.out.println("Exc in writing binary access data: " + exc.getMessage());
             exc.printStackTrace();
+            throw exc;
         }
         finally {
             CoverageAnalysisIO.unlockFile(filename);

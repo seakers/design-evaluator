@@ -48,7 +48,7 @@ public class ADDArchitecture extends AbstractArchitecture {
 
 
 
-    public void optimizePartitioningArchitecture(Resource res){
+    public void optimizePartitioningArchitecture(Resource res) throws Exception {
         HashMap<Integer, ArrayList<String>> partitions = new HashMap<>();
 
         Iterator spacecraft_iterator = this.design.iterator();
@@ -86,7 +86,7 @@ public class ADDArchitecture extends AbstractArchitecture {
         this.design = new_design;
     }
 
-    public void optimizeSelectingArchitecture(Resource res){
+    public void optimizeSelectingArchitecture(Resource res) throws Exception {
 
         ArrayList<String> instruments = new ArrayList<>();
         Iterator it = this.design.iterator();

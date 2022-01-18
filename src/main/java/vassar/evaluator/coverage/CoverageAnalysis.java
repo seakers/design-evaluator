@@ -152,7 +152,7 @@ public class CoverageAnalysis {
         this.reset();
     }
 
-    public Map<TopocentricFrame, TimeIntervalArray> getAccesses(double fieldOfView, double inclination, double altitude, int numSats, int numPlanes, String raanLabel) throws OrekitException {
+    public Map<TopocentricFrame, TimeIntervalArray> getAccesses(double fieldOfView, double inclination, double altitude, int numSats, int numPlanes, String raanLabel) throws Exception, OrekitException {
         // System.out.println("\n----- GET ACCESSES -----");
         // System.out.println(fieldOfView);
         // System.out.println(inclination);

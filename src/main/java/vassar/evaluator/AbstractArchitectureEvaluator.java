@@ -71,7 +71,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
 
     @Override
-    public Result call() {
+    public Result call() throws Exception {
 
         checkInit();
 
@@ -109,6 +109,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         catch (Exception e) {
             System.out.println("EXC in Task:call: " + e.getClass() + " " + e.getMessage());
             e.printStackTrace();
+            throw e;
         }
 
         return result;
@@ -165,7 +166,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         return critique;
     }
 
-    protected Result evaluatePerformance(Problem params, Rete r, AbstractArchitecture arch, QueryBuilder qb) {
+    protected Result evaluatePerformance(Problem params, Rete r, AbstractArchitecture arch, QueryBuilder qb) throws JessException, OrekitException, Exception {
         System.out.println("----- EVALUATING PERFORMANCE");
 
         Result result = new Result();
@@ -411,11 +412,15 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             System.out.println(e.getErrorCode());
             System.out.println(e.getLineNumber());
             e.printStackTrace();
-            System.exit(-1);
+            throw e;
         }
         catch (OrekitException e) {
             e.printStackTrace();
-            throw new Error();
+            throw e;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
         return result;
     }

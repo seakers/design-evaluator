@@ -159,7 +159,7 @@ public class EvaluatorApp {
 
         // RUN CONSUMER
         try {
-            evaluator.run();
+            evaluator.runConsumer();
         }
         catch (Exception e) {
             e.printStackTrace();

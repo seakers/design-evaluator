@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-public class Consumer implements Runnable {
+public class Consumer {
 
     private enum State {
         WAITING_FOR_USER, READY
@@ -121,7 +121,7 @@ public class Consumer implements Runnable {
     // 2. Reload rete object from database
 
 
-    public void run() {
+    public void runConsumer() throws Exception {
         int counter = 0;
 
         // this.sendTestMessages();
@@ -551,7 +551,7 @@ public class Consumer implements Runnable {
         this.pendingReset = true;
     }
     
-    public void msgTypeEvaluate(Map<String, String> msg_contents){
+    public void msgTypeEvaluate(Map<String, String> msg_contents) throws Exception {
 
         String  input       = msg_contents.get("input");
         Integer datasetId   = Integer.parseInt(msg_contents.get("dataset_id"));
@@ -625,7 +625,7 @@ public class Consumer implements Runnable {
     }
 
 
-    public void msgTypeSELECTING(Map<String, String> msg_contents){
+    public void msgTypeSELECTING(Map<String, String> msg_contents) throws Exception {
 
         String input  = msg_contents.get("input");
         String rQueue = msg_contents.get("rQueue");
@@ -653,7 +653,7 @@ public class Consumer implements Runnable {
         // EvaluatorApp.sleep(5);
     }
 
-    public void msgTypePARTITIONING(Map<String, String> msg_contents){
+    public void msgTypePARTITIONING(Map<String, String> msg_contents) throws Exception {
 
         String input  = msg_contents.get("input");
         String rQueue = msg_contents.get("rQueue");
@@ -742,7 +742,7 @@ public class Consumer implements Runnable {
         this.client.computeNDSMs();
     }
 
-    public void msgTypeContinuityMatrix(Map<String, String> msg_contents){
+    public void msgTypeContinuityMatrix(Map<String, String> msg_contents) throws Exception {
 
 
         System.out.println("---> COMPUTING CONTINUITY MATRIX");

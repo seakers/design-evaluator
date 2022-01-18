@@ -15,7 +15,8 @@
         { "name": "VASSAR_RESPONSE_URL", "value": "https://sqs.us-east-2.amazonaws.com/923405430231/vassar_response" },
         { "name": "DEPLOYMENT_TYPE", "value": "AWS" },
         { "name": "CLUSTER_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster" },
-        { "name": "SERVICE_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/evaluator-service" }
+        { "name": "SERVICE_ARN", "value": "arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/evaluator-service" },
+        { "name": "JAVA_OPTS", "value": "-Xmx3840m"}
       ],
       "mountPoints": [
         {

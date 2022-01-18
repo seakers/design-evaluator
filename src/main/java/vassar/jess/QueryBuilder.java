@@ -272,7 +272,7 @@ public class QueryBuilder {
 
 
 
-    public Comparator<Fact> getFactComparator(){
+    public Comparator<Fact> getFactComparator() {
         Rete engine = this.r;
         return new Comparator<Fact>() {
             @Override
@@ -299,9 +299,9 @@ public class QueryBuilder {
                             String v1 = o1.getSlotValue(true_slot).stringValue(engine.getGlobalContext());
                             String v2 = o2.getSlotValue(true_slot).stringValue(engine.getGlobalContext());
                             return v1.compareTo(v2);
-                        } catch (Exception e) {
+                        } catch (JessException e) {
                             e.printStackTrace();
-                            System.exit(0);
+                            return 0;
                         }
                     }
                 }

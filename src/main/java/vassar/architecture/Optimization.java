@@ -603,7 +603,7 @@ public class Optimization {
 
 
     // Schedule missions based on Data Continuity penalties
-    public static ArrayList<Integer> scheduleMissions(HashMap<Integer, ArrayList<String>> missions, Resource res){
+    public static ArrayList<Integer> scheduleMissions(HashMap<Integer, ArrayList<String>> missions, Resource res) throws Exception {
 
         // Get data continuity matrix
         HashMap<Integer, HashMap<String, Double>> matrix = Optimization.computeDataContinuityMatrix(res, missions.size());
@@ -665,7 +665,7 @@ public class Optimization {
 
 
 
-    public static HashMap<Integer, HashMap<String, Double>> computeDataContinuityMatrix(Resource res, int num_mission_slots){
+    public static HashMap<Integer, HashMap<String, Double>> computeDataContinuityMatrix(Resource res, int num_mission_slots) throws Exception {
         // HashMap<Integer                         -- mission slots
         // HashMap<Integer, HashMap                -- measurements mapped to penalty
         // HashMap<Integer, HashMap<String         -- measurement

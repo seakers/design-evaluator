@@ -113,7 +113,7 @@ public class DatabaseClient {
 
 
     // ---> Data Continuity Information
-    public ArrayList<HashMap<String, ArrayList<Date>>> getDataContinuityInformation(){
+    public ArrayList<HashMap<String, ArrayList<Date>>> getDataContinuityInformation() throws ParseException {
         ArrayList<String> all_measurements = new ArrayList<>();
 
         if(this.historical_info.isEmpty()){
@@ -146,7 +146,7 @@ public class DatabaseClient {
                     System.out.println("---- ERROR PARSING MISSION DATE");
                     System.out.println(start_date);
                     System.out.println(end_date);
-                    System.exit(0);
+                    throw e;
                 }
 
                 // Iterate over mission instruments

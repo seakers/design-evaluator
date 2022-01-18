@@ -94,7 +94,7 @@ public class VassarClient {
 // |______\_/ \__,_|_|\__,_|\__,_|\__\___| /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 //
 
-    public Result evaluateArchitecture(String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast){
+    public Result evaluateArchitecture(String bitString, Integer datasetId, boolean ga, boolean redo, boolean fast) throws Exception {
 
         AbstractArchitecture arch = new Architecture(bitString, 1, this.engine.getProblem());
 
@@ -159,7 +159,7 @@ public class VassarClient {
 
 
 
-    public Result evaluateSELECTINGArchitecture(String json_design){
+    public Result evaluateSELECTINGArchitecture(String json_design) throws Exception {
 
         // ARCHITECTURE
         ADDArchitecture arch = new ADDArchitecture(json_design);
@@ -213,7 +213,7 @@ public class VassarClient {
         }
     }
 
-    public Result evaluatePARTITIONINGArchitecture(String json_design){
+    public Result evaluatePARTITIONINGArchitecture(String json_design) throws Exception {
 
         // ARCHITECTURE
         ADDArchitecture arch = new ADDArchitecture(json_design);
@@ -331,7 +331,7 @@ public class VassarClient {
 
     }
 
-    public void computeContinuityMatrix(){
+    public void computeContinuityMatrix() throws Exception {
 
 
         ArrayList<String> mission1 = new ArrayList<>();
