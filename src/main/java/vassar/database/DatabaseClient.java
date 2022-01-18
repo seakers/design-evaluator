@@ -143,7 +143,7 @@ public class DatabaseClient {
                 }
                 catch (ParseException e){
                     e.printStackTrace();
-                    System.out.println("---- ERORR PARSING MISSION DATE");
+                    System.out.println("---- ERROR PARSING MISSION DATE");
                     System.out.println(start_date);
                     System.out.println(end_date);
                     System.exit(0);

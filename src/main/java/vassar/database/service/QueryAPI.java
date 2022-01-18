@@ -57,7 +57,7 @@ public class QueryAPI {
 
         public Builder(String apolloUrl, String apolloWsUrl){
             this.apolloUrl = apolloUrl;
-            this.http       = new OkHttpClient.Builder().build();
+            this.http       = new OkHttpClient.Builder().connectTimeout(120, TimeUnit.SECONDS).readTimeout(120, TimeUnit.SECONDS).writeTimeout(120, TimeUnit.SECONDS).callTimeout(120, TimeUnit.SECONDS).build();
             this.apollo     = ApolloClient.builder()
                     .serverUrl(this.apolloUrl)
                     .subscriptionTransportFactory(new WebSocketSubscriptionTransport.Factory(apolloWsUrl, this.http)) // ws://graphql:8080/v1/graphql

@@ -212,30 +212,16 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
             int javaAssertedFactID = 1;
 
-
-
-
-
-
-
-
             // Check if all of the orbits in the original formulation are used
-
-
-
 
             // revTimePrecomputedIndex: integer list with as many indicies as problem orbits
             // revTimePrecomputedIndex: index mapping from the problem orbit list to the precomputed orbit list
             int[] revTimePrecomputedIndex = new int[params.getOrbitList().length];
 
-
-
             String[] revTimePrecomputedOrbitList = {"LEO-600-polar-NA","SSO-600-SSO-AM","SSO-600-SSO-DD","SSO-800-SSO-DD","SSO-800-SSO-PM"};
             // String[] revTimePrecomputedOrbitList = params.getOrbitList();
 
-
-
-            // loop thru revTimePrecomputedIndex,   place -1 if using orbit not in revTimePrecomputedOrbitList or place index
+            // loop thru revTimePrecomputedIndex, place -1 if using orbit not in revTimePrecomputedOrbitList or place index
             // if there is a -1 in revTimePrecomputedIndex, then that problem orbit is not found in the pre-computed orbit list
             // if there is an int != -1 in revTimePrecomputedIndex, then that is that problem orbit's mapping to the index of the orbit in the pre-computed orbit list
             for(int i = 0; i < params.getOrbitList().length; i++){
@@ -251,13 +237,6 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 // Assign -1 if unmatched. Otherwise, assign the corresponding index
                 revTimePrecomputedIndex[i] = matchedIndex;
             }
-
-
-
-
-
-
-
 //            System.out.println("--- Revolution Time " + revTimePrecomputedIndex);
 //            System.out.println("--- Measurements to Instruments Keyset " + params.measurementsToInstruments.keySet());
 
@@ -270,9 +249,6 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 // v: contains the list of measurement fovs - one for each problem orbit
                 // v: contains false if no fovs were found for any of the orbits
                 // v: potentially could be a list of fovs shorter than the list of orbits
-
-
-
                 if (RU.getTypeName(v.type()).equalsIgnoreCase("LIST")) {
 
                     //System.out.println("------- LIST -------");
@@ -373,15 +349,6 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 }
             }
 
-
-
-
-
-
-
-
-
-
             r.setFocus("ASSIMILATION2");
             r.run();
 
@@ -396,9 +363,6 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
             r.setFocus("SYNERGIES-ACROSS-ORBITS");
             r.run();
-
-
-
 
             // VIIRS: no requirement rules are being fired
             if ((params.getRequestMode().equalsIgnoreCase("FUZZY-CASES")) || (params.getRequestMode().equalsIgnoreCase("FUZZY-ATTRIBUTES"))) {

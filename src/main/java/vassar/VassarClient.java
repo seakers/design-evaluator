@@ -101,25 +101,7 @@ public class VassarClient {
         System.out.println(arch.isFeasibleAssignment());
 
         AbstractArchitectureEvaluator t = new ArchitectureEvaluator(this.engine, arch, "Slow");
-
-        ExecutorService executorService = Executors.newFixedThreadPool(1);
-
-        Future<Result> future = executorService.submit(t);
-
-        Result result = null;
-        try {
-            result = future.get();
-        }
-        catch (ExecutionException e) {
-            System.out.println("Exception when evaluating an architecture");
-            e.printStackTrace();
-            System.exit(-1);
-        }
-        catch (InterruptedException e) {
-            System.out.println("Execution got interrupted while evaluating an architecture");
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        Result result = t.call();
 
         this.indexArchitecture(result, bitString, datasetId, ga, redo, fast);
 

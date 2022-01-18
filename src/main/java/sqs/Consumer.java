@@ -53,6 +53,7 @@ public class Consumer implements Runnable {
     private long                                       lastPingTime = System.currentTimeMillis();
     private long                                       lastDownsizeRequestTime = System.currentTimeMillis();
     private int                                        userId;
+    private boolean                                    pendingReset = false;
 
 
     public static class Builder {
@@ -156,16 +157,21 @@ public class Consumer implements Runnable {
             // CHECK CONNECTION QUEUE
             List<Message> messages = new ArrayList<>();
             List<Message> connectionMessages = new ArrayList<>();
-            connectionMessages = this.getMessages(this.requestQueueUrl, 1, 1);
-            connectionMessages = this.handleMessages(this.requestQueueUrl, connectionMessages);
-            messages.addAll(connectionMessages);
+            List<Message> userMessages = new ArrayList<>();
+
+            if (this.currentState == State.WAITING_FOR_USER) {
+                connectionMessages = this.getMessages(this.requestQueueUrl, 1, 1);
+                connectionMessages = this.handleMessages(this.requestQueueUrl, connectionMessages);
+                messages.addAll(connectionMessages);
+            }
 
             // CHECK USER QUEUE
-            List<Message> userMessages = new ArrayList<>();
-            if (this.userRequestQueueUrl != null) {
-                userMessages = this.getMessages(this.userRequestQueueUrl, 5, 1);
-                userMessages = this.handleMessages(this.userRequestQueueUrl, userMessages);
-                messages.addAll(userMessages);
+            if (this.currentState == State.READY) {
+                if (this.userRequestQueueUrl != null) {
+                    userMessages = this.getMessages(this.userRequestQueueUrl, 5, 1);
+                    userMessages = this.handleMessages(this.userRequestQueueUrl, userMessages);
+                    messages.addAll(userMessages);
+                }
             }
 
             // PROCESS ALL MESSAGES
@@ -211,6 +217,9 @@ public class Consumer implements Runnable {
                     else if (msgType.equals("ping")) {
                         this.msgTypePing(msgContents);
                     }
+                    else if (msgType.equals("reset")) {
+                        this.msgTypeReset(msgContents);
+                    }
                     else if (msgType.equals("exit")) {
                         System.out.println("----> Exiting gracefully");
                         this.running = false;
@@ -227,6 +236,12 @@ public class Consumer implements Runnable {
             }
             if (!userMessages.isEmpty()) {
                 this.deleteMessages(userMessages, this.userRequestQueueUrl);
+            }
+            if (this.pendingReset) {
+                this.currentState = State.WAITING_FOR_USER;
+                this.userRequestQueueUrl = null;
+                this.userResponseQueueUrl = null;
+                this.pendingReset = false;
             }
             counter++;
         }
@@ -378,7 +393,7 @@ public class Consumer implements Runnable {
                 allowedTypes = Arrays.asList("connectionRequest", "statusCheck");
                 break;
             case READY:
-                allowedTypes = Arrays.asList("build", "ping", "statusCheck", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ContinuityMatrix", "exit");
+                allowedTypes = Arrays.asList("build", "ping", "statusCheck", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ContinuityMatrix", "reset", "exit");
                 break;
         }
         // Check for both allowedTypes and UUID match
@@ -404,9 +419,10 @@ public class Consumer implements Runnable {
 
         int group_id   = Integer.parseInt(msgContents.get("group_id"));
         int problem_id = Integer.parseInt(msgContents.get("problem_id"));
+        int run_id     = Integer.parseInt(msgContents.getOrDefault("run_id", "-1"));
 
         // Create queues for private communication
-        QueueUrls queueUrls = createUserQueues(userId);
+        QueueUrls queueUrls = createUserQueues(userId, run_id);
 
         // Build evaluation container
         this.client.rebuildResource(group_id, problem_id);
@@ -529,6 +545,10 @@ public class Consumer implements Runnable {
                                     .messageAttributes(messageAttributes)
                                     .delaySeconds(0)
                                     .build());
+    }
+
+    private void msgTypeReset(Map<String, String> msgContents) {
+        this.pendingReset = true;
     }
     
     public void msgTypeEvaluate(Map<String, String> msg_contents){
@@ -930,9 +950,13 @@ public class Consumer implements Runnable {
         public String responseUrl;
     }
 
-    private QueueUrls createUserQueues(String userId) {
+    private QueueUrls createUserQueues(String userId, Integer run_id) {
         String requestQueueName = "user-queue-request-" + userId;
         String responseQueueName = "user-queue-response-" + userId;
+        if (run_id != -1) {
+            requestQueueName += "-" + run_id;
+            responseQueueName += "-" + run_id;
+        }
         Map<String,String> tags = new HashMap<>();
         tags.put("USER_ID", userId);
         Map<QueueAttributeName, String> queueAttrs = new HashMap<>();
