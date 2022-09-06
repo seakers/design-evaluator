@@ -30,6 +30,7 @@ import jess.Value;
 import jess.ValueVector;
 import vassar.architecture.*;
 import vassar.combinatorics.Combinatorics;
+import vassar.database.DatabaseClient;
 import vassar.evaluator.ADDEvaluator;
 import vassar.evaluator.AbstractArchitectureEvaluator;
 import vassar.evaluator.ArchitectureEvaluator;
@@ -785,6 +786,23 @@ public class VassarClient {
     public int getGroupID() {
         return this.engine.dbClient.getGroupID();
     }
+
+
+//     _    _      _
+//    | |  | |    | |
+//    | |__| | ___| |_ __   ___ _ __ ___
+//    |  __  |/ _ \ | '_ \ / _ \ '__/ __|
+//    | |  | |  __/ | |_) |  __/ |  \__ \
+//    |_|  |_|\___|_| .__/ \___|_|  |___/
+//                  | |
+//                  |_|
+
+    public Resource getEngine(){
+        return this.engine;
+    }
+
+    public DatabaseClient getDbClient(){ return this.engine.dbClient; }
+
 
 
 }

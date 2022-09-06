@@ -399,6 +399,13 @@ public class DatabaseClient {
         return this.queryAPI.doesArchitectureExist(input);
     }
 
+    public int getArchitectureID(String input){
+        return this.queryAPI.getArchitectureID(input);
+    }
+
+
+
+
 
     public void writeDebugInfo() {
         this.debugAPI.writeJson();

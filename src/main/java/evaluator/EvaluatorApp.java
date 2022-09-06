@@ -54,8 +54,8 @@ public class EvaluatorApp {
         String outputPath         = ResourcePaths.rootDirectory + "/debug";
 
         String region             = System.getenv("REGION");
-        String requestQueueUrl    = System.getenv("VASSAR_REQUEST_URL");
-        String responseQueueUrl   = System.getenv("VASSAR_RESPONSE_URL");
+        String requestQueueUrl    = System.getenv("EVAL_REQUEST_URL");
+        String responseQueueUrl   = System.getenv("EVAL_RESPONSE_URL");
         String apolloUrl          = System.getenv("APOLLO_URL");
         String apolloWsUrl        = System.getenv("APOLLO_URL_WS");
 
@@ -86,12 +86,16 @@ public class EvaluatorApp {
         ConcurrentLinkedQueue<Map<String, String>> queue = new ConcurrentLinkedQueue<>();
 
         System.out.println("\n------------------ VASSAR INIT ------------------");
-        System.out.println("----------> APOLLO URL: " + apolloUrl);
-        System.out.println("-----> INPUT QUEUE URL: " + requestQueueUrl);
-        System.out.println("-----> OUTPUT QUEUE URL: " + responseQueueUrl);
-        System.out.println("--------> REQUEST MODE: " + requestMode);
+        System.out.println("--------------> APOLLO URL: " + apolloUrl);
+        System.out.println("------> EVAL REQUEST QUEUE: " + requestQueueUrl);
+        System.out.println("-----> EVAL RESPONSE QUEUE: " + responseQueueUrl);
+        System.out.println("------> PING REQUEST QUEUE: " + System.getenv("PING_REQUEST_URL"));
+        System.out.println("-----> PING RESPONSE QUEUE: " + System.getenv("PING_RESPONSE_URL"));
+        System.out.println("------> PRIV REQUEST QUEUE: " + System.getenv("PRIVATE_REQUEST_URL"));
+        System.out.println("-----> PRIV RESPONSE QUEUE: " + System.getenv("PRIVATE_RESPONSE_URL"));
+        System.out.println("------------> REQUEST MODE: " + requestMode);
+        System.out.println("--------> DEVELOPMENT TYPE: " + System.getenv("DEPLOYMENT_TYPE"));
         System.out.println("-------------------------------------------------------\n");
-
 
 //  _           _ _     _
 // | |         (_) |   | |
@@ -100,17 +104,16 @@ public class EvaluatorApp {
 // | |_) | |_| | | | (_| |
 // |_.__/ \__,_|_|_|\__,_|
 //
-
-
-        // --> SQS
-        SqsClientBuilder sqsClientBuilder = SqsClient.builder()
-                                                     .region(Region.US_EAST_2);
+        
+        // --> SQS Client
+        SqsClientBuilder sqsClientBuilder = SqsClient.builder().region(Region.US_EAST_2);
         if (System.getenv("AWS_STACK_ENDPOINT") != null) {
             sqsClientBuilder.endpointOverride(URI.create(System.getenv("AWS_STACK_ENDPOINT")));
             sqsClientBuilder.region(Region.US_WEST_2);
         }
         final SqsClient sqsClient = sqsClientBuilder.build();
 
+        // --> ECS Client
         EcsClient ecsClient = null;
         if (System.getenv("DEPLOYMENT_TYPE").equals("AWS")) {
             ecsClient = EcsClient.builder()
@@ -118,13 +121,11 @@ public class EvaluatorApp {
                             .build();
         }
 
-
+        // --> APIs
         QueryAPI queryAPI = new QueryAPI.Builder(apolloUrl, apolloWsUrl)
                                         .privateQueue(queue)
                                         .sqsClient(sqsClient)
                                         .build();
-
-        // Ensure debug folder exists
 
         DebugAPI debugAPI = new DebugAPI.Builder(outputFilePath)
                                         .setOutputPath(outputPath)
@@ -147,6 +148,8 @@ public class EvaluatorApp {
         VassarClient vClient = new VassarClient.Builder()
                                         .setEngine(engine)
                                         .build();
+        
+
 
         Consumer evaluator = new Consumer.Builder(sqsClient)
                                          .setVassarClient(vClient)
@@ -155,11 +158,9 @@ public class EvaluatorApp {
                                          .setPrivateQueue(queue)
                                          .setECSClient(ecsClient)
                                          .debug(debug)
-                                         .build();
-
-        // RUN CONSUMER
+                                         .build();// RUN CONSUMER
         try {
-            evaluator.runConsumer();
+            evaluator.run();
         }
         catch (Exception e) {
             e.printStackTrace();

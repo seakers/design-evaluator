@@ -642,6 +642,26 @@ public class QueryAPI {
     }
 
 
+    public int getArchitectureID(String input){
+        if(this.doesArchitectureExist(input)){
+            ArchitectureIDQuery countQuery = ArchitectureIDQuery.builder()
+                    .problem_id(this.problemId)
+                    .input(input)
+                    .build();
+            ApolloCall<ArchitectureIDQuery.Data>           apolloCall  = this.apollo.query(countQuery);
+            Observable<Response<ArchitectureIDQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+            return observable.blockingFirst().getData().items().get(0).id();
+        }
+        return -1;
+    }
+
+
+
+
+
+
+
+
 
 
 
