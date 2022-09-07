@@ -1036,8 +1036,9 @@ public class Consumer {
 
 
 
-
-
+    // --------------------
+    // --- ECS SERVICES ---
+    // --------------------
 
     private void downsizeAwsService() {
         // Only do this if in AWS

@@ -107,19 +107,13 @@ public class EvaluatorApp {
         
         // --> SQS Client
         SqsClientBuilder sqsClientBuilder = SqsClient.builder().region(Region.US_EAST_2);
-        if (System.getenv("AWS_STACK_ENDPOINT") != null) {
-            sqsClientBuilder.endpointOverride(URI.create(System.getenv("AWS_STACK_ENDPOINT")));
-            sqsClientBuilder.region(Region.US_WEST_2);
-        }
+
         final SqsClient sqsClient = sqsClientBuilder.build();
 
         // --> ECS Client
-        EcsClient ecsClient = null;
-        if (System.getenv("DEPLOYMENT_TYPE").equals("AWS")) {
-            ecsClient = EcsClient.builder()
-                            .region(Region.US_EAST_2)
-                            .build();
-        }
+        EcsClient ecsClient = ecsClient = EcsClient.builder()
+                .region(Region.US_EAST_2)
+                .build();
 
         // --> APIs
         QueryAPI queryAPI = new QueryAPI.Builder(apolloUrl, apolloWsUrl)
