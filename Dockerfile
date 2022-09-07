@@ -45,6 +45,8 @@ RUN ./gradlew installDist
 
 # - Environment variables are passed in the AWS Fargate task definition
 FROM amazoncorretto:11
+#FROM amazoncorretto:11-alpine
+
 COPY --from=BUILD_TOOL /app/build/install/evaluator /app/evaluator
 
 # Debug stuff

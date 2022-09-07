@@ -39,6 +39,7 @@ RUN mvn install:install-file -Dfile=./jess.jar -DgroupId=gov.sandia -DartifactId
 
 
 FROM amazoncorretto:11
+
 # COPY --from=Schema /schema/schema.json /app/src/main/graphql/com/evaluator/schema.json
 COPY --from=BUILD_TOOL /root/.m2 /root/.m2
 

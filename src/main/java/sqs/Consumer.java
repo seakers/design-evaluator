@@ -175,7 +175,6 @@ public class Consumer {
             for (Map<String, String> msgContents: privateMessageContents) {
                 if (msgContents.containsKey("msgType")) {
                     String msgType = msgContents.get("msgType");
-
                     if (msgType.equals("connectionRequest")) {
                         this.msgTypeConnectionRequest(msgContents);
                     }
@@ -224,7 +223,6 @@ public class Consumer {
             for (Map<String, String> msgContents: evalMessageContents) {
                 if (msgContents.containsKey("msgType")) {
                     String msgType = msgContents.get("msgType");
-
                     if (msgType.equals("evaluate")) {
                         this.msgTypeEvaluate(msgContents);
                         // this.msgTypeEvaluate2(msgContents);
