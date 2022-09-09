@@ -2,7 +2,7 @@
 ### Build Containers ###
 ########################
 
-# Download and install dependencies not available on maven
+## 1. SystemArchitectureProblems ##
 FROM maven:3-jdk-11-slim AS BUILD_TOOL
 WORKDIR /repos
 RUN apt-get update -y
@@ -11,31 +11,25 @@ RUN apt-get install git -y
 RUN git clone https://github.com/seakers/SystemArchitectureProblems.git
 RUN git clone https://github.com/seakers/orekit.git
 
-## 1. SystemArchitectureProblems ##
 WORKDIR /repos/SystemArchitectureProblems
 RUN git fetch && git checkout jdk-11
 RUN mvn install
 
-## 2. Orekit ##
 WORKDIR /repos/orekit
 RUN git checkout fov_changes
 WORKDIR /repos/orekit/orekit
 RUN mvn install
 
-## 3. JESS ##
 WORKDIR /repos/jars
 COPY /jars/jess.jar /repos/jars/jess.jar
 RUN mvn install:install-file -Dfile=./jess.jar -DgroupId=gov.sandia -DartifactId=jess -Dversion=7.1p2 -Dpackaging=jar
 
-# Compile and package the app
-WORKDIR /app
-COPY /gradle /app/gradle
-COPY /src /app/src
-COPY /build.gradle /app/build.gradle
-COPY /settings.gradle /app/settings.gradle
-COPY /gradlew /app/gradlew
 
-RUN ./gradlew installDist
+## 2. Graphql Schema: node ##
+# FROM node:14-alpine AS Schema
+# WORKDIR /schema
+# RUN npm install -g apollo
+# RUN apollo schema:download --endpoint https://172.18.0.7:8080/v1/graphql --header 'X-Hasura-Admin-Secret: daphne'
 
 
 
@@ -43,26 +37,19 @@ RUN ./gradlew installDist
 ### Final Container ###
 #######################
 
-# - Environment variables are passed in the AWS Fargate task definition
+
 FROM amazoncorretto:11
-#FROM amazoncorretto:11-alpine
 
-COPY --from=BUILD_TOOL /app/build/install/evaluator /app/evaluator
-
-
-
-# Debug stuff
-RUN yum install -y procps htop top free
-
-# -- Set default directory for running --
-COPY /resources /resources
+# COPY --from=Schema /schema/schema.json /app/src/main/graphql/com/evaluator/schema.json
+COPY --from=BUILD_TOOL /root/.m2 /root/.m2
 
 
-WORKDIR /app/evaluator
- ./bin/evaluator
+# -- DEPS --
+WORKDIR /installs
 
-#WORKDIR /env
-#COPY .env /env
-#COPY run.sh /app
-#RUN chmod +x /app/run.sh
-#CMD /app/run.sh
+
+
+# -- GRAPHQL SCHEMA --
+WORKDIR /app
+# RUN gradle generateApolloSources
+# CMD gradle run
