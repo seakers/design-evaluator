@@ -49,9 +49,20 @@ FROM amazoncorretto:11
 
 COPY --from=BUILD_TOOL /app/build/install/evaluator /app/evaluator
 
+
+
 # Debug stuff
 RUN yum install -y procps htop top free
 
 # -- Set default directory for running --
+COPY /resources /resources
+
+
 WORKDIR /app/evaluator
-CMD ./bin/evaluator
+ ./bin/evaluator
+
+#WORKDIR /env
+#COPY .env /env
+#COPY run.sh /app
+#RUN chmod +x /app/run.sh
+#CMD /app/run.sh

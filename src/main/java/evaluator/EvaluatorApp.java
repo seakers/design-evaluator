@@ -73,13 +73,7 @@ public class EvaluatorApp {
         String jessAppPath        = ResourcePaths.resourcesRootDir + "/vassar/problems/SMAP/clp";
         String requestMode        = System.getenv("REQUEST_MODE");
 
-        Requests requests = new Requests.Builder()
-                                        .setGlobalTemplatePath(jessGlobalTempPath)
-                                        .setGlobalFunctionPath(jessGlobalFuncPath)
-                                        .setFunctionTemplates()
-                                        .setRequestMode(requestMode)
-                                        .setJessAppPath(jessAppPath)
-                                        .build();
+        
 
 
         // -----> When scaling, private queue names will be random
@@ -96,6 +90,16 @@ public class EvaluatorApp {
         System.out.println("------------> REQUEST MODE: " + requestMode);
         System.out.println("--------> DEVELOPMENT TYPE: " + System.getenv("DEPLOYMENT_TYPE"));
         System.out.println("-------------------------------------------------------\n");
+
+
+        Requests requests = new Requests.Builder()
+                                        .setGlobalTemplatePath(jessGlobalTempPath)
+                                        .setGlobalFunctionPath(jessGlobalFuncPath)
+                                        .setFunctionTemplates()
+                                        .setRequestMode(requestMode)
+                                        .setJessAppPath(jessAppPath)
+                                        .build();
+
 
 //  _           _ _     _
 // | |         (_) |   | |
