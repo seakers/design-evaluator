@@ -227,13 +227,6 @@ public class Consumer {
                         this.msgTypeEvaluate(msgContents);
                         // this.msgTypeEvaluate2(msgContents);
                     }
-                    else if (msgType.equals("build")) {
-                        this.msgTypeBuild(msgContents);
-                    }
-                    else if (msgType.equals("exit")) {
-                        System.out.println("----> Exiting gracefully");
-                        this.running = false;
-                    }
                 }
                 else {
                     System.out.println("-----> INCOMING MESSAGE DIDN'T HAVE ATTRIBUTE: msgType");
@@ -385,7 +378,7 @@ public class Consumer {
         List<String> allowedTypes = new ArrayList<>();
         switch (this.currentState) {
             case READY:
-                allowedTypes = Arrays.asList("connectionRequest", "statusCheck");
+                allowedTypes = Arrays.asList("connectionRequest", "statusCheck", "build");
                 break;
             case RUNNING:
                 allowedTypes = Arrays.asList("build", "ping", "statusCheck", "evaluate", "add", "Instrument Selection", "Instrument Partitioning", "TEST-EVAL", "NDSM", "ContinuityMatrix", "reset", "exit");
@@ -494,6 +487,7 @@ public class Consumer {
 //                                |___/             |___/|_|
 
 
+    // --> DEPRECATED
     private void msgTypeConnectionRequest(Map<String, String> msgContents) {
 
         // --> 1. Set user_id
@@ -514,6 +508,10 @@ public class Consumer {
         System.out.println("------> PROBLEM ID: " + problem_id);
         System.out.println("---------> USER ID: " + this.userId);
         System.out.println("-------------------------------------------------------\n");
+
+
+
+
 
 
         final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
@@ -723,12 +721,18 @@ public class Consumer {
     }
 
     public void msgTypeBuild(Map<String, String> msg_contents){
+
+        // --> 1. Set user id
+        String userId = System.getenv("USER_ID");
+        this.userId = Integer.parseInt(userId);
+        this.client.setUserID(this.userId);
+
+        // --> 2. Build resource
         int group_id   = Integer.parseInt(msg_contents.get("group_id"));
         int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
-
         this.client.rebuildResource(group_id, problem_id);
 
-        // Send message announcing it's ready to eval architectures - does this message still need to be sent?
+        // --> 3. Let brain know of status
         final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
         messageAttributes.put("msgType",
                 MessageAttributeValue.builder()
@@ -749,7 +753,7 @@ public class Consumer {
                         .build()
         );
         this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.userResponseQueueUrl)
+                .queueUrl(this.brainPrivateQueueResponse)
                 .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(0)
@@ -759,6 +763,7 @@ public class Consumer {
         if(group_id != -1 && problem_id != -1){
             this.sendRunningStatus(group_id, problem_id);
         }
+        
         this.currentState = State.RUNNING;
 
         System.out.println("\n-------------------- BUILD REQUEST --------------------");
