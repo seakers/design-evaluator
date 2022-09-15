@@ -131,6 +131,17 @@ public class QueryAPI {
 //
 
 
+    // ---> USER
+    public List<UserInformationQuery.Item> userInfoQuery(){
+        UserInformationQuery iaQuery = UserInformationQuery.builder()
+                .user_id(this.userId)
+                .build();
+        ApolloCall<UserInformationQuery.Data> apolloCall  = this.apollo.query(iaQuery);
+        Observable<Response<UserInformationQuery.Data>> observable  = Rx2Apollo.from(apolloCall);
+        return observable.blockingFirst().getData().items();
+    }
+
+
 
     // ---> INSTRUMENTS
     public List<InstrumentQuery.Item> instrumentQuery(){

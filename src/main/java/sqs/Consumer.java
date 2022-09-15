@@ -41,16 +41,14 @@ public class Consumer {
     private VassarClient                               client;
     private SqsClient                                  sqsClient;
     private EcsClient                                  ecsClient;
-    private String                                     requestQueueUrl = System.getenv("EVAL_REQUEST_URL");
-    private String                                     responseQueueUrl = System.getenv("EVAL_RESPONSE_URL");
-    private String                                     brainPrivateQueue = System.getenv("PRIVATE_REQUEST_URL");
-    private String                                     brainPrivateQueueResponse = System.getenv("PRIVATE_RESPONSE_URL");
+    private String evalRequestUrl = System.getenv("EVAL_REQUEST_URL");
+    private String evalResponseUrl = System.getenv("EVAL_RESPONSE_URL");
+    private String privateRequestUrl = System.getenv("PRIVATE_REQUEST_URL");
+    private String privateResponseUrl = System.getenv("PRIVATE_RESPONSE_URL");
     private String                                     deadLetterQueueArn;
     private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
     private State                                      currentState = State.READY;
     private String                                     uuid = UUID.randomUUID().toString();
-    private String                                     userRequestQueueUrl = null;  // DEPRECATED
-    private String                                     userResponseQueueUrl = null; // DEPRECATED
     private long                                       lastDownsizeRequestTime = System.currentTimeMillis();
     private int                                        userId;
     private boolean                                    pendingReset = false;
@@ -115,8 +113,8 @@ public class Consumer {
             build.ecsClient        = this.ecsClient;
             build.debug            = this.debug;
             build.client           = this.client;
-            build.requestQueueUrl  = this.requestQueueUrl;
-            build.responseQueueUrl = this.responseQueueUrl;
+            build.evalRequestUrl = this.requestQueueUrl;
+            build.evalResponseUrl = this.responseQueueUrl;
             build.privateQueue     = this.privateQueue;
             build.running          = true;
             build.numEvalMessages  = this.getNumEvalMessages();
@@ -127,8 +125,8 @@ public class Consumer {
             build.pingConsumer = new PingConsumer(build.pingConsumerQueue, build.pingConsumerQueueResponse);
             build.pingThread   = null;
 
-            build.brainPrivateQueue         = System.getenv("PRIVATE_REQUEST_URL");
-            build.brainPrivateQueueResponse = System.getenv("PRIVATE_RESPONSE_URL");
+            build.privateRequestUrl = System.getenv("PRIVATE_REQUEST_URL");
+            build.privateResponseUrl = System.getenv("PRIVATE_RESPONSE_URL");
 
             return build;
         }
@@ -175,41 +173,41 @@ public class Consumer {
             for (Map<String, String> msgContents: privateMessageContents) {
                 if (msgContents.containsKey("msgType")) {
                     String msgType = msgContents.get("msgType");
-                    if (msgType.equals("connectionRequest")) {
-                        this.msgTypeConnectionRequest(msgContents);
-                    }
-                    else if (msgType.equals("add")) {
-                        this.msgTypeADD(msgContents);
-                    }
-                    else if (msgType.equals("Instrument Selection")) {
-                        this.msgTypeSELECTING(msgContents);
-                    }
-                    else if (msgType.equals("Instrument Partitioning")) {
-                        this.msgTypePARTITIONING(msgContents);
-                    }
-                    else if (msgType.equals("TEST-EVAL")) {
-                        this.msgTypeTEST_EVAL(msgContents);
-                    }
-                    else if (msgType.equals("NDSM")) {
-                        this.msgTypeNDSM(msgContents);
-                    }
-                    else if (msgType.equals("ContinuityMatrix")) {
-                        this.msgTypeContinuityMatrix(msgContents);
-                    }
-                    else if (msgType.equals("build")) {
+                    if (msgType.equals("build")) {
                         this.msgTypeBuild(msgContents);
                     }
                     else if (msgType.equals("exit")) {
                         System.out.println("----> Exiting gracefully");
                         this.running = false;
                     }
+//                    else if (msgType.equals("Instrument Selection")) {
+//                        this.msgTypeSELECTING(msgContents);
+//                    }
+//                    else if (msgType.equals("Instrument Partitioning")) {
+//                        this.msgTypePARTITIONING(msgContents);
+//                    }
+//                    else if (msgType.equals("TEST-EVAL")) {
+//                        this.msgTypeTEST_EVAL(msgContents);
+//                    }
+//                    else if (msgType.equals("NDSM")) {
+//                        this.msgTypeNDSM(msgContents);
+//                    }
+//                    else if (msgType.equals("ContinuityMatrix")) {
+//                        this.msgTypeContinuityMatrix(msgContents);
+//                    }
+//                    else if (msgType.equals("connectionRequest")) {
+//                        this.msgTypeConnectionRequest(msgContents);
+//                    }
+//                    else if (msgType.equals("add")) {
+//                        this.msgTypeADD(msgContents);
+//                    }
                 }
                 else {
                     System.out.println("-----> INCOMING MESSAGE DIDN'T HAVE ATTRIBUTE: msgType");
                 }
             }
             if (!privateMessages.isEmpty()) {
-                this.deleteMessages(privateMessages, this.brainPrivateQueue);
+                this.deleteMessages(privateMessages, this.privateRequestUrl);
             }
 
 
@@ -225,7 +223,6 @@ public class Consumer {
                     String msgType = msgContents.get("msgType");
                     if (msgType.equals("evaluate")) {
                         this.msgTypeEvaluate(msgContents);
-                        // this.msgTypeEvaluate2(msgContents);
                     }
                 }
                 else {
@@ -233,7 +230,7 @@ public class Consumer {
                 }
             }
             if (!evalMessages.isEmpty()) {
-                this.deleteMessages(evalMessages, this.requestQueueUrl);
+                this.deleteMessages(evalMessages, this.evalRequestUrl);
             }
 
 
@@ -378,6 +375,19 @@ public class Consumer {
         List<String> allowedTypes = new ArrayList<>();
         switch (this.currentState) {
             case READY:
+                allowedTypes = Arrays.asList("build", "exit");
+                break;
+            case RUNNING:
+                allowedTypes = Arrays.asList("build", "exit", "evaluate");
+                break;
+        }
+        return allowedTypes.contains(msgType);
+    }
+    private boolean isMessageAllowedOld(Map<String, String> msgContents) {
+        String msgType = msgContents.get("msgType");
+        List<String> allowedTypes = new ArrayList<>();
+        switch (this.currentState) {
+            case READY:
                 allowedTypes = Arrays.asList("connectionRequest", "statusCheck", "build");
                 break;
             case RUNNING:
@@ -397,6 +407,7 @@ public class Consumer {
         }
         return isAllowed;
     }
+
 
     // 3.
     public HashMap<String, String> processMessage(Message msg, boolean printInfo){
@@ -432,9 +443,9 @@ public class Consumer {
 
     private List<Message> checkPrivateQueue(){
         List<Message> brainMessages = new ArrayList<>();
-        if(this.brainPrivateQueue != null){
-            brainMessages = this.getMessages(this.brainPrivateQueue, 1, 1);
-            brainMessages = this.handleMessages(this.brainPrivateQueue, brainMessages);
+        if(this.privateRequestUrl != null){
+            brainMessages = this.getMessages(this.privateRequestUrl, 1, 1);
+            brainMessages = this.handleMessages(this.privateRequestUrl, brainMessages);
         }
         return brainMessages;
     }
@@ -443,9 +454,9 @@ public class Consumer {
         // --> Only check eval queue if status is: RUNNING
 
         List<Message> userMessages = new ArrayList<>();
-        if (this.requestQueueUrl != null && this.currentState == State.RUNNING) {
-            userMessages = this.getMessages(this.requestQueueUrl, this.numEvalMessages, 3);
-            userMessages = this.handleMessages(this.requestQueueUrl, userMessages);
+        if (this.evalRequestUrl != null && this.currentState == State.RUNNING) {
+            userMessages = this.getMessages(this.evalRequestUrl, this.numEvalMessages, 3);
+            userMessages = this.handleMessages(this.evalRequestUrl, userMessages);
         }
         return userMessages;
     }
@@ -467,7 +478,7 @@ public class Consumer {
                         .build()
         );
         this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.brainPrivateQueueResponse)
+                .queueUrl(this.privateResponseUrl)
                 .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(0)
@@ -485,6 +496,147 @@ public class Consumer {
 //    |_|  |_|\___||___/___/\__,_|\__, |\___|    |_|\__, | .__/ \___||___/
 //                                 __/ |             __/ | |
 //                                |___/             |___/|_|
+
+    // --------------------
+    // --- NEW MESSAGES ---
+    // --------------------
+    // 1. Build
+    // 2. Evaluate
+
+
+
+    public void msgTypeBuild(Map<String, String> msg_contents){
+
+        // --> 1. Get user_id
+        String userId = System.getenv("USER_ID");
+        this.userId = Integer.parseInt(userId);
+        this.client.setUserID(this.userId);
+
+        // --> 2. Get group_id, problem_id
+        HashMap<String, Integer> user_info = this.client.getDbClient().getUserInfo();
+        int group_id = user_info.get("group_id");
+        int problem_id = user_info.get("problem_id");
+
+        // --> 3. Build resource
+        this.client.rebuildResource(group_id, problem_id);
+
+        // --> 4. Send update message to ping thread
+        this.sendRunningStatus(group_id, problem_id);
+
+        // --> 5. Send update message to private response queue
+        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+        messageAttributes.put("msgType",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("buildAck")
+                        .build()
+        );
+        this.sqsClient.sendMessage(SendMessageRequest.builder()
+                .queueUrl(this.privateResponseUrl)
+                .messageBody("vassar_message")
+                .messageAttributes(messageAttributes)
+                .delaySeconds(0)
+                .build());
+
+        // --> 6. Update current state
+        this.currentState = State.RUNNING;
+        System.out.println("\n-------------------- BUILD REQUEST --------------------");
+        System.out.println("--------> GROUP ID: " + group_id);
+        System.out.println("------> PROBLEM ID: " + problem_id);
+        System.out.println("-------------------------------------------------------\n");
+    }
+
+    public void msgTypeEvaluate(Map<String, String> msg_contents) throws Exception {
+
+
+        // --> 1. Get input / dataset_id
+        HashMap<String, Integer> user_info = this.client.getDbClient().getUserInfo();
+        int    dataset_id = user_info.get("dataset_id");
+        String input      = msg_contents.get("input");
+
+
+        // --> 2. Determine how to index design
+        boolean fast = false;  // If true: only index figures of merit into db
+        if(msg_contents.containsKey("fast")){
+            fast = Boolean.parseBoolean(msg_contents.get("fast"));
+        }
+
+
+        // --> 3. Determine if request by ga or not
+        boolean ga_arch = false;  // If true: send arch directly back to ga
+        if(msg_contents.containsKey("ga")){
+            ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
+        }
+
+
+        // --> 4. Determining if re-evaluating design
+        boolean re_evaluate = false;
+        if(msg_contents.containsKey("redo")){
+            re_evaluate = Boolean.parseBoolean(msg_contents.get("redo"));
+        }
+        if(!re_evaluate) {
+            if (this.client.doesArchitectureExist(input)) {
+                System.out.println("---> Architecture already exists!!!");
+                return;
+            }
+        }
+
+
+        // --> 5. Evaluate design
+        Result result = this.client.evaluateArchitecture(input, dataset_id, ga_arch, re_evaluate, fast);
+        System.out.println("\n-------------------- EVALUATE REQUEST OUTPUT --------------------");
+        System.out.println("-----> INPUT: " + input);
+        System.out.println("------> COST: " + result.getCost());
+        System.out.println("---> SCIENCE: " + result.getScience());
+        System.out.println("----------------------------------------------------------------\n");
+    }
+
+
+
+    public void msgTypeEvaluateUser(Map<String, String> msg_contents) throws Exception{
+
+        // --> 1. Get input / dataset_id
+        HashMap<String, Integer> user_info = this.client.getDbClient().getUserInfo();
+        int    dataset_id = user_info.get("dataset_id");
+        String input      = msg_contents.get("input");
+
+        // --> 2. Get evaluation options
+        boolean re_evaluate = false;  // If true:
+        boolean fast        = false;  // If true: only index figures of merit into db
+        if(msg_contents.containsKey("redo")){
+            re_evaluate = Boolean.parseBoolean(msg_contents.get("redo"));
+        }
+        if(msg_contents.containsKey("fast")){
+            fast = Boolean.parseBoolean(msg_contents.get("fast"));
+        }
+
+    }
+    public void msgTypeEvaluateGa(Map<String, String> msg_contents) throws Exception{
+
+        // --> 1. Get input / dataset_id
+        HashMap<String, Integer> user_info = this.client.getDbClient().getUserInfo();
+        int    dataset_id = user_info.get("dataset_id");
+        String input      = msg_contents.get("input");
+
+        // --> 2. Get evaluation options
+        boolean re_evaluate = false;  // If true:
+        boolean fast        = false;  // If true: only index figures of merit into db
+        if(msg_contents.containsKey("redo")){
+            re_evaluate = Boolean.parseBoolean(msg_contents.get("redo"));
+        }
+        if(msg_contents.containsKey("fast")){
+            fast = Boolean.parseBoolean(msg_contents.get("fast"));
+        }
+
+    }
+
+
+
+
+    // --------------------
+    // --- OLD MESSAGES ---
+    // --------------------
+
 
 
     // --> DEPRECATED
@@ -541,7 +693,7 @@ public class Consumer {
         );
 
         this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.brainPrivateQueueResponse)
+                .queueUrl(this.privateResponseUrl)
                 .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(0)
@@ -550,28 +702,59 @@ public class Consumer {
         this.currentState = State.RUNNING;
     }
 
+    public void msgTypeBuildOld(Map<String, String> msg_contents){
 
-    public void msgTypeEvaluate2(Map<String, String> msg_contents) throws Exception {
+        // --> 1. Set user id
+        String userId = System.getenv("USER_ID");
+        this.userId = Integer.parseInt(userId);
+        this.client.setUserID(this.userId);
 
-        // --> 1. Get evaluation parameters
-        String  input       = msg_contents.get("input");
-        String  eval_type   = msg_contents.get("eval_type");  // NORMAL | NDSM
-        String  index_type  = msg_contents.get("index_type"); // FULL   | FAST | GA | UPDATE
-        Integer dataset_id  = Integer.parseInt(msg_contents.get("dataset_id"));
+        // --> 2. Build resource
+        int group_id   = Integer.parseInt(msg_contents.get("group_id"));
+        int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
+        this.client.rebuildResource(group_id, problem_id);
 
-        // --> 2. Check to see if architecture already exists
-        Integer arch_id = this.client.getDbClient().getArchitectureID(input);
-        if(msg_contents.containsKey("arch_id")){
-            arch_id  = Integer.parseInt(msg_contents.get("arch_id"));
+        // --> 3. Let brain know of status
+        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
+        messageAttributes.put("msgType",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("isReady")
+                        .build()
+        );
+        messageAttributes.put("type",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("evaluator")
+                        .build()
+        );
+        messageAttributes.put("UUID",
+                MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue(this.uuid)
+                        .build()
+        );
+        this.sqsClient.sendMessage(SendMessageRequest.builder()
+                .queueUrl(this.privateResponseUrl)
+                .messageBody("vassar_message")
+                .messageAttributes(messageAttributes)
+                .delaySeconds(0)
+                .build());
+
+        // --> Update ping thread
+        if(group_id != -1 && problem_id != -1){
+            this.sendRunningStatus(group_id, problem_id);
         }
 
+        this.currentState = State.RUNNING;
 
-
-
+        System.out.println("\n-------------------- BUILD REQUEST --------------------");
+        System.out.println("--------> GROUP ID: " + group_id);
+        System.out.println("------> PROBLEM ID: " + problem_id);
+        System.out.println("-------------------------------------------------------\n");
     }
 
-
-    public void msgTypeEvaluate(Map<String, String> msg_contents) throws Exception {
+    public void msgTypeEvaluateOld(Map<String, String> msg_contents) throws Exception {
 
         String  input       = msg_contents.get("input");
         Integer datasetId   = Integer.parseInt(msg_contents.get("dataset_id"));
@@ -616,8 +799,6 @@ public class Consumer {
         System.out.println("----------------------------------------------------------------\n");
         // this.consumerSleep(3);
     }
-
-
 
 
 
@@ -720,57 +901,6 @@ public class Consumer {
         // EvaluatorApp.sleep(5);
     }
 
-    public void msgTypeBuild(Map<String, String> msg_contents){
-
-        // --> 1. Set user id
-        String userId = System.getenv("USER_ID");
-        this.userId = Integer.parseInt(userId);
-        this.client.setUserID(this.userId);
-
-        // --> 2. Build resource
-        int group_id   = Integer.parseInt(msg_contents.get("group_id"));
-        int problem_id = Integer.parseInt(msg_contents.get("problem_id"));
-        this.client.rebuildResource(group_id, problem_id);
-
-        // --> 3. Let brain know of status
-        final Map<String, MessageAttributeValue> messageAttributes = new HashMap<>();
-        messageAttributes.put("msgType",
-                MessageAttributeValue.builder()
-                        .dataType("String")
-                        .stringValue("isReady")
-                        .build()
-        );
-        messageAttributes.put("type",
-                MessageAttributeValue.builder()
-                        .dataType("String")
-                        .stringValue("evaluator")
-                        .build()
-        );
-        messageAttributes.put("UUID",
-                MessageAttributeValue.builder()
-                        .dataType("String")
-                        .stringValue(this.uuid)
-                        .build()
-        );
-        this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.brainPrivateQueueResponse)
-                .messageBody("vassar_message")
-                .messageAttributes(messageAttributes)
-                .delaySeconds(0)
-                .build());
-
-        // --> Update ping thread
-        if(group_id != -1 && problem_id != -1){
-            this.sendRunningStatus(group_id, problem_id);
-        }
-        
-        this.currentState = State.RUNNING;
-
-        System.out.println("\n-------------------- BUILD REQUEST --------------------");
-        System.out.println("--------> GROUP ID: " + group_id);
-        System.out.println("------> PROBLEM ID: " + problem_id);
-        System.out.println("-------------------------------------------------------\n");
-    }
 
     public void msgTypeNDSM(Map<String, String> msg_contents){
 
@@ -847,7 +977,7 @@ public class Consumer {
     }
 
     private void createConnectionQueues() {
-        String[] requestQueueUrls = this.requestQueueUrl.split("/");
+        String[] requestQueueUrls = this.evalRequestUrl.split("/");
         String requestQueueName = requestQueueUrls[requestQueueUrls.length-1];
 
         String deadQueueArn = "";
@@ -867,7 +997,7 @@ public class Consumer {
         Map<QueueAttributeName, String> queueAttrs = new HashMap<>();
         queueAttrs.put(QueueAttributeName.MESSAGE_RETENTION_PERIOD, Integer.toString(5*60));
         queueAttrs.put(QueueAttributeName.REDRIVE_POLICY, "{\"maxReceiveCount\":\"3\", \"deadLetterTargetArn\":\"" + deadQueueArn + "\"}");
-        if (!this.queueExists(this.requestQueueUrl)) {
+        if (!this.queueExists(this.evalRequestUrl)) {
             CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
                 .queueName(requestQueueName)
                 .attributes(queueAttrs)
@@ -875,15 +1005,15 @@ public class Consumer {
             CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
         }
         SetQueueAttributesRequest setAttrReq = SetQueueAttributesRequest.builder()
-            .queueUrl(this.requestQueueUrl)
+            .queueUrl(this.evalRequestUrl)
             .attributes(queueAttrs)
             .build();
         sqsClient.setQueueAttributes(setAttrReq);
         
 
-        String[] responseQueueUrls = this.responseQueueUrl.split("/");
+        String[] responseQueueUrls = this.evalResponseUrl.split("/");
         String responseQueueName = responseQueueUrls[responseQueueUrls.length-1];
-        if (!this.queueExists(this.responseQueueUrl)) {
+        if (!this.queueExists(this.evalResponseUrl)) {
             CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
                 .queueName(responseQueueName)
                 .attributes(queueAttrs)
@@ -891,7 +1021,7 @@ public class Consumer {
                 CreateQueueResponse response = sqsClient.createQueue(createQueueRequest);
         }
         setAttrReq = SetQueueAttributesRequest.builder()
-            .queueUrl(this.responseQueueUrl)
+            .queueUrl(this.evalResponseUrl)
             .attributes(queueAttrs)
             .build();
         sqsClient.setQueueAttributes(setAttrReq);
@@ -1012,7 +1142,7 @@ public class Consumer {
 
     private void sendMessage(Map<String, MessageAttributeValue> messageAttributes, int delay){
         this.sqsClient.sendMessage(SendMessageRequest.builder()
-                .queueUrl(this.requestQueueUrl)
+                .queueUrl(this.evalRequestUrl)
                 .messageBody("vassar_message")
                 .messageAttributes(messageAttributes)
                 .delaySeconds(delay)

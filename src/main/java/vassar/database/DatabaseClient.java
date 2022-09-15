@@ -343,6 +343,16 @@ public class DatabaseClient {
 
 
 
+    public HashMap<String, Integer> getUserInfo(){
+        HashMap<String, Integer> user_info = new HashMap<>();
+        List<UserInformationQuery.Item>  items = this.queryAPI.userInfoQuery();
+        user_info.put("group_id", items.get(0).eoss().group_id());
+        user_info.put("problem_id", items.get(0).eoss().problem_id());
+        user_info.put("dataset_id", items.get(0).eoss().dataset_id());
+        return user_info;
+    }
+
+
     public void setProblemID(int id){
         this.queryAPI.problemId = id;
     }

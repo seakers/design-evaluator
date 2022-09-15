@@ -25,9 +25,6 @@ services:
       - type: bind
         source: .
         target: /app
-      - type: bind
-        source: /home/gapaza/repos/seakers/VASSAR_resources
-        target: /resources
     tty: true
     container_name: evaluator
     command: bash

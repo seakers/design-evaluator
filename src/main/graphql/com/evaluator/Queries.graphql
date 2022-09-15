@@ -1,4 +1,29 @@
 
+#     _    _
+#    | |  | |
+#    | |  | | ___   ___  _ __
+#    | |  | |/ __| / _ \| '__|
+#    | |__| |\__ \|  __/| |
+#     \____/ |___/ \___||_|
+
+
+query UserInformation($user_id: Int) {
+    items: daphne_context_userinformation(where: {auth_user: {id: {_eq: $user_id}}}) {
+        eoss: EOSS_eosscontext {
+            group_id
+            problem_id
+            dataset_id
+        }
+    }
+}
+
+
+
+
+
+
+
+
 #   _____           _                                   _
 #  |_   _|         | |                                 | |
 #    | |  _ __  ___| |_ _ __ _   _ _ __ ___   ___ _ __ | |_ ___
