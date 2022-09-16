@@ -638,7 +638,6 @@ public class Consumer {
     // --------------------
 
 
-
     // --> DEPRECATED
     private void msgTypeConnectionRequest(Map<String, String> msgContents) {
 
