@@ -1,6 +1,8 @@
 package sqs;
 
 import evaluator.EvaluatorApp;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.*;
 import software.amazon.awssdk.services.sqs.model.*;
 import vassar.VassarClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -41,6 +43,7 @@ public class Consumer {
     private VassarClient                               client;
     private SqsClient                                  sqsClient;
     private EcsClient                                  ecsClient;
+    private Ec2Client                                  ec2Client;
     private String evalRequestUrl = System.getenv("EVAL_REQUEST_URL");
     private String evalResponseUrl = System.getenv("EVAL_RESPONSE_URL");
     private String privateRequestUrl = System.getenv("PRIVATE_REQUEST_URL");
@@ -69,6 +72,7 @@ public class Consumer {
         private VassarClient                          client;
         private SqsClient                             sqsClient;
         private EcsClient                             ecsClient;
+        private Ec2Client                             ec2Client;
         private String                                requestQueueUrl;
         private String                                responseQueueUrl;
         private ConcurrentLinkedQueue<Map<String, String>> privateQueue;
@@ -102,6 +106,11 @@ public class Consumer {
             return this;
         }
 
+        public Builder setEC2Client(Ec2Client ec2Client) {
+            this.ec2Client = ec2Client;
+            return this;
+        }
+
         public Builder debug(boolean debug) {
             this.debug = debug;
             return this;
@@ -111,6 +120,7 @@ public class Consumer {
             Consumer build         = new Consumer();
             build.sqsClient        = this.sqsClient;
             build.ecsClient        = this.ecsClient;
+            build.ec2Client        = this.ec2Client;
             build.debug            = this.debug;
             build.client           = this.client;
             build.evalRequestUrl = this.requestQueueUrl;
@@ -238,6 +248,9 @@ public class Consumer {
         }
         this.sendExitMessage();
         this.closePingThread();
+        if(System.getenv("DEPLOYMENT_TYPE").equals("AWS")){
+            this.stopInstance();
+        }
     }
 
 
@@ -552,7 +565,7 @@ public class Consumer {
         // --> 1. Get input / dataset_id
         HashMap<String, Integer> user_info = this.client.getDbClient().getUserInfo();
         int    dataset_id = user_info.get("dataset_id");
-        String input      = msg_contents.get("input");
+        String input      = msg_contents.get("v");
 
 
         // --> 2. Determine how to index design
@@ -1171,6 +1184,38 @@ public class Consumer {
     // --------------------
     // --- ECS SERVICES ---
     // --------------------
+
+
+    private void stopInstance(){
+
+        // --> 1. Get instance id
+        String identifier = System.getenv("IDENTIFIER");
+
+        Filter filter = Filter.builder()
+                .name("tag:IDENTIFIER")
+                .values(identifier)
+                .build();
+
+        DescribeInstancesRequest request = DescribeInstancesRequest.builder()
+                .filters(filter)
+                .build();
+
+        DescribeInstancesResponse response = this.ec2Client.describeInstances(request);
+        if (response.hasReservations() && response.reservations().size() == 1){
+            Instance instance = response.reservations().get(0).instances().get(0);
+            String instance_id = instance.instanceId();
+
+            // --> 2. Stop instance
+            StopInstancesRequest request2 = StopInstancesRequest.builder()
+                    .instanceIds(instance_id)
+                    .build();
+            StopInstancesResponse response2 = this.ec2Client.stopInstances(request2);
+        }
+        else{
+            System.out.println("--> ERROR STOPPING INSTANCE, COULD NOT GET ID");
+        }
+    }
+
 
     private void downsizeAwsService() {
         // Only do this if in AWS

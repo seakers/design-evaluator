@@ -6,6 +6,7 @@ package evaluator;
 import jess.Userfunction;
 import okhttp3.OkHttpClient;
 import seakers.orekit.util.OrekitConfig;
+import software.amazon.awssdk.services.ec2.Ec2Client;
 import vassar.GlobalScope;
 import vassar.VassarClient;
 import vassar.database.DatabaseClient;
@@ -115,7 +116,12 @@ public class EvaluatorApp {
         final SqsClient sqsClient = sqsClientBuilder.build();
 
         // --> ECS Client
-        EcsClient ecsClient = ecsClient = EcsClient.builder()
+        EcsClient ecsClient = EcsClient.builder()
+                .region(Region.US_EAST_2)
+                .build();
+
+        // --> EC2 Client
+        Ec2Client ec2Client = Ec2Client.builder()
                 .region(Region.US_EAST_2)
                 .build();
 
@@ -155,6 +161,7 @@ public class EvaluatorApp {
                                          .setResponseQueueUrl(responseQueueUrl)
                                          .setPrivateQueue(queue)
                                          .setECSClient(ecsClient)
+                                         .setEC2Client(ec2Client)
                                          .debug(debug)
                                          .build();// RUN CONSUMER
         try {
