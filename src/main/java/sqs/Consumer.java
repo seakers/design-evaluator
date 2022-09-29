@@ -565,7 +565,7 @@ public class Consumer {
         // --> 1. Get input / dataset_id
         HashMap<String, Integer> user_info = this.client.getDbClient().getUserInfo();
         int    dataset_id = user_info.get("dataset_id");
-        String input      = msg_contents.get("v");
+        String input      = msg_contents.get("input");
 
 
         // --> 2. Determine how to index design
