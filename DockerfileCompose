@@ -25,31 +25,14 @@ COPY /jars/jess.jar /repos/jars/jess.jar
 RUN mvn install:install-file -Dfile=./jess.jar -DgroupId=gov.sandia -DartifactId=jess -Dversion=7.1p2 -Dpackaging=jar
 
 
-## 2. Graphql Schema: node ##
-# FROM node:14-alpine AS Schema
-# WORKDIR /schema
-# RUN npm install -g apollo
-# RUN apollo schema:download --endpoint https://172.18.0.7:8080/v1/graphql --header 'X-Hasura-Admin-Secret: daphne'
-
 
 
 #######################
 ### Final Container ###
 #######################
-
-
+#FROM amazoncorretto:11-alpine
 FROM amazoncorretto:11
-
-# COPY --from=Schema /schema/schema.json /app/src/main/graphql/com/evaluator/schema.json
 COPY --from=BUILD_TOOL /root/.m2 /root/.m2
 
-
-# -- DEPS --
-WORKDIR /installs
-
-
-
-# -- GRAPHQL SCHEMA --
 WORKDIR /app
-# RUN gradle generateApolloSources
-# CMD gradle run
+

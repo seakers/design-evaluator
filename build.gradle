@@ -63,7 +63,7 @@ application {
 apollo {
     service("design-evaluator"){
         introspection {
-            endpointUrl = "http://graphql:8080/v1/graphql"
+            endpointUrl = "http://52.15.172.32:8080/v1/graphql"
         }
     }
 }

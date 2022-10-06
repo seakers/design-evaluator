@@ -112,7 +112,6 @@ public class EvaluatorApp {
         
         // --> SQS Client
         SqsClientBuilder sqsClientBuilder = SqsClient.builder().region(Region.US_EAST_2);
-
         final SqsClient sqsClient = sqsClientBuilder.build();
 
         // --> ECS Client

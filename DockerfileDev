@@ -44,7 +44,6 @@ RUN ./gradlew installDist
 #######################
 #FROM amazoncorretto:11-alpine
 FROM amazoncorretto:11
-
 COPY --from=BUILD_TOOL /app/build/install/evaluator /app/evaluator
 
 RUN yum install -y procps htop top free
@@ -53,6 +52,6 @@ COPY /resources /resources
 
 WORKDIR /env
 COPY .env /env
-COPY run.sh /app
-RUN chmod +x /app/run.sh
-CMD /app/run.sh
+COPY run_dev.sh /app
+RUN chmod +x /app/run_dev.sh
+CMD /app/run_dev.sh

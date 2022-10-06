@@ -465,7 +465,6 @@ public class Consumer {
 
     private List<Message> checkEvalQueue(){
         // --> Only check eval queue if status is: RUNNING
-
         List<Message> userMessages = new ArrayList<>();
         if (this.evalRequestUrl != null && this.currentState == State.RUNNING) {
             userMessages = this.getMessages(this.evalRequestUrl, this.numEvalMessages, 3);
@@ -576,7 +575,7 @@ public class Consumer {
 
 
         // --> 3. Determine if request by ga or not
-        boolean ga_arch = false;  // If true: send arch directly back to ga
+        boolean ga_arch = false;
         if(msg_contents.containsKey("ga")){
             ga_arch = Boolean.parseBoolean(msg_contents.get("ga"));
         }
@@ -1169,12 +1168,6 @@ public class Consumer {
                 .delaySeconds(delay)
                 .build());
     }
-
-    public void deletePrivMessages(){
-        System.out.println("---> DELETING PRIVATE MESSAGES");
-        this.privateQueue.clear();
-    }
-
 
 
 

@@ -2,7 +2,7 @@ version: '3.7'
 services:
   evaluator:
     build:
-      dockerfile: Dockerfile
+      dockerfile: DockerfileCompose
       context: .
     image: apazagab/design-evaluator:latest
     environment:
