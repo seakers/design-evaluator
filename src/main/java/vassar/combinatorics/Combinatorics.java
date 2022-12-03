@@ -29,7 +29,7 @@ public class Combinatorics {
 
 
     // Computes synergy NDSM for instruments (for all orbits)
-    // SDSN: synergy based
+    // SDSM: synergy based
     // EDSM: cost based
     public static HashMap<String,NDSM> computeNDSM(Resource res, String[] instruments, int dim){
         HashMap<String,NDSM> dsm_map = new HashMap<>();
@@ -63,11 +63,12 @@ public class Combinatorics {
                     Nto1pair nto10 = new Nto1pair(combination, instrument);
 
                     // 1. Create Architecture
-//                    System.out.println("---> NDSM ARCH TO BE EVALUATED");
-//                    System.out.println(orbit);
-//                    System.out.println(combination);
-//                    System.out.println(instrument);
-//                    EvaluatorApp.sleep(5);
+                    System.out.println("---> NDSM ARCH TO BE EVALUATED");
+                    System.out.println(orbit);
+                    System.out.println(combination);
+                    System.out.println(instrument);
+                    EvaluatorApp.sleep(5);
+                    System.exit(0);
 
                     ArrayList<String> appended_insts = new ArrayList<>(combination);
                     appended_insts.add(instrument);
@@ -158,7 +159,7 @@ public class Combinatorics {
         try{
             SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd-HH-mm-ss" );
             String stamp = dateFormat.format( new Date() );
-            FileOutputStream file = new FileOutputStream(ResourcePaths.rootDirectory + "/output/DSM-Decadal"+dim+"-" + stamp + ".dat");
+            FileOutputStream file = new FileOutputStream(ResourcePaths.rootDirectory + "/output/DSM-TESTING"+dim+"-" + stamp + ".dat");
             ObjectOutputStream os = new ObjectOutputStream( file );
             os.writeObject( dsm_map );
             os.close();

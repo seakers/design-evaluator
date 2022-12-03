@@ -65,31 +65,27 @@ public class Optimization {
         System.out.println(dimen_2);
         System.out.println("---> improveSynergyScore");
         Optimization.printPartitions(partitions);
-//        EvaluatorApp.sleep(5);
 
         // REPAIR LONE ELEMENTS
         partitions = Optimization.repairLoneSynergisticElement(partitions, dimen_2, engine);
         System.out.println("---> repairLoneSynergisticElement");
         Optimization.printPartitions(partitions);
-//        EvaluatorApp.sleep(5);
+
 
         // PUT REMAINING INSTS IN NEW MISSION
         partitions = Optimization.addRemainingElements(partitions, items);
         System.out.println("---> addRemainingElements");
         Optimization.printPartitions(partitions);
-//        EvaluatorApp.sleep(5);
 
         // REPAIR LONE ELEMENTS
         partitions = Optimization.repairLoneSynergisticElement(partitions, dimen_2, engine);
         System.out.println("---> repairLoneSynergisticElement");
         Optimization.printPartitions(partitions);
-//        EvaluatorApp.sleep(5);
 
         // REMOVE DUPLICATE ELEMENTS
         partitions = Optimization.removeDuplicateElements(partitions, items);
         System.out.println("---> removeDuplicateElements");
         Optimization.printPartitions(partitions);
-//        EvaluatorApp.sleep(5);
 
         return (new HashMap<>(partitions));
     }

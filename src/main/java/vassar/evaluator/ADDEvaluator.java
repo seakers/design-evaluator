@@ -205,8 +205,8 @@ public class ADDEvaluator implements Callable<Result> {
             engine.eval("(bind ?*science-multiplier* 1.0)");
 //            engine.eval("(defadvice before (create$ >= <= < >) (foreach ?xxx $?argv (if (eq ?xxx nil) then (return FALSE))))");
 //            engine.eval("(defadvice before (create$ sqrt + * **) (foreach ?xxx $?argv (if (eq ?xxx nil) then (bind ?xxx 0))))");
-            engine.eval("(watch rules)");
-            engine.eval("(facts)");
+//            engine.eval("(watch rules)");
+//            engine.eval("(facts)");
 
 
             if(this.orbitSelection){
@@ -1182,7 +1182,7 @@ public class ADDEvaluator implements Callable<Result> {
         QueryBuilder    q_builder = this.resource.getQueryBuilder();
         ArrayList<Fact> missions  = this.q_builder.missionFactQuery("beforeScheduling");
 
-        System.out.println("--> mission query: " + missions);
+        // System.out.println("--> mission query: " + missions);
 
         HashMap<Integer, Fact> order_map = new HashMap<>();
         for(Fact mission_fact: missions){
@@ -1195,13 +1195,13 @@ public class ADDEvaluator implements Callable<Result> {
             }
         }
 
-        System.out.println("--> mission order map: " + order_map);
+        // System.out.println("--> mission order map: " + order_map);
 
         for(int x = 0; x < order_map.keySet().size(); x++){
             ordered_missions.add(order_map.get(x));
         }
 
-        System.out.println("--> ordered missions: " + ordered_missions);
+        // System.out.println("--> ordered missions: " + ordered_missions);
 
 //        for(Fact mission_fact: ordered_missions){
 //            try{

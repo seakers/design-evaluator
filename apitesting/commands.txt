@@ -1,0 +1,9 @@
+./apitest eval_response stop_ga.json
+./apitest private_response stop_ga2.json
+
+
+
+./apitest private_request build_msg.json
+./apitest private_request ndsm_msg.json
+
+./apitest eval_request evaluate_msg.json

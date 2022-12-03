@@ -8,6 +8,9 @@ import okhttp3.OkHttpClient;
 import seakers.orekit.util.OrekitConfig;
 import vassar.GlobalScope;
 import vassar.VassarClient;
+import vassar.combinatorics.Combinatorics;
+import vassar.combinatorics.NDSM;
+import vassar.combinatorics.Nto1pair;
 import vassar.database.DatabaseClient;
 import vassar.database.service.DebugAPI;
 import vassar.database.service.QueryAPI;
@@ -33,6 +36,8 @@ import java.util.logging.Logger;
 public class EvaluatorApp {
 
     public static void main(String[] args) {
+
+        // EvaluatorApp.testingFunc();
 
 //  _____ _   _ _____ _______
 // |_   _| \ | |_   _|__   __|
@@ -180,5 +185,37 @@ public class EvaluatorApp {
     public static void sleep(int seconds){
         try                            { TimeUnit.SECONDS.sleep(seconds); }
         catch (InterruptedException e) { e.printStackTrace(); }
+    }
+
+
+    public static void testingFunc(){
+        System.out.println("--> TESTING");
+
+        String ndsm_filepath = "/app/output/DSM-TESTING2-2022-12-02-21-57-12.dat";
+        ndsm_filepath = ResourcePaths.ndsm2_Decadal;
+
+        HashMap<String, NDSM> ndsm = Combinatorics.getNDSMs(ndsm_filepath);
+        for(String key: ndsm.keySet()){
+            System.out.println(key);
+        }
+
+        TreeMap<Nto1pair,Double> sdsm = Combinatorics.combineNDSM_File(ndsm_filepath, "SDSM");
+        TreeMap<Nto1pair,Double> edsm = Combinatorics.combineNDSM_File(ndsm_filepath, "EDSM");
+
+
+        Iterator sdsm_iterator = sdsm.entrySet().iterator();
+        while(sdsm_iterator.hasNext()){
+            Map.Entry pair = (Map.Entry) sdsm_iterator.next();
+            Object synergy_key = pair.getKey();
+            Nto1pair nt = (Nto1pair) synergy_key;
+            String has_synergy_with = nt.getBase()[0];
+            String inst_check_synergy = nt.getAdded();
+            System.out.println("--> INTERACTION: " + has_synergy_with + " " + inst_check_synergy);
+        }
+
+
+
+
+        System.exit(0);
     }
 }
