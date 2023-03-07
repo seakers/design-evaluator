@@ -1,0 +1,22 @@
+{
+  "MessageBody": "test",
+  "DelaySeconds": 0,
+  "MessageAttributes": {
+    "msgType": {
+      "DataType": "String",
+      "StringValue": "connectionRequest"
+    },
+    "user_id": {
+      "DataType": "String",
+      "StringValue": "1"
+    },
+    "group_id": {
+      "DataType": "String",
+      "StringValue": "1"
+    },
+    "problem_id": {
+      "DataType": "String",
+      "StringValue": "6"
+    }
+  }
+}

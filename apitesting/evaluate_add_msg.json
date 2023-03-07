@@ -1,0 +1,22 @@
+{
+  "MessageBody": "test",
+  "DelaySeconds": 0,
+  "MessageAttributes": {
+    "msgType": {
+      "DataType": "String",
+      "StringValue": "add"
+    },
+    "input": {
+      "DataType": "String",
+      "StringValue": "jsoninputstr"
+    },
+    "rQueue": {
+      "DataType": "String",
+      "StringValue": "http://localhost:9324/000000000000/eval_response"
+    },
+    "UUID": {
+      "DataType": "String",
+      "StringValue": "False"
+    }
+  }
+}

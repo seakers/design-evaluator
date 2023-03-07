@@ -171,7 +171,7 @@ public class DebugAPI {
                 }
             }
             catch (Exception e) {
-                System.out.println("An error occurred writing: " + fileName);
+                System.out.println("(ERROR) An error occurred writing: " + fileName);
                 e.printStackTrace();
             }
         }
@@ -201,7 +201,7 @@ public class DebugAPI {
             }
         }
         catch (Exception e) {
-            System.out.println("An error occurred.");
+            System.out.println("(ERROR) An error occurred.");
             e.printStackTrace();
         }
     }
