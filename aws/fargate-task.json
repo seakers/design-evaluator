@@ -9,8 +9,8 @@
       "command": ["/app/evaluator/bin/evaluator"],
       "environment": [
         { "name": "REQUEST_MODE", "value": "CRISP-ATTRIBUTES" },
-        { "name": "APOLLO_URL", "value": "http://graphql.daphne.local:8080/v1/graphql" },
-        { "name": "APOLLO_URL_WS", "value": "ws://graphql.daphne.local:8080/v1/graphql" },
+        { "name": "APOLLO_URL", "value": "http://graphql.daphne-cluster.local:8080/v1/graphql" },
+        { "name": "APOLLO_URL_WS", "value": "ws://graphql.daphne-cluster.local:8080/v1/graphql" },
         { "name": "VASSAR_REQUEST_URL", "value": "https://sqs.us-east-2.amazonaws.com/923405430231/vassar_request" },
         { "name": "VASSAR_RESPONSE_URL", "value": "https://sqs.us-east-2.amazonaws.com/923405430231/vassar_response" },
         { "name": "DEPLOYMENT_TYPE", "value": "AWS" },

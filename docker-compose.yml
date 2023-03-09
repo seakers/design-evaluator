@@ -1,0 +1,32 @@
+version: '3.7'
+services:
+  evaluator:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    image: apazagab/design-evaluator-llm:latest
+    environment:
+      # --> Config
+      - VASSAR_REQUEST_URL=https://sqs.us-east-2.amazonaws.com/923405430231/vassar_request
+      - VASSAR_RESPONSE_URL=https://sqs.us-east-2.amazonaws.com/923405430231/vassar_response
+      - APOLLO_URL=https://daphne-services.selva-research.com:8080/v1/graphql
+      - APOLLO_URL_WS=wss://daphne-services.selva-research.com:8080/v1/graphql
+      - REQUEST_MODE=CRISP-ATTRIBUTES
+      - DEPLOYMENT_TYPE=LOCAL
+      - JAVA_OPTS=-Xmx3840m
+      - CLUSTER_ARN=arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster
+      - SERVICE_ARN=arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/evaluator-service
+      - AWS_CREDENTIAL_PROFILES_FILE=/aws/credentials
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+      - type: bind
+        source: /home/gapaza/repos/seakers/VASSAR_resources
+        target: /resources
+      - type: bind
+        source: /home/gapaza/.aws
+        target: /aws
+    tty: true
+    container_name: design_evaluator_llm
+    command: bash
