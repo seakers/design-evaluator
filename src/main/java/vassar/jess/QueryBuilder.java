@@ -137,6 +137,32 @@ public class QueryBuilder {
         return facts;
     }
 
+    public ArrayList<Fact> getAllMeasurementFacts(){
+        ArrayList<Fact> facts = new ArrayList<>();
+        ArrayList<String> instruments = new ArrayList<>();
+
+        String query_call = "(defquery modify-query ?f <- (REQUIREMENTS::Measurement ))";
+        try{
+            this.r.eval(query_call);
+            QueryResult q_result = r.runQueryStar("modify-query", new ValueVector());
+            while(q_result.next())
+                facts.add((Fact) q_result.getObject("f"));
+            this.r.removeDefrule("modify-query");
+
+            if(facts.isEmpty()){
+                System.out.println("---> MEASUREMENT FACTS NOT FOUND");
+                // EvaluatorApp.sleep(1);
+                return facts;
+            }
+
+            return facts;
+        }
+        catch(JessException e){
+            e.printStackTrace();
+        }
+        return facts;
+    }
+
 
 
     // Assumes there is only one mission !!!
@@ -311,7 +337,28 @@ public class QueryBuilder {
     }
 
 
+    public static ArrayList<Fact> abstractQuery(String module, Rete r){
+        ArrayList<Fact> facts = new ArrayList<>();
 
+        String call = "(defquery TempAbstract-query ?f <- ("+module+"))";
+
+        try {
+            r.eval(call);
+            QueryResult q_result = r.runQueryStar("TempAbstract-query", new ValueVector());
+
+            while(q_result.next())
+                facts.add((Fact) q_result.getObject("f"));
+
+            r.removeDefrule("TempArchitecture-query");
+
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+
+        return facts;
+    }
 
 
     public ArrayList<Fact> missionFactQuery(String fileName){

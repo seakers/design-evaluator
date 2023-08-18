@@ -7,8 +7,8 @@ services:
     image: apazagab/design-evaluator-llm:latest
     environment:
       # --> Config
-      - VASSAR_REQUEST_URL=https://sqs.us-east-2.amazonaws.com/923405430231/vassar_request
-      - VASSAR_RESPONSE_URL=https://sqs.us-east-2.amazonaws.com/923405430231/vassar_response
+      - VASSAR_REQUEST_URL=http://localhost:9324/000000000000/vassar_request
+      - VASSAR_RESPONSE_URL=http://localhost:9324/000000000000/vassar_response
       - APOLLO_URL=https://daphne-services.selva-research.com:8080/v1/graphql
       - APOLLO_URL_WS=wss://daphne-services.selva-research.com:8080/v1/graphql
       - REQUEST_MODE=CRISP-ATTRIBUTES
@@ -16,17 +16,32 @@ services:
       - JAVA_OPTS=-Xmx3840m
       - CLUSTER_ARN=arn:aws:ecs:us-east-2:923405430231:cluster/daphne-cluster
       - SERVICE_ARN=arn:aws:ecs:us-east-2:923405430231:service/daphne-cluster/evaluator-service
-      - AWS_CREDENTIAL_PROFILES_FILE=/aws/credentials
+      - AWS_STACK_ENDPOINT=http://mock-sqs:9324
     volumes:
       - type: bind
-        source: .
-        target: /app
+        source: ./src
+        target: /app/src
+      - type: bind
+        source: ./design
+        target: /app/design
+      - type: bind
+        source: ./resources
+        target: /app/resources
+      - type: bind
+        source: ./debug
+        target: /app/debug
       - type: bind
         source: /home/gapaza/repos/seakers/VASSAR_resources
         target: /resources
       - type: bind
         source: /home/gapaza/.aws
-        target: /aws
+        target: /root/.aws
     tty: true
     container_name: design_evaluator_llm
     command: bash
+  mock-sqs:
+    image: softwaremill/elasticmq
+    ports:
+      - "9324:9324"
+      - "9325:9325"
+    container_name: mock_sqs

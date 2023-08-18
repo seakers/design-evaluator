@@ -30,8 +30,8 @@
         {% endautoescape %}
 
         (bind ?list (create$ {% for attribute in rule.attributes %} ?x{{loop.index + 1}} {% endfor %}))
-
-        (assert (AGGREGATION::SUBOBJECTIVE (id {{rule.subobjective}}) (attributes {% for attribute in rule.attributes %} {{attribute.name}} {% endfor %}) (index {{rule.index}}) (parent {{rule.parent}}) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::{{rule.subobjective}}-attrib) " A" (call ?m getFactId) "}")))))
+        (printout t "The fact id is: " (fact-id ?m) crlf)
+        (assert (AGGREGATION::SUBOBJECTIVE (meas-id (call ?m getFactId)) (id {{rule.subobjective}}) (attributes {% for attribute in rule.attributes %} {{attribute.name}} {% endfor %}) (index {{rule.index}}) (parent {{rule.parent}}) (attrib-scores ?list) (satisfaction (*$ ?list)) (reasons ?new-reasons) (satisfied-by ?whom) (reason ?reason ) (requirement-id (?m getFactId)) (factHistory (str-cat "{R" (?*rulesMap* get REQUIREMENTS::{{rule.subobjective}}-attrib) " A" (call ?m getFactId) "}")))))
 
   {% endfor %}
 

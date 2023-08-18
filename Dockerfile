@@ -52,6 +52,14 @@ RUN yum update -y && \
 
 # -- GRAPHQL SCHEMA --
 WORKDIR /app
+
+COPY /build.gradle /app
+COPY /gradlew /app
+COPY /gradlew.bat /app
+COPY /settings.gradle /app
+COPY /gradle /app/gradle
+
+
 # RUN gradle generateApolloSources
 # CMD gradle run
 

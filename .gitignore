@@ -7,3 +7,5 @@ build
 bin/
 debug
 debug/*
+design
+.env

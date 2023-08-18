@@ -4,6 +4,7 @@ import jess.*;
 import vassar.GlobalScope;
 import vassar.database.DatabaseClient;
 import vassar.database.template.TemplateRequest;
+import vassar.evaluator.ModelParser;
 import vassar.jess.func.RawSafety;
 import vassar.problem.Problem;
 import vassar.evaluator.spacecraft.LaunchVehicle;
@@ -149,6 +150,15 @@ public class Resource {
 
         // BUILD PROBLEM
         this.problem = this.problemBuilder.build(this.dbClient);
+
+        // PARSE RULES
+//        try{
+//            ModelParser mParser = new ModelParser(this.engine);
+//            mParser.saveVocabulary();
+//        }
+//        catch (Exception ex){
+//            ex.printStackTrace();
+//        }
     }
 
     private void evaluateRules() {

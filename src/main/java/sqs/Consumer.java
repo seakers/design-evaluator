@@ -131,8 +131,8 @@ public class Consumer {
         this.createConnectionQueues();
 
         while (this.running) {
-            // System.out.println("-----> Loop iteration: " + counter);
-            // System.out.println("Current State: " + this.currentState);
+             System.out.println("-----> Loop iteration: " + counter);
+//             System.out.println("Current State: " + this.currentState);
             
             List<Map<String, String>> messagesContents = new ArrayList<>();
 

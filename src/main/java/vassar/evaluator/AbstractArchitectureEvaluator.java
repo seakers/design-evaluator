@@ -24,6 +24,7 @@ import vassar.architecture.AbstractArchitecture;
 import vassar.problem.Problem;
 import vassar.evaluator.spacecraft.Orbit;
 
+import java.io.StringWriter;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -87,6 +88,19 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         Result result     = new Result();
 
         try {
+            // ---------------------
+            // --- Watch Routing ---
+            // ---------------------
+            StringWriter watch_router = new StringWriter();
+            r.addOutputRouter("wrouter", watch_router);
+            r.setWatchRouter("wrouter");
+//            r.eval("(watch facts)");
+//            r.eval("(watch activations)");
+            r.eval("(watch rules)");
+            WatchParser wparser = new WatchParser(r, watch_router);
+
+
+
             if (type.equalsIgnoreCase("Slow")) {
                 result = evaluatePerformance(params, r, arch, qb);
 
@@ -105,6 +119,9 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             result.setCostCritique(this.critiqueCost(r, result));
 
             result.setTaskType(type);
+
+
+            wparser.runParsing();
         }
         catch (Exception e) {
             System.out.println("EXC in Task:call: " + e.getClass() + " " + e.getMessage());
@@ -172,6 +189,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
         Result result = new Result();
         try {
 
+
             r.reset();
 
             r.eval("(bind ?*science-multiplier* 1.0)");
@@ -185,6 +203,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
 
 
             qb.missionFactQuery("missionFactsNonADD");
+
 
             r.setFocus("MANIFEST0");
             r.run();
@@ -398,7 +417,7 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
                 //System.out.println("----- DEBUG");
                 //System.out.println(partials);
                 //System.out.println(fulls);
-                //result.setExplanations(fulls);
+                // result.setExplanations(fulls);
             }
         }
 
@@ -524,6 +543,11 @@ public abstract class AbstractArchitectureEvaluator implements Callable<Result> 
             System.out.println(theresult.capabilities);
             System.out.println(theresult.explanations);
         }
+
+        theresult.valueFacts = qb.makeQuery("AGGREGATION::VALUE");
+        theresult.stakeholderFacts = qb.makeQuery("AGGREGATION::STAKEHOLDER");
+        theresult.objectiveFacts = qb.makeQuery("AGGREGATION::OBJECTIVE");
+        theresult.subobjectiveFacts = qb.makeQuery("AGGREGATION::SUBOBJECTIVE");
 
         return theresult;
     }

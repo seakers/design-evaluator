@@ -33,6 +33,7 @@ import vassar.combinatorics.Combinatorics;
 import vassar.evaluator.ADDEvaluator;
 import vassar.evaluator.AbstractArchitectureEvaluator;
 import vassar.evaluator.ArchitectureEvaluator;
+import vassar.evaluator.ModelParser;
 import vassar.jess.Requests;
 import vassar.jess.Resource;
 import vassar.result.Result;
@@ -103,7 +104,12 @@ public class VassarClient {
         AbstractArchitectureEvaluator t = new ArchitectureEvaluator(this.engine, arch, "Slow");
         Result result = t.call();
 
-        this.indexArchitecture(result, bitString, datasetId, ga, redo, fast);
+//        ContextualizedDesign design_context = new ContextualizedDesign(result, this.engine);
+        DesignWriter dw = new DesignWriter(result, this.engine);
+
+        if(System.getenv("DEPLOYMENT_TYPE").equals("AWS")){
+            this.indexArchitecture(result, bitString, datasetId, ga, redo, fast);
+        }
 
         return result;
     }
@@ -767,6 +773,13 @@ public class VassarClient {
 
         Resource newResource = this.engine.rebuild(group_id, problem_id, newRequests.getRequests());
         this.engine          = newResource;
+
+//        try{
+//            ModelParser mp = new ModelParser(this.engine.getEngine());
+//        }
+//        catch (Exception ex){
+//            ex.printStackTrace();
+//        }
     }
 
     public DatasetInfoQuery.Data getDatasetInfo(int datasetId) {

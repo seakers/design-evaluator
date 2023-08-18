@@ -1,8 +1,12 @@
 package vassar.architecture;
 
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import vassar.problem.Problem;
 
+import java.io.FileWriter;
 import java.util.*;
 
 public class Architecture extends AbstractArchitecture{
@@ -16,6 +20,33 @@ public class Architecture extends AbstractArchitecture{
         this.problem = problem;
         this.bitMatrix = booleanString2Matrix(bitString);
         this.numSatellites = numSatellites;
+
+        JsonObject arch_inputs = new JsonObject();
+        arch_inputs.addProperty("bitString", bitString);
+        String orbs = "";
+        for(String orb: problem.orbitList){
+            orbs += " " + orb;
+        }
+        String insts = "";
+        for(String inst: problem.instrumentList){
+            insts += " " + inst;
+        }
+        arch_inputs.addProperty("orbits", orbs);
+        arch_inputs.addProperty("instruments", insts);
+
+        try{
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            FileWriter jsonWriter = new FileWriter("/app/debug/datasets/arch.json");
+            String jsonString = gson.toJson(arch_inputs);
+            jsonWriter.write(jsonString);
+            jsonWriter.flush();
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+
+
     }
 
     public Architecture(boolean[][] bitMatrix, int numSatellites, Problem problem) {

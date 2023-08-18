@@ -6,6 +6,8 @@ package evaluator;
 import jess.Userfunction;
 import okhttp3.OkHttpClient;
 import seakers.orekit.util.OrekitConfig;
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.profiles.ProfileFile;
 import vassar.GlobalScope;
 import vassar.VassarClient;
 import vassar.database.DatabaseClient;
@@ -100,11 +102,13 @@ public class EvaluatorApp {
 // | |_) | |_| | | | (_| |
 // |_.__/ \__,_|_|_|\__,_|
 //
+        ProfileCredentialsProvider cred = ProfileCredentialsProvider.builder().profileFile(ProfileFile.defaultProfileFile()).build();
 
 
         // --> SQS
         SqsClientBuilder sqsClientBuilder = SqsClient.builder()
                                                      .region(Region.US_EAST_2);
+
         if (System.getenv("AWS_STACK_ENDPOINT") != null) {
             sqsClientBuilder.endpointOverride(URI.create(System.getenv("AWS_STACK_ENDPOINT")));
             sqsClientBuilder.region(Region.US_WEST_2);

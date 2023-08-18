@@ -33,7 +33,13 @@ public class Result implements Serializable {
     private TreeMap<String,ArrayList<Fact>> capabilityList;
     private TreeMap<String,Double> subobjectiveScoresMap;
     public ArrayList<Fact> capabilities;
-    private ArrayList<Fact> costFacts;
+    private ArrayList<Fact> costFacts; // Contains satellite design facts, one for each sat in the design
+
+    public ArrayList<Fact> stakeholderFacts;
+    public ArrayList<Fact> objectiveFacts;
+    public ArrayList<Fact> subobjectiveFacts;
+    public ArrayList<Fact> valueFacts;
+
     private String taskType;
 
     private Vector<String> performanceCritique;

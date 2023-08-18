@@ -133,6 +133,8 @@ public class Requests {
                             .templateHeader("REQUIREMENTS::Measurement")
                             .build()
             );
+
+            // --> Swap these to get CAPABILITY::Manifested-instrument deftemplate output
             build.requests.add(
                     new InstrumentAttributeTemplateRequest.Builder()
                             .applyExtension(new JessExtension())
@@ -147,6 +149,11 @@ public class Requests {
                             .templateHeader("DATABASE::Instrument")
                             .build()
             );
+
+
+
+
+
             build.requests.add(
                     new MissionAttributeTemplateRequest.Builder()
                             .applyExtension(new JessExtension())
@@ -154,18 +161,19 @@ public class Requests {
                             .templateHeader("MANIFEST::Mission")
                             .build()
             );
-            build.requests.add(
-                    new OrbitAttributeTemplateRequest.Builder()
-                            .applyExtension(new JessExtension())
-                            .templateFilePath(this.globalTemplatePath + "/AttributeTemplateRequest.clp")
-                            .templateHeader("DATABASE::Orbit")
-                            .build()
-            );
+
             build.requests.add(
                     new LaunchVehicleAttributeTemplateRequest.Builder()
                             .applyExtension(new JessExtension())
                             .templateFilePath(this.globalTemplatePath + "/AttributeTemplateRequest.clp")
                             .templateHeader("DATABASE::Launch-vehicle")
+                            .build()
+            );
+            build.requests.add(
+                    new OrbitAttributeTemplateRequest.Builder()
+                            .applyExtension(new JessExtension())
+                            .templateFilePath(this.globalTemplatePath + "/AttributeTemplateRequest.clp")
+                            .templateHeader("DATABASE::Orbit")
                             .build()
             );
             build.requests.add(

@@ -6,7 +6,9 @@ import com.apollographql.apollo.exception.ApolloException;
 import com.apollographql.apollo.subscription.WebSocketSubscriptionTransport;
 import com.evaluator.*;
 import com.evaluator.type.*;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 // APOLLO
@@ -57,7 +59,25 @@ public class QueryAPI {
 
         public Builder(String apolloUrl, String apolloWsUrl){
             this.apolloUrl = apolloUrl;
-            this.http       = new OkHttpClient.Builder().connectTimeout(120, TimeUnit.SECONDS).readTimeout(120, TimeUnit.SECONDS).writeTimeout(120, TimeUnit.SECONDS).callTimeout(120, TimeUnit.SECONDS).build();
+            this.http       = new OkHttpClient.Builder()
+                    .connectTimeout(120, TimeUnit.SECONDS)
+                    .readTimeout(120, TimeUnit.SECONDS)
+                    .writeTimeout(120, TimeUnit.SECONDS)
+                    .callTimeout(120, TimeUnit.SECONDS)
+                    .addInterceptor(new Interceptor() {
+                        @NotNull
+                        @Override
+                        public okhttp3.Response intercept(@NotNull Interceptor.Chain chain) throws IOException {
+                            Request original = chain.request();
+                            Request request = original.newBuilder()
+                                    .header("X-Hasura-Admin-Secret", "daphne")
+                                    .method(original.method(), original.body())
+                                    .build();
+
+                            return chain.proceed(request);
+                        }
+                    })
+                    .build();
             this.apollo     = ApolloClient.builder()
                     .serverUrl(this.apolloUrl)
                     .subscriptionTransportFactory(new WebSocketSubscriptionTransport.Factory(apolloWsUrl, this.http)) // ws://graphql:8080/v1/graphql
